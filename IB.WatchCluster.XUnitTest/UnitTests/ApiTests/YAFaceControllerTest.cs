@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using IB.WatchCluster.Abstract.Entity.Configuration;
 using IB.WatchCluster.Abstract.Entity.WatchFace;
 using IB.WatchCluster.Api.Controllers;
 using IB.WatchCluster.Api.Infrastructure;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -21,6 +23,8 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
             //
             var loggerMock = new Mock<ILogger<YAFaceController>>();
             var otMetricsMock = new Mock<OtMetrics>();
+            var kafkaConfigMock = new Mock<KafkaConfiguration>();
+            var activitySourceMock = new ActivitySource("test-source");
             var deliveryResult = new DeliveryResult<string, string> 
             { 
                 Message = new Message<string, string> { Value = "" }, 
@@ -40,7 +44,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 
             
             var controller = new YAFaceController(
-                loggerMock.Object, otMetricsMock.Object, kafkaProducerMock.Object, collectorConsumerMock.Object);
+                loggerMock.Object, otMetricsMock.Object, activitySourceMock, kafkaConfigMock.Object, kafkaProducerMock.Object, collectorConsumerMock.Object);
             controller.ControllerContext.HttpContext = new DefaultHttpContext();
             controller.HttpContext.TraceIdentifier = requestId;
 
@@ -65,6 +69,8 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
             //
             var loggerMock = new Mock<ILogger<YAFaceController>>();
             var otMetricsMock = new Mock<OtMetrics>();
+            var kafkaConfigMock = new Mock<KafkaConfiguration>();
+            var activitySourceMock = new ActivitySource("test-source");
             var deliveryResult = new DeliveryResult<string, string>
             {
                 Message = new Message<string, string> { Value = "" },
@@ -84,7 +90,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 
 
             var controller = new YAFaceController(
-                loggerMock.Object, otMetricsMock.Object, kafkaProducerMock.Object, collectorConsumerMock.Object);
+                loggerMock.Object, otMetricsMock.Object, activitySourceMock, kafkaConfigMock.Object, kafkaProducerMock.Object, collectorConsumerMock.Object);
             controller.ControllerContext.HttpContext = new DefaultHttpContext();
             controller.HttpContext.TraceIdentifier = requestId;
 

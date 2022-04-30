@@ -36,11 +36,11 @@ namespace IB.WatchCluster.Api.Infrastructure
         public static ObjectResult ReturnErrorResponse(this Exception exception)
         {
 
-            if (exception is ApiException)
+            if (exception is ApiException ex)
             {
-                ObjectResult result = new(((ApiException)exception).ErrorResponse)
+                ObjectResult result = new(ex.ErrorResponse)
                 {
-                    StatusCode = ((ApiException)exception).HttpStatus
+                    StatusCode = ex.HttpStatus
                 };
                 return result;
             }

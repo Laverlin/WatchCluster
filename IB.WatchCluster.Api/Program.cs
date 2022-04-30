@@ -13,6 +13,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
+using System.Diagnostics;
 
 // Set Bootstrap logger
 //
@@ -68,15 +69,17 @@ try
     // Add services to the container.
     //
     builder.Services.AddScoped<RequestRateLimit>();
-
+    builder.Services.AddSingleton(new ActivitySource(SolutionInfo.Name));
     builder.Services.AddSingleton<OtMetrics>();
+    builder.Services.AddSingleton<KafkaConfiguration>(kafkaConfig);
     builder.Services.AddSingleton<ProducerConfig>(kafkaConfig.BuildProducerConfig());
     builder.Services.AddSingleton<IConsumer<string, string>>(
         new ConsumerBuilder<string, string>(kafkaConfig.BuildConsumerConfig()).Build());
     builder.Services.AddSingleton<KafkaProducerCore>();
-    builder.Services.AddSingleton<KafkaProducer<string, string>>();
-    builder.Services.AddSingleton<CollectorConsumer>();
-    builder.Services.AddHostedService<CollectorConsumer>(provider => provider.GetService<CollectorConsumer>()!);
+    builder.Services.AddSingleton<IKafkaProducer<string, string>, KafkaProducer<string, string>>();
+    builder.Services.AddSingleton<CollectorService>();
+    builder.Services.AddSingleton<ICollector>(provider => provider.GetRequiredService<CollectorService>());
+    builder.Services.AddHostedService<CollectorService>(provider => provider.GetRequiredService<CollectorService>());
 
     builder.Services.AddControllers();
 

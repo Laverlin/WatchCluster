@@ -13,6 +13,12 @@ namespace IB.WatchCluster.Abstract.Entity.Configuration
         /// </summary>
         [Required]
         public string BootstrapServers { get; set; } = default!;
+
+        public string GroupId { get; set; } = "collector-group";
+
+        public string WatchRequestTopic { get; set; } = "watch-request";
+
+        public string WatchResponseTopic { get; set; } = "watch-response";
     }
 
     /// <summary>
@@ -37,7 +43,8 @@ namespace IB.WatchCluster.Abstract.Entity.Configuration
         {
             return new ConsumerConfig { 
                 BootstrapServers = kafkaConfig.BootstrapServers,
-                GroupId = "tmp-consumerGroup"
+                GroupId = kafkaConfig.GroupId,
+                ClientId = "Collector"
             };
         }
     }

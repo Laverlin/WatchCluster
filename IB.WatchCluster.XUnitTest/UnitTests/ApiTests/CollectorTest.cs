@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using IB.WatchCluster.Abstract.Entity.Configuration;
 using IB.WatchCluster.Abstract.Entity.WatchFace;
 using IB.WatchCluster.Api.Infrastructure;
 using IB.WatchCluster.Api.Services;
@@ -16,8 +17,9 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
         {
             // Arrange
             //
-            var loggerMock = new Mock<ILogger<CollectorConsumer>>();
+            var loggerMock = new Mock<ILogger<CollectorService>>();
             var otMetricsMock = new Mock<OtMetrics>();
+            var kafkaConfigMock = new Mock<KafkaConfiguration>();
 
             var consumerMock = new Mock<IConsumer<string, string>>();
             consumerMock
@@ -26,7 +28,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
                 .Verifiable();
             consumerMock.Setup(m => m.Subscribe(It.IsAny<string>()));
 
-            var collector = new CollectorConsumer(consumerMock.Object, loggerMock.Object, otMetricsMock.Object);
+            var collector = new CollectorService(consumerMock.Object, kafkaConfigMock.Object, loggerMock.Object, otMetricsMock.Object);
 
             // Act
             //
@@ -45,10 +47,10 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
         {
             // Arrange
             //
-            var loggerMock = new Mock<ILogger<CollectorConsumer>>();
+            var loggerMock = new Mock<ILogger<CollectorService>>();
             var otMetricsMock = new Mock<OtMetrics>();
+            var kafkaConfigMock = new Mock<KafkaConfiguration>();
 
-            var i = 0;
             var consumerMock = new Mock<IConsumer<string, string>>();
             consumerMock
                 .SetupSequence(m => m.Consume(It.IsAny<CancellationToken>()))
@@ -60,7 +62,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 
             consumerMock.Setup(m => m.Subscribe(It.IsAny<string>()));
 
-            var collector = new CollectorConsumer(consumerMock.Object, loggerMock.Object, otMetricsMock.Object);
+            var collector = new CollectorService(consumerMock.Object, kafkaConfigMock.Object, loggerMock.Object, otMetricsMock.Object);
 
             // Act
             //
@@ -83,10 +85,10 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
         {
             // Arrange
             //
-            var loggerMock = new Mock<ILogger<CollectorConsumer>>();
+            var loggerMock = new Mock<ILogger<CollectorService>>();
             var otMetricsMock = new Mock<OtMetrics>();
+            var kafkaConfigMock = new Mock<KafkaConfiguration>();
 
-            var i = 0;
             var consumerMock = new Mock<IConsumer<string, string>>();
             consumerMock
                 .Setup(m => m.Consume(It.IsAny<CancellationToken>()))
@@ -95,7 +97,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 
             consumerMock.Setup(m => m.Subscribe(It.IsAny<string>()));
 
-            var collector = new CollectorConsumer(consumerMock.Object, loggerMock.Object, otMetricsMock.Object);
+            var collector = new CollectorService(consumerMock.Object, kafkaConfigMock.Object, loggerMock.Object, otMetricsMock.Object);
 
             // Act
             //

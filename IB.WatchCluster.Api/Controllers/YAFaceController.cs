@@ -3,10 +3,12 @@ using IB.WatchCluster.Abstract.Entity.WatchFace;
 using IB.WatchCluster.Api.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using Confluent.Kafka;
 using System.Text.Json;
 using IB.WatchCluster.Api.Services;
+using IB.WatchCluster.Abstract.Entity.Configuration;
+using System.Diagnostics;
+using System.Text;
 
 namespace IB.WatchCluster.Api.Controllers
 {
@@ -23,11 +25,14 @@ namespace IB.WatchCluster.Api.Controllers
         private readonly IKafkaProducer<string, string> _kafkaProducer;
         private readonly ICollector _collectorConsumer;
         private readonly OtMetrics _otMetrics;
-
+        private readonly ActivitySource _activitySource;
+        private readonly KafkaConfiguration _kafkaConfiguration;
 
         public YAFaceController(
             ILogger<YAFaceController> logger,
             OtMetrics otMetrics,
+            ActivitySource activitySource,
+            KafkaConfiguration kafkaConfiguration,
             IKafkaProducer<string, string> kafkaProducer,
             ICollector collectorConsumer)
         {
@@ -35,6 +40,8 @@ namespace IB.WatchCluster.Api.Controllers
             _kafkaProducer = kafkaProducer;
             _collectorConsumer = collectorConsumer;
             _otMetrics = otMetrics;
+            _activitySource = activitySource;
+            _kafkaConfiguration = kafkaConfiguration;
         }
 
         /// <summary>
@@ -42,25 +49,26 @@ namespace IB.WatchCluster.Api.Controllers
         /// </summary>
         /// <param name="watchRequest">watchface data</param>
         /// <returns>weather, location and exchange rate info</returns>
-        [HttpGet, MapToApiVersion("2.0")]
+        [HttpGet, MapToApiVersion("2.0"), Authorize]
         [ProducesResponseType(typeof(WatchResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         [RequestRateFactory(KeyField = "did", Seconds = 5)]
-        [Authorize]
         public async Task<ActionResult<WatchResponse>> Get([FromQuery] WatchRequest watchRequest)
         {
             try
             {
+                using var activity = _activitySource.StartActivity("Request processing");
                 var requestId = Request.HttpContext.TraceIdentifier;
-                var message = new Message<string, string> 
-                { 
+                var message = new Message<string, string>
+                {
+                    Headers = new Headers(){ new Header("activityId", Encoding.ASCII.GetBytes(activity?.Id ?? "")) },
                     Key = requestId,
                     Value = JsonSerializer.Serialize(watchRequest) 
                 };
 
-                var result = await _kafkaProducer.ProduceAsync("incoming-request", message);
+                var result = await _kafkaProducer.ProduceAsync(_kafkaConfiguration.WatchRequestTopic, message);
                 if (result.Status == PersistenceStatus.Persisted)
                 {
                     _otMetrics.ProducedCounter.Add(1);
