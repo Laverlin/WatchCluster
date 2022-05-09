@@ -40,7 +40,7 @@ namespace IB.WatchCluster.ServiceHost.Infrastructure
             _consumer.Subscribe(_kafkaConfig.WatchRequestTopic);
             try
             {
-                _logger.LogInformation("Start consuming");
+                _logger.LogInformation("Start consuming {@Type}", typeof(TRequest).Name);
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     try
@@ -51,24 +51,28 @@ namespace IB.WatchCluster.ServiceHost.Infrastructure
                             cr.Message.Key, cr.TopicPartitionOffset.ToString());
 
                         cr.Message.Headers.TryGetLastBytes("activityId", out var rawActivityId);
-                        using var activity = _activitySource.StartActivity("handle requested task", ActivityKind.Consumer, Encoding.ASCII.GetString(rawActivityId));
+                        using var activity = _activitySource
+                            .StartActivity($"Handle requested by {typeof(TRequest).Name}", ActivityKind.Consumer, Encoding.ASCII.GetString(rawActivityId));
                         
                         var watchRequest = JsonSerializer.Deserialize<WatchRequest>(cr.Message.Value);
                         if (watchRequest == null)
                             _logger.LogWarning("Can not parse {@WatchRequest}", cr.Message.Value);
-                        var result = _requestHandler.Process(watchRequest);
 
-                        _producer.Produce(
-                            _kafkaConfig.WatchResponseTopic,
-                            new Message<string, string> 
-                            { 
-                                Headers = new Headers() { new Header("type", Encoding.ASCII.GetBytes(typeof(TRequest).Name)) },
-                                Key = cr.Message.Key, 
-                                Value = JsonSerializer.Serialize(result) 
-                            },
-                            dh => _logger.LogDebug(
-                                "Resend message {@Key} at: {@TopicPartitionOffset}",
-                                dh.Message.Key, dh.TopicPartitionOffset.ToString()));
+                        _requestHandler.ProcessAsync(watchRequest)
+                            .ContinueWith(async t =>
+                            {
+                                var dr = await _producer.ProduceAsync(
+                                    _kafkaConfig.WatchResponseTopic,
+                                    new Message<string, string>
+                                    {
+                                        Headers = new Headers() { new Header("type", Encoding.ASCII.GetBytes(typeof(TRequest).Name)) },
+                                        Key = cr.Message.Key,
+                                        Value = JsonSerializer.Serialize(t.Result)
+                                    });
+                                _logger.LogDebug(
+                                    "Resend message {@Key} at: {@TopicPartitionOffset}", dr.Message.Key, dr.TopicPartitionOffset.ToString());
+                             });
+
                     }
                     catch (ConsumeException e)
                     {

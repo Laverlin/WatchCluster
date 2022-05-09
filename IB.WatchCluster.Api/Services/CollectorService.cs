@@ -93,46 +93,26 @@ namespace IB.WatchCluster.Api.Services
         {
             using (_activitySource.StartActivity("CollectMessages"))
             {
-                var message = await _messageSubject
-                    // .Where(m => m.RequestId == requestId)
+                var messages = await _messageSubject
                     .SkipWhile(m => m.RequestId != requestId)
-                    .Take(1)
+                    .Take(2)
                     .TakeUntil(Observable.Timer(TimeSpan.FromSeconds(15)))
-                    .FirstOrDefaultAsync();
-
-                if (message == null)
-                {
-                    _otMetrics.BufferedNotFoundCounter.Add(1);
-                    _logger.LogWarning("message for {@requestId} not found in buffer", requestId);
-                }
-                else
-                {
-                    _otMetrics.BufferedFoundCounter.Add(1);
-                    _logger.LogDebug("collect message {@message}", message);
-                }
-
-                var weatherInfo = new WeatherInfo();
-                var locationInfo = new LocationInfo();
-                var exchangeRateInfo = new ExchangeRateInfo();
-
-                if (message != null)
-                    switch (message.MessageType)
-                    {
-                        case nameof(LocationInfo):
-                            locationInfo = JsonSerializer.Deserialize<LocationInfo>(message.Message) ?? new LocationInfo();
-                            break;
-
-                        default:
-                            throw new ArgumentException("Unknown message type");
-                    }
-                
+                    .ToArray();
 
                 var watchResponse = new WatchResponse
                 {
-                    RequestId = message?.RequestId ?? "",
-                    LocationInfo = locationInfo,
-                    WeatherInfo = weatherInfo,
-                    ExchangeRateInfo = exchangeRateInfo
+                    RequestId = messages.Select(m => m.RequestId).FirstOrDefault(),
+                    LocationInfo = JsonSerializer.Deserialize<LocationInfo>(
+                        messages
+                            .Where(m => m.MessageType == nameof(LocationInfo))
+                            .Select(m => m.Message)
+                            .FirstOrDefault() ?? "{}"),
+                    WeatherInfo = JsonSerializer.Deserialize<WeatherInfo>(
+                        messages
+                            .Where(m => m.MessageType == nameof(WeatherInfo))
+                            .Select(m => m.Message)
+                            .FirstOrDefault() ?? "{}"),
+                    ExchangeRateInfo = new ExchangeRateInfo()
                 };
 
                 return watchResponse;

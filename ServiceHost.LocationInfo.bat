@@ -1,0 +1,1 @@
+c:\Projects\WatchCluster\IB.WatchCluster.ServiceHost\bin\Debug\net6.0\IB.WatchCluster.ServiceHost.exe LocationInfo
