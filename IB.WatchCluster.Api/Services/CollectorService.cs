@@ -1,11 +1,14 @@
 ﻿using Confluent.Kafka;
 using IB.WatchCluster.Abstract;
+using IB.WatchCluster.Abstract.Entity.Configuration;
 using IB.WatchCluster.Abstract.Entity.WatchFace;
 using IB.WatchCluster.Api.Entity;
 using IB.WatchCluster.Api.Infrastructure;
 using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Text;
+using System.Text.Json;
 
 namespace IB.WatchCluster.Api.Services
 {
@@ -14,20 +17,20 @@ namespace IB.WatchCluster.Api.Services
         public Task<WatchResponse> GetCollectedMessages(string requestId);
     }
 
-    public class CollectorConsumer: BackgroundService, ICollector
+    public class CollectorService: BackgroundService, ICollector
     {
-        private readonly string _topic;
         private readonly IConsumer<string, string> _kafkaConsumer;
+        private readonly KafkaConfiguration _kafkaConfiguration;
         private readonly ILogger _logger;
         private readonly OtMetrics _otMetrics;
         private readonly ActivitySource _activitySource;
         private readonly ReplaySubject<CollectedMessage> _messageSubject = new (TimeSpan.FromMinutes(1));
 
-        public CollectorConsumer(
-            IConsumer<string, string> kafkaConsumer, ILogger<CollectorConsumer> logger, OtMetrics otMetrics)
+        public CollectorService(
+            IConsumer<string, string> kafkaConsumer, KafkaConfiguration kafkaConfiguration, ILogger<CollectorService> logger, OtMetrics otMetrics)
         {
-            _topic = "incoming-request";
             _kafkaConsumer = kafkaConsumer;
+            _kafkaConfiguration = kafkaConfiguration;
             _logger = logger;
             _otMetrics = otMetrics;
             _activitySource = new ActivitySource(SolutionInfo.Name);
@@ -43,18 +46,21 @@ namespace IB.WatchCluster.Api.Services
 
         public void StartConsumerLoop(CancellationToken cancellationToken)
         {
-            _kafkaConsumer.Subscribe(_topic);
+            _kafkaConsumer.Subscribe(_kafkaConfiguration.WatchResponseTopic);
 
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
                     var cr = _kafkaConsumer.Consume(cancellationToken);
+                    cr.Message.Headers.TryGetLastBytes("type", out var messageType);
                     var message = new CollectedMessage
                     {
                         RequestId = cr.Message.Key,
-                        Message = cr.Message.Value
+                        Message = cr.Message.Value,
+                        MessageType = Encoding.ASCII.GetString(messageType)
                     };
+
                     _logger.LogDebug("Collector got {@message}", message);
                     _messageSubject.OnNext(message);
                     _otMetrics.MessageBufferedCounter.Add(1);
@@ -70,6 +76,7 @@ namespace IB.WatchCluster.Api.Services
                     if (e.Error.IsFatal)
                     {
                         // https://github.com/edenhill/librdkafka/blob/master/INTRODUCTION.md#fatal-consumer-errors
+                        //
                         break;
                     }
                 }
@@ -86,34 +93,26 @@ namespace IB.WatchCluster.Api.Services
         {
             using (_activitySource.StartActivity("CollectMessages"))
             {
-                var message = await _messageSubject
-                    // .Where(m => m.RequestId == requestId)
+                var messages = await _messageSubject
                     .SkipWhile(m => m.RequestId != requestId)
-                    .Take(1)
+                    .Take(2)
                     .TakeUntil(Observable.Timer(TimeSpan.FromSeconds(15)))
-                    .FirstOrDefaultAsync();
-
-                if (message == null)
-                {
-                    _otMetrics.BufferedNotFoundCounter.Add(1);
-                    _logger.LogWarning("message for {@requestId} not found in buffer", requestId);
-                }
-                else
-                {
-                    _otMetrics.BufferedFoundCounter.Add(1);
-                    _logger.LogDebug("collect message {@message}", message);
-                }
-
-                var weatherInfo = new WeatherInfo();
-                var locationInfo = new LocationInfo();
-                var exchangeRateInfo = new ExchangeRateInfo();
+                    .ToArray();
 
                 var watchResponse = new WatchResponse
                 {
-                    RequestId = message?.RequestId ?? "",
-                    LocationInfo = locationInfo,
-                    WeatherInfo = weatherInfo,
-                    ExchangeRateInfo = exchangeRateInfo
+                    RequestId = messages.Select(m => m.RequestId).FirstOrDefault(),
+                    LocationInfo = JsonSerializer.Deserialize<LocationInfo>(
+                        messages
+                            .Where(m => m.MessageType == nameof(LocationInfo))
+                            .Select(m => m.Message)
+                            .FirstOrDefault() ?? "{}"),
+                    WeatherInfo = JsonSerializer.Deserialize<WeatherInfo>(
+                        messages
+                            .Where(m => m.MessageType == nameof(WeatherInfo))
+                            .Select(m => m.Message)
+                            .FirstOrDefault() ?? "{}"),
+                    ExchangeRateInfo = new ExchangeRateInfo()
                 };
 
                 return watchResponse;

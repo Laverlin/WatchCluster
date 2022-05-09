@@ -8,8 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoFixture" Version="4.17.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
     <PackageReference Include="Moq" Version="4.17.2" />
+    <PackageReference Include="Moq.Contrib.HttpClient" Version="1.3.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -23,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\IB.WatchCluster.Api\IB.WatchCluster.Api.csproj" />
+    <ProjectReference Include="..\IB.WatchCluster.ServiceHost\IB.WatchCluster.ServiceHost.csproj" />
   </ItemGroup>
 
 </Project>

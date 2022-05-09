@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IB.WatchCluster.Api", "IB.W
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IB.WatchCluster.XUnitTest", "IB.WatchCluster.XUnitTest\IB.WatchCluster.XUnitTest.csproj", "{C20CD17D-329E-4718-B8BB-6F3C1E0304E1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IB.WatchCluster.ServiceHost", "IB.WatchCluster.ServiceHost\IB.WatchCluster.ServiceHost.csproj", "{7E905AF2-D9B0-4A0E-83E9-350747323B4B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{C20CD17D-329E-4718-B8BB-6F3C1E0304E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C20CD17D-329E-4718-B8BB-6F3C1E0304E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C20CD17D-329E-4718-B8BB-6F3C1E0304E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E905AF2-D9B0-4A0E-83E9-350747323B4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E905AF2-D9B0-4A0E-83E9-350747323B4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E905AF2-D9B0-4A0E-83E9-350747323B4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E905AF2-D9B0-4A0E-83E9-350747323B4B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
