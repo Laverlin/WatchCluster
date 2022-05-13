@@ -95,7 +95,7 @@ namespace IB.WatchCluster.Api.Services
             {
                 var messages = await _messageSubject
                     .SkipWhile(m => m.RequestId != requestId)
-                    .Take(2)
+                    .Take(3)
                     .TakeUntil(Observable.Timer(TimeSpan.FromSeconds(15)))
                     .ToArray();
 
@@ -112,7 +112,12 @@ namespace IB.WatchCluster.Api.Services
                             .Where(m => m.MessageType == nameof(WeatherInfo))
                             .Select(m => m.Message)
                             .FirstOrDefault() ?? "{}"),
-                    ExchangeRateInfo = new ExchangeRateInfo()
+                    ExchangeRateInfo = JsonSerializer.Deserialize<ExchangeRateInfo>(
+                        messages
+                            .Where(m => m.MessageType == nameof(ExchangeRateInfo))
+                            .Select(m => m.Message)
+                            .DefaultIfEmpty("{}")
+                            .Single()),
                 };
 
                 return watchResponse;

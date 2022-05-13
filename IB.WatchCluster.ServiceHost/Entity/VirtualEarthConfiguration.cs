@@ -10,6 +10,5 @@ namespace IB.WatchCluster.ServiceHost.Entity
         [Required]
         [StringLength(maximumLength: 64, MinimumLength = 64)]
         public string AuthKey { get; set; } = default!;
-
     }
 }

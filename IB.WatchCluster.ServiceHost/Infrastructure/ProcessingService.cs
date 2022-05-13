@@ -51,7 +51,7 @@ namespace IB.WatchCluster.ServiceHost.Infrastructure
                             cr.Message.Key, cr.TopicPartitionOffset.ToString());
 
                         cr.Message.Headers.TryGetLastBytes("activityId", out var rawActivityId);
-                        using var activity = _activitySource
+                        var activity = _activitySource
                             .StartActivity($"Handle requested by {typeof(TRequest).Name}", ActivityKind.Consumer, Encoding.ASCII.GetString(rawActivityId));
                         
                         var watchRequest = JsonSerializer.Deserialize<WatchRequest>(cr.Message.Value);
@@ -71,7 +71,8 @@ namespace IB.WatchCluster.ServiceHost.Infrastructure
                                     });
                                 _logger.LogDebug(
                                     "Resend message {@Key} at: {@TopicPartitionOffset}", dr.Message.Key, dr.TopicPartitionOffset.ToString());
-                             });
+                             }, stoppingToken)
+                            .ContinueWith(_ => activity?.Stop(), stoppingToken);
 
                     }
                     catch (ConsumeException e)

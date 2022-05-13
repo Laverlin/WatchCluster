@@ -20,10 +20,7 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 
-if (args.Length != 1)
-    throw new ArgumentException("Wrong arguments");
-
-Log.Information($"Starting the Service {args[0]}");
+Log.Information($"Starting the Service");
 
 await Host.CreateDefaultBuilder(args)
     .ConfigureLogging((context, logBuilder) =>
@@ -43,10 +40,9 @@ await Host.CreateDefaultBuilder(args)
     {
         var appConfig = hostContext.Configuration.LoadVerifiedConfiguration<AppConfiguration>();
         var kafkaConfig = hostContext.Configuration.LoadVerifiedConfiguration<KafkaConfiguration>();
-        var virtualEarthConfig = hostContext.Configuration.LoadVerifiedConfiguration<VirtualEarthConfiguration>();
         var consumerConfig = kafkaConfig.BuildConsumerConfig();
         consumerConfig.AutoOffsetReset = AutoOffsetReset.Latest;
-        consumerConfig.GroupId = $"ServiceHost-{args[0]}";
+        consumerConfig.GroupId = $"ServiceHost-{appConfig.Handler}";
 
         services.AddOpenTelemetryTracing(builder => builder
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(SolutionInfo.Name))
@@ -63,23 +59,28 @@ await Host.CreateDefaultBuilder(args)
         services.AddSingleton<OtMetrics>();
         services.AddSingleton(new ActivitySource(SolutionInfo.Name));
         services.AddSingleton(kafkaConfig);
-        services.AddSingleton(virtualEarthConfig);
         services.AddSingleton<KafkaProducer<string, string>>();
         services.AddSingleton(new ConsumerBuilder<string, string>(consumerConfig).Build());
 
-        services.AddHttpClient<IRequestHandler<LocationInfo>, VirtualEarthService>();
-        services.AddSingleton<IRequestHandler<WeatherInfo>, DarkSkyService>();
-
-        switch(args[0])
+        switch(appConfig.Handler)
         {
             case nameof(LocationInfo):
+                services.AddHttpClient<IRequestHandler<LocationInfo>, VirtualEarthService>();
+                services.AddSingleton(hostContext.Configuration.LoadVerifiedConfiguration<VirtualEarthConfiguration>());
                 services.AddHostedService<ProcessingService<LocationInfo>>();
                 break;
             case nameof(WeatherInfo):
+                services.AddHttpClient<IRequestHandler<WeatherInfo>, WeatherService>();
+                services.AddSingleton(hostContext.Configuration.LoadVerifiedConfiguration<WeatherConfiguration>());
                 services.AddHostedService<ProcessingService<WeatherInfo>>();
                 break;
+            case nameof(ExchangeRateInfo):
+                services.AddHttpClient<IRequestHandler<ExchangeRateInfo>, CurrencyExchangeService>();
+                services.AddSingleton(hostContext.Configuration.LoadVerifiedConfiguration<CurrencyExchangeConfiguration>());
+                services.AddHostedService<ProcessingService<ExchangeRateInfo>>();
+                break;
             default: 
-                throw new ArgumentException($"Unknown service type { args[0] }");
+                throw new ArgumentException($"Unknown service type { appConfig.Handler }");
         }
     })
     .RunConsoleAsync();

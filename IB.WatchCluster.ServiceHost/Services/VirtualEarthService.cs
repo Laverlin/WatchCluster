@@ -16,7 +16,7 @@ namespace IB.WatchCluster.ServiceHost.Services
         private readonly HttpClient _httpClient;
         private readonly VirtualEarthConfiguration _virtualEarthConfig;
         private readonly OtMetrics _metrics;
-        private static readonly MemoryCache _memoryCache = new MemoryCache(new MemoryCacheOptions());
+        private static readonly MemoryCache _memoryCache = new (new MemoryCacheOptions());
 
         private class LocationCache
         {
