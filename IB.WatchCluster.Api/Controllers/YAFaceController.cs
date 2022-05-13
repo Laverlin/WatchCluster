@@ -89,7 +89,7 @@ namespace IB.WatchCluster.Api.Controllers
                 }
 
                 _otMetrics.CollectedCounter.Add(1);
-                _logger.LogInformation(
+                _logger.LogDebug(
                     new EventId(105, "WatchRequest"), "{@WatchRequest}, {@WatchResponse}, {@DeviceId}, {@CityName}",
                     watchRequest, watchResponse, watchRequest.DeviceId, watchResponse?.LocationInfo.CityName);
                 return watchResponse!;

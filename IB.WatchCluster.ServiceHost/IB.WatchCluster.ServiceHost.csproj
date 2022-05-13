@@ -7,6 +7,8 @@
     <Nullable>enable</Nullable>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <UserSecretsId>8ce481cd-c228-4afe-830a-55456ef89a03</UserSecretsId>
+	<AssemblyVersion>1.0.0.0</AssemblyVersion>
+	<Version>1.0.0.0-dev-local</Version>	  
   </PropertyGroup>
 
   <ItemGroup>
