@@ -61,14 +61,14 @@ jobs:
     - name: Build and push API
       uses: docker/build-push-action@v2
       with:
-        dockerfile: IB.WatchCluster.Api/Dockerfile
+        file: ./IB.WatchCluster.Api/Dockerfile
         push: true
         tags: ilaverlin/watchcluster-api:latest   
         
     - name: Build and push ServiceHost
       uses: docker/build-push-action@v2
       with:
-        dockerfile: IB.WatchCluster.ServiceHost/Dockerfile
+        file: ./IB.WatchCluster.ServiceHost/Dockerfile
         push: true
         tags: ilaverlin/watchcluster-servicehost:latest           
       
