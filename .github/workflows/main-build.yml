@@ -63,12 +63,12 @@ jobs:
       with:
         context: IB.WatchCluster.Api
         push: true
-        tags: ilaverlin/WatchClusterApi:latest   
+        tags: ilaverlin/watchcluster-api:latest   
         
     - name: Build and push ServiceHost
       uses: docker/build-push-action@v2
       with:
         context: IB.WatchCluster.ServiceHost
         push: true
-        tags: ilaverlin/WatchClusterServiceHost:latest           
+        tags: ilaverlin/watchcluster-servicehost:latest           
       
