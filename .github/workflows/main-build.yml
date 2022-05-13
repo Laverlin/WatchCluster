@@ -32,12 +32,13 @@ jobs:
       run: |
         Write-Host "version=1.0.${{steps.current-time.outputs.formattedTime}}.${{github.run_number}}" >> $GITHUB_ENV
         $projFiles = Get-Childitem -Include *Service.csproj, *Abstract.csproj -Recurse
+        $version = ${{ env.version }}
         foreach($projFile in $projFiles)
         {
-          Write-Host "Writing version ${{ env.version }} in $projFile"
+          Write-Host 'Writing version $version in $projFile'
           [xml]$projXml = Get-Content -Path $projFile
-          $projXml.Project.PropertyGroup.AssemblyVersion = ${{ env.version }}
-          $projXml.Project.PropertyGroup.Version = "${{ env.version }}-stable"
+          $projXml.Project.PropertyGroup.AssemblyVersion = $version
+          $projXml.Project.PropertyGroup.Version = "$version-stable"
           $projXml.Save($projFile)
         }
 
