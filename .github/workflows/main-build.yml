@@ -17,9 +17,31 @@ jobs:
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 6.0.x
+
     - name: Restore dependencies
       run: dotnet restore
+
+    - name: Get current time
+      uses: josStorer/get-current-time@v2
+      id: current-time
+      with:
+        format: YYDDD
+
+    - name: Write version
+      shell: pwsh
+      run: |
+        $projFiles = Get-Childitem -Path $(Build.SourcesDirectory) -Include *Service.csproj, *Abstract.csproj -Recurse
+        foreach($projFile in $projFiles)
+        {
+          Write-Host "Writing version $fullVersion in $projFile"
+          [xml]$projXml = Get-Content -Path $projFile
+          $projXml.Project.PropertyGroup.AssemblyVersion = 1.0.${{steps.current-time.outputs.formattedTime}}.${{github.run_number}}
+          $projXml.Project.PropertyGroup.Version = "1.0.${{steps.current-time.outputs.formattedTime}}.${{github.run_number}}-stable"
+          $projXml.Save($projFile)
+        }
+
     - name: Build
       run: dotnet build --no-restore
+
     - name: Test
       run: dotnet test --no-build --verbosity normal
