@@ -30,7 +30,7 @@ jobs:
     - name: Write version
       shell: pwsh
       run: |
-        echo "version=1.0.${{steps.current-time.outputs.formattedTime}}.${{github.run_number}}" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+        "version=1.0.${{steps.current-time.outputs.formattedTime}}.${{github.run_number}}" >> $env:GITHUB_ENV
         $projFiles = Get-Childitem -Include *Service.csproj, *Abstract.csproj -Recurse
         $version = "${{ env.version }}"
         foreach($projFile in $projFiles)
