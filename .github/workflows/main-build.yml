@@ -39,11 +39,12 @@ jobs:
         $version = "${{ env.version }}"
         foreach($projFile in $projFiles)
         {
-          Write-Host 'Writing version $version in $projFile'
+          Write-Host "Writing version $version in $projFile"
           [xml]$projXml = Get-Content -Path $projFile
           $projXml.Project.PropertyGroup.AssemblyVersion = $version
           $projXml.Project.PropertyGroup.Version = "$version-stable"
           $projXml.Save($projFile)
+          Write-Host "new value $($projXml.Project.PropertyGroup.Version)"
         }
 
     - name: Build
