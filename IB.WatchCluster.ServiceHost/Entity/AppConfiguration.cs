@@ -11,7 +11,7 @@ namespace IB.WatchCluster.ServiceHost.Entity
         /// <summary>
         /// Location service url template
         /// </summary>
-        [Required, Url]
+        [Required]
         public string OpenTelemetryCollectorUrl { get; set; } = default!;
     }
 }

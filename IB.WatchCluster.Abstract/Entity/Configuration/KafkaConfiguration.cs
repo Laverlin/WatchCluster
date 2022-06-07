@@ -41,10 +41,12 @@ namespace IB.WatchCluster.Abstract.Entity.Configuration
         /// <param name="kafkaConfig">loaded & verified kafka config</param>
         public static ConsumerConfig BuildConsumerConfig(this KafkaConfiguration kafkaConfig)
         {
-            return new ConsumerConfig { 
+            return new ConsumerConfig 
+            { 
                 BootstrapServers = kafkaConfig.BootstrapServers,
                 GroupId = kafkaConfig.GroupId,
-                ClientId = "Collector"
+                ClientId = "Collector",
+                AllowAutoCreateTopics = true,
             };
         }
     }
