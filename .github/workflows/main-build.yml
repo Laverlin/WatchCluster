@@ -44,7 +44,7 @@ jobs:
           $projXml.Project.PropertyGroup.AssemblyVersion = $version
           $projXml.Project.PropertyGroup.Version = "$version-stable"
           $projXml.Save($projFile)
-          Write-Host "new value $($projXml.Project.PropertyGroup.Version)"
+          Write-Host $projFile
         }
 
     - name: Build
