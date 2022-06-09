@@ -10,7 +10,7 @@ using System.Text.Json;
 
 namespace IB.WatchCluster.ServiceHost.Infrastructure
 {
-    public class ProcessingService<TRequest> : BackgroundService
+    public class ProcessingService<TRequest>: BackgroundService where TRequest: IHandlerResult
     {
         private readonly KafkaConfiguration _kafkaConfig;
         private readonly IConsumer<string, string> _consumer;
@@ -35,17 +35,17 @@ namespace IB.WatchCluster.ServiceHost.Infrastructure
             _requestHandler = requestHandler;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override Task ExecuteAsync(CancellationToken cancellationToken)
         {
             _consumer.Subscribe(_kafkaConfig.WatchRequestTopic);
             try
             {
                 _logger.LogInformation("Start consuming {@Type}", typeof(TRequest).Name);
-                while (!stoppingToken.IsCancellationRequested)
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     try
                     {
-                        var cr = _consumer.Consume(stoppingToken);
+                        var cr = _consumer.Consume(cancellationToken);
                         _logger.LogDebug(
                             "Consumed message {@Key} at: {@TopicPartitionOffset}",
                             cr.Message.Key, cr.TopicPartitionOffset.ToString());
@@ -56,23 +56,32 @@ namespace IB.WatchCluster.ServiceHost.Infrastructure
                         
                         var watchRequest = JsonSerializer.Deserialize<WatchRequest>(cr.Message.Value);
                         if (watchRequest == null)
+                        {
                             _logger.LogWarning("Can not parse {@WatchRequest}", cr.Message.Value);
+                            continue;
+                        }
 
                         _requestHandler.ProcessAsync(watchRequest)
                             .ContinueWith(async t =>
                             {
+                                var result = t.Result;
+                                result.RequestId = watchRequest.RequestId;
                                 var dr = await _producer.ProduceAsync(
                                     _kafkaConfig.WatchResponseTopic,
                                     new Message<string, string>
                                     {
-                                        Headers = new Headers() { new Header("type", Encoding.ASCII.GetBytes(typeof(TRequest).Name)) },
+                                        Headers = new Headers() 
+                                        { 
+                                            new Header("type", Encoding.ASCII.GetBytes(typeof(TRequest).Name)),
+                                            new Header("activityId", rawActivityId)
+                                        },
                                         Key = cr.Message.Key,
-                                        Value = JsonSerializer.Serialize(t.Result)
+                                        Value = JsonSerializer.Serialize(result)
                                     });
                                 _logger.LogDebug(
                                     "Resend message {@Key} at: {@TopicPartitionOffset}", dr.Message.Key, dr.TopicPartitionOffset.ToString());
-                             }, stoppingToken)
-                            .ContinueWith(_ => activity?.Stop(), stoppingToken);
+                             }, cancellationToken)
+                            .ContinueWith(_ => activity?.Stop(), cancellationToken);
 
                     }
                     catch (ConsumeException e)

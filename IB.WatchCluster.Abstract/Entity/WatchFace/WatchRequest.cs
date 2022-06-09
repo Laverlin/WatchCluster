@@ -1,4 +1,5 @@
 ﻿using System;
+using LinqToDB.Mapping;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IB.WatchCluster.Abstract.Entity.WatchFace
@@ -6,18 +7,28 @@ namespace IB.WatchCluster.Abstract.Entity.WatchFace
     /// <summary>
     /// Request parameters from a watch
     /// </summary>
+    [Table("CityInfo")]
     public class WatchRequest
     {
+        /// <summary>
+        /// Unique requestId
+        /// </summary>
+        [PrimaryKey]
+        [Column("requestid")]
+        public string RequestId { get; set; }
+
         /// <summary>
         /// Latitude
         /// </summary>
         [FromQuery(Name = "lat")]
+        [Column("Lat")]
         public decimal? Lat { get; set; }
 
         /// <summary>
         /// Longitude
         /// </summary>
         [FromQuery(Name = "lon")]
+        [Column("Lon")]
         public decimal? Lon { get; set; }
 
         /// <summary>
@@ -29,6 +40,7 @@ namespace IB.WatchCluster.Abstract.Entity.WatchFace
         /// <summary>
         /// application version
         /// </summary>
+        [Column("FaceVersion")]
         [FromQuery(Name = "av")]
         public string Version { get; set; }
 
@@ -36,12 +48,14 @@ namespace IB.WatchCluster.Abstract.Entity.WatchFace
         /// Framework version
         /// </summary>
         [FromQuery(Name = "fw")]
+        [Column("FrameworkVersion")]
         public string Framework { get; set; }
 
         /// <summary>
         /// CIQ version
         /// </summary>
         [FromQuery(Name = "ciqv")]
+        [Column("CIQVersion")]
         public string CiqVersion { get; set; }
 
         /// <summary>
@@ -63,11 +77,17 @@ namespace IB.WatchCluster.Abstract.Entity.WatchFace
         public string WeatherProvider { get; set; }
 
         [FromQuery(Name = "bc")]
+        [Column("BaseCurrency")]
         public string BaseCurrency { get; set; }
 
         [FromQuery(Name = "tc")]
+        [Column("TargetCurrency")]
         public string TargetCurrency { get; set; }
 
+        [Column("RequestTime")]
         public DateTime RequestTime { get; set; } = DateTime.UtcNow;
+
+        [Column("DeviceInfoId")]
+        public int? DeviceDataId { get; set; }
     }
 }

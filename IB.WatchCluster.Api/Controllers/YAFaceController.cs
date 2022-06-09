@@ -61,9 +61,14 @@ namespace IB.WatchCluster.Api.Controllers
             {
                 using var activity = _activitySource.StartActivity("Request processing");
                 var requestId = Request.HttpContext.TraceIdentifier;
+                watchRequest.RequestId = requestId;
                 var message = new Message<string, string>
                 {
-                    Headers = new Headers(){ new Header("activityId", Encoding.ASCII.GetBytes(activity?.Id ?? "")) },
+                    Headers = new Headers()
+                    { 
+                        new Header("activityId", Encoding.ASCII.GetBytes(activity?.Id ?? "")),
+                        new Header("type", Encoding.ASCII.GetBytes(nameof(WatchRequest)))
+                    },
                     Key = requestId,
                     Value = JsonSerializer.Serialize(watchRequest) 
                 };

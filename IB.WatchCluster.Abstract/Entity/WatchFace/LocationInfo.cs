@@ -1,11 +1,13 @@
-﻿using System.Text.Json.Serialization;
+﻿using LinqToDB.Mapping;
+using System.Text.Json.Serialization;
 
 namespace IB.WatchCluster.Abstract.Entity.WatchFace
 {
     /// <summary>
     /// Name of the location based on given coordinates
     /// </summary>
-    public class LocationInfo
+    [Table("CityInfo")]
+    public class LocationInfo: IHandlerResult
     {
         public LocationInfo() { }
 
@@ -20,9 +22,17 @@ namespace IB.WatchCluster.Abstract.Entity.WatchFace
         }
 
         /// <summary>
+        /// Unique requestId
+        /// </summary>
+        [PrimaryKey]
+        [Column("requestid")]
+        public string RequestId { get; set; }
+
+        /// <summary>
         /// City name in given location
         /// </summary>
         [JsonPropertyName("cityName")]
+        [Column("CityName")]
         public string CityName { get; set; }
 
         /// <summary>

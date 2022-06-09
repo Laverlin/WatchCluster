@@ -21,5 +21,10 @@ namespace IB.WatchCluster.Abstract
         /// Assembly name
         /// </summary>
         public static string Name => Assembly.GetEntryAssembly()?.GetName().Name;
+
+        /// <summary>
+        /// Assembly itself
+        /// </summary>
+        public static readonly Assembly Assembly = typeof(SolutionInfo).Assembly;
     }
 }

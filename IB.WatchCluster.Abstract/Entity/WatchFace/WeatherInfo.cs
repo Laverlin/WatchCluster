@@ -1,12 +1,21 @@
-﻿using System.Text.Json.Serialization;
+﻿using LinqToDB.Mapping;
+using System.Text.Json.Serialization;
 
 namespace IB.WatchCluster.Abstract.Entity.WatchFace
 {
     /// <summary>
     /// Weather data
     /// </summary>
-    public class WeatherInfo
+    [Table("CityInfo")]
+    public class WeatherInfo: IHandlerResult
     {
+        /// <summary>
+        /// Unique requestId
+        /// </summary>
+        [PrimaryKey]
+        [Column("requestid")]
+        public string RequestId { get; set; }
+
         /// <summary>
         /// The weather provider that actually processed the request
         /// </summary>
@@ -23,18 +32,21 @@ namespace IB.WatchCluster.Abstract.Entity.WatchFace
         /// Precipitation probability if request was processed by DarkSky
         /// </summary>
         [JsonPropertyName("precipProbability")]
+        [Column("PrecipProbability")]
         public decimal PrecipProbability { get; set; }
 
         /// <summary>
         /// Current Temperature in Celsius
         /// </summary>
         [JsonPropertyName("temperature")]
+        [Column("Temperature")]
         public decimal Temperature { get; set; }
 
         /// <summary>
         /// Current Wind speed in m/s
         /// </summary>
         [JsonPropertyName("windSpeed")]
+        [Column("Wind")]
         public decimal WindSpeed { get; set; }
 
         /// <summary>

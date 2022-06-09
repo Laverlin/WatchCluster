@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32407.343
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IB.WatchCluster.Abstract", "IB.WatchCluster.Abstract\IB.WatchCluster.Abstract.csproj", "{6D2EE6DA-431F-4695-86D0-70BAB72D476A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IB.WatchCluster.Abstract", "IB.WatchCluster.Abstract\IB.WatchCluster.Abstract.csproj", "{6D2EE6DA-431F-4695-86D0-70BAB72D476A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IB.WatchCluster.Api", "IB.WatchCluster.Api\IB.WatchCluster.Api.csproj", "{334D5BD2-B061-46A7-B3FA-394AE8BBAA94}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IB.WatchCluster.Api", "IB.WatchCluster.Api\IB.WatchCluster.Api.csproj", "{334D5BD2-B061-46A7-B3FA-394AE8BBAA94}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IB.WatchCluster.XUnitTest", "IB.WatchCluster.XUnitTest\IB.WatchCluster.XUnitTest.csproj", "{C20CD17D-329E-4718-B8BB-6F3C1E0304E1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IB.WatchCluster.XUnitTest", "IB.WatchCluster.XUnitTest\IB.WatchCluster.XUnitTest.csproj", "{C20CD17D-329E-4718-B8BB-6F3C1E0304E1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IB.WatchCluster.ServiceHost", "IB.WatchCluster.ServiceHost\IB.WatchCluster.ServiceHost.csproj", "{7E905AF2-D9B0-4A0E-83E9-350747323B4B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IB.WatchCluster.ServiceHost", "IB.WatchCluster.ServiceHost\IB.WatchCluster.ServiceHost.csproj", "{7E905AF2-D9B0-4A0E-83E9-350747323B4B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IB.WatchCluster.DbSink", "IB.WatchCluster.PgSink\IB.WatchCluster.DbSink.csproj", "{23D56221-046D-42D3-9A3F-B9014D63C9B4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{7E905AF2-D9B0-4A0E-83E9-350747323B4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E905AF2-D9B0-4A0E-83E9-350747323B4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E905AF2-D9B0-4A0E-83E9-350747323B4B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23D56221-046D-42D3-9A3F-B9014D63C9B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23D56221-046D-42D3-9A3F-B9014D63C9B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23D56221-046D-42D3-9A3F-B9014D63C9B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23D56221-046D-42D3-9A3F-B9014D63C9B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
