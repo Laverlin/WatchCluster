@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IB.WatchCluster.XUnitTest",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IB.WatchCluster.ServiceHost", "IB.WatchCluster.ServiceHost\IB.WatchCluster.ServiceHost.csproj", "{7E905AF2-D9B0-4A0E-83E9-350747323B4B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IB.WatchCluster.DbSink", "IB.WatchCluster.PgSink\IB.WatchCluster.DbSink.csproj", "{23D56221-046D-42D3-9A3F-B9014D63C9B4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IB.WatchCluster.DbSink", "IB.WatchCluster.DbSink\IB.WatchCluster.DbSink.csproj", "{23D56221-046D-42D3-9A3F-B9014D63C9B4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
