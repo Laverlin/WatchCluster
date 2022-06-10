@@ -113,6 +113,12 @@ namespace IB.WatchCluster.DbSink
                 //
                 _consumer.Close();
             }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Unhandled exception, shutting down");
+                _consumer.Close();
+                throw;
+            }
         }
 
 
