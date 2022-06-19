@@ -53,10 +53,10 @@ namespace IB.WatchCluster.DbSink
                             "Consumed message {@Key} at: {@TopicPartitionOffset}",
                             cr.Message.Key, cr.TopicPartitionOffset.ToString());
 
-                        cr.Message.Headers.TryGetLastBytes("activityId", out var rawActivityId);
+                        // cr.Message.Headers.TryGetLastBytes("activityId", out var rawActivityId);
                         cr.Message.Headers.TryGetLastBytes("type", out var rawMessageType);
 
-                        using (_activitySource.StartActivity("SinkRequest", ActivityKind.Consumer, Encoding.ASCII.GetString(rawActivityId)))
+                        using (_activitySource.StartActivity("SinkRequest"))
                         {
                             var messageType = SolutionInfo.Assembly.GetTypes().FirstOrDefault(t => t.Name == Encoding.ASCII.GetString(rawMessageType));
                             _logger.LogDebug("Got mssage type {@messageType}", messageType);
@@ -94,7 +94,7 @@ namespace IB.WatchCluster.DbSink
                                     await StoreExchangeRateInfo((ExchangeRateInfo)message);
                                 }
                                 else
-                                { 
+                                {
                                     _logger.LogWarning("Unknown type: @{type}", messageType);
                                     continue;
                                 }

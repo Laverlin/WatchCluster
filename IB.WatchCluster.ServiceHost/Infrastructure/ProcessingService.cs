@@ -96,6 +96,12 @@ namespace IB.WatchCluster.ServiceHost.Infrastructure
                 //
                 _consumer.Close();
             }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Unhandled exception, shutting down");
+                _consumer.Close();
+                throw;
+            }
             return Task.CompletedTask;
         }
     }
