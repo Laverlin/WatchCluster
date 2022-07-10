@@ -5,6 +5,7 @@ using IB.WatchCluster.Abstract.Entity.Configuration;
 using IB.WatchCluster.Api.Entity;
 using IB.WatchCluster.Api.Entity.Configuration;
 using IB.WatchCluster.Api.Infrastructure;
+using IB.WatchCluster.Api.Infrastructure.Middleware;
 using IB.WatchCluster.Api.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
@@ -115,6 +116,8 @@ try
     //
     builder.Services.AddSwagger(apiConfiguration.AuthSettings.Scheme, apiConfiguration.AuthSettings.TokenName);
 
+    
+
     // Setup each request processors
     //
     var app = builder.Build();
@@ -131,6 +134,8 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
+    app.UseMiddleware<ActiveRequestCounterMiddleware>();
+
     app.MapControllers();
     app.MapHealthChecks(
         "/health",
@@ -144,6 +149,6 @@ catch (Exception ex)
 }
 finally
 {
-    Log.Information("Shut down complete");
+    Log.Information("Shutdown complete");
     Log.CloseAndFlush();
 }

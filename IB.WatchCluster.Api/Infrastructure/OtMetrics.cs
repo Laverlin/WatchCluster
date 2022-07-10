@@ -17,6 +17,14 @@ namespace IB.WatchCluster.Api.Infrastructure
         public Counter<long> BufferedFoundCounter { get; }
         public Counter<long> BufferedNotFoundCounter { get; }
 
+
+        public Counter<long> ActiveRequestCounter { get; }
+        public Counter<long> ActiveWSRequestCounter { get; }
+        public Counter<long> HttpRequestCount { get; }
+
+        public Counter<long> HttpErrorCount { get; }
+
+
         public OtMetrics()
         {
             var meter = new Meter(MetricName);
@@ -31,6 +39,11 @@ namespace IB.WatchCluster.Api.Infrastructure
             MessageBufferedCounter = meter.CreateCounter<long>($"{MetricName}_mesage_buffered_count");
             BufferedFoundCounter = meter.CreateCounter<long>($"{MetricName}_buffered_found_count");
             BufferedNotFoundCounter = meter.CreateCounter<long>($"{MetricName}_buffered_lost_count");
+
+            ActiveRequestCounter = meter.CreateCounter<long>($"{MetricName}_activerequest_count");
+            ActiveWSRequestCounter = meter.CreateCounter<long>($"{MetricName}_ws_activerequest_count");
+            HttpRequestCount = meter.CreateCounter<long>($"{MetricName}_httprequest_count");
+            HttpErrorCount = meter.CreateCounter<long>($"{MetricName}_httperror_count");
         }
     }
 }
