@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Text.Json;
+using System.Linq;
 
 namespace IB.WatchCluster.Api.Services
 {
@@ -102,25 +103,21 @@ namespace IB.WatchCluster.Api.Services
 
                     try
                     {
-                        var watchResponse = new WatchResponse
-                        {
-                            RequestId = messages.Select(m => m.RequestId).FirstOrDefault(),
-                            LocationInfo = JsonSerializer.Deserialize<LocationInfo>(
-                                messages
-                                    .Where(m => m.MessageType == nameof(LocationInfo))
-                                    .Select(m => m.Message)
-                                    .FirstOrDefault() ?? "{}"),
-                            WeatherInfo = JsonSerializer.Deserialize<WeatherInfo>(
-                                messages
-                                    .Where(m => m.MessageType == nameof(WeatherInfo))
-                                    .Select(m => m.Message)
-                                    .FirstOrDefault() ?? "{}"),
-                            ExchangeRateInfo = JsonSerializer.Deserialize<ExchangeRateInfo>(
-                                messages
-                                    .Where(m => m.MessageType == nameof(ExchangeRateInfo))
-                                    .Select(m => m.Message)
-                                    .DefaultIfEmpty("{}")
-                                    .Single()),
+                    var watchResponse = new WatchResponse
+                    {
+                        RequestId = messages.Select(m => m.RequestId).FirstOrDefault(),
+                        LocationInfo = JsonSerializer.Deserialize<LocationInfo>(
+                            messages
+                                .Where(m => m.MessageType == nameof(LocationInfo))
+                                .Select(m => m.Message)
+                                .FirstOrDefault() ?? "{}"),
+                        WeatherInfo = JsonSerializer.Deserialize<WeatherInfo>(
+                            messages
+                                .Where(m => m.MessageType == nameof(WeatherInfo))
+                                .Select(m => m.Message)
+                                .FirstOrDefault() ?? "{}"),
+                        ExchangeRateInfo = JsonSerializer.Deserialize<ExchangeRateInfo>(
+                            messages.SingleOrDefault(m => m.MessageType == nameof(ExchangeRateInfo))?.Message ?? "{}")
                         };
                         return watchResponse;
                     }
