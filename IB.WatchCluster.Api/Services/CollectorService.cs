@@ -100,24 +100,19 @@ namespace IB.WatchCluster.Api.Services
                         .Take(3)
                         .TakeUntil(Observable.Timer(TimeSpan.FromSeconds(15)))
                         .ToArray();
+                    _logger.LogInformation("Collect messages {@messages}", messages);
 
                     try
                     {
-                    var watchResponse = new WatchResponse
-                    {
-                        RequestId = messages.Select(m => m.RequestId).FirstOrDefault(),
-                        LocationInfo = JsonSerializer.Deserialize<LocationInfo>(
-                            messages
-                                .Where(m => m.MessageType == nameof(LocationInfo))
-                                .Select(m => m.Message)
-                                .FirstOrDefault() ?? "{}"),
-                        WeatherInfo = JsonSerializer.Deserialize<WeatherInfo>(
-                            messages
-                                .Where(m => m.MessageType == nameof(WeatherInfo))
-                                .Select(m => m.Message)
-                                .FirstOrDefault() ?? "{}"),
-                        ExchangeRateInfo = JsonSerializer.Deserialize<ExchangeRateInfo>(
-                            messages.SingleOrDefault(m => m.MessageType == nameof(ExchangeRateInfo))?.Message ?? "{}")
+                        var watchResponse = new WatchResponse
+                        {
+                            RequestId = messages.Select(m => m.RequestId).FirstOrDefault(),
+                            LocationInfo = JsonSerializer.Deserialize<LocationInfo>(
+                                messages.SingleOrDefault(m => m.MessageType == nameof(LocationInfo))?.Message ?? "{}"),
+                            WeatherInfo = JsonSerializer.Deserialize<WeatherInfo>(
+                                messages.SingleOrDefault(m => m.MessageType == nameof(WeatherInfo))?.Message ?? "{}"),
+                            ExchangeRateInfo = JsonSerializer.Deserialize<ExchangeRateInfo>(
+                                messages.SingleOrDefault(m => m.MessageType == nameof(ExchangeRateInfo))?.Message ?? "{}")
                         };
                         return watchResponse;
                     }
