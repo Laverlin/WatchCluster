@@ -9,7 +9,6 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Text.Json;
-using System.Linq;
 
 namespace IB.WatchCluster.Api.Services
 {
@@ -18,14 +17,14 @@ namespace IB.WatchCluster.Api.Services
         public Task<WatchResponse> GetCollectedMessages(string requestId);
     }
 
-    public class CollectorService: BackgroundService, ICollector
+    public class CollectorService : BackgroundService, ICollector
     {
         private readonly IConsumer<string, string> _kafkaConsumer;
         private readonly KafkaConfiguration _kafkaConfiguration;
         private readonly ILogger _logger;
         private readonly OtMetrics _otMetrics;
         private readonly ActivitySource _activitySource;
-        private readonly ReplaySubject<CollectedMessage> _messageSubject = new (TimeSpan.FromMinutes(1));
+        private readonly ReplaySubject<CollectedMessage> _messageSubject = new(TimeSpan.FromMinutes(1));
 
         public CollectorService(
             IConsumer<string, string> kafkaConsumer, KafkaConfiguration kafkaConfiguration, ILogger<CollectorService> logger, OtMetrics otMetrics)
@@ -92,39 +91,22 @@ namespace IB.WatchCluster.Api.Services
 
         public async Task<WatchResponse> GetCollectedMessages(string requestId)
         {
+            using (_activitySource.StartActivity("CollectMessages"))
+            {
+                var messages = await _messageSubject
+                    .Where(m => m.RequestId == requestId)
+                    .Take(3)
+                    .TakeUntil(Observable.Timer(TimeSpan.FromSeconds(15)))
+                    .ToArray();
 
-                using (_activitySource.StartActivity("CollectMessages"))
+                return new WatchResponse
                 {
-                    var messages = await _messageSubject
-                        .SkipWhile(m => m.RequestId != requestId)
-                        .Take(3)
-                        .TakeUntil(Observable.Timer(TimeSpan.FromSeconds(15)))
-                        .ToArray();
-                    _logger.LogInformation("Collect messages {@messages}", messages);
-
-                    try
-                    {
-                        var watchResponse = new WatchResponse
-                        {
-                            RequestId = messages.Select(m => m.RequestId).FirstOrDefault(),
-                            LocationInfo = JsonSerializer.Deserialize<LocationInfo>(
-                                messages.SingleOrDefault(m => m.MessageType == nameof(LocationInfo))?.Message ?? "{}"),
-                            WeatherInfo = JsonSerializer.Deserialize<WeatherInfo>(
-                                messages.SingleOrDefault(m => m.MessageType == nameof(WeatherInfo))?.Message ?? "{}"),
-                            ExchangeRateInfo = JsonSerializer.Deserialize<ExchangeRateInfo>(
-                                messages.SingleOrDefault(m => m.MessageType == nameof(ExchangeRateInfo))?.Message ?? "{}")
-                        };
-                        return watchResponse;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Collect Message Exception {@messages}", messages);
-                        throw;
-                    }
-
-               
-                }
-
+                    RequestId = messages.Select(m => m.RequestId).FirstOrDefault(),
+                    LocationInfo = deserializeMessage<LocationInfo>(messages),
+                    WeatherInfo = deserializeMessage<WeatherInfo>(messages),
+                    ExchangeRateInfo = deserializeMessage<ExchangeRateInfo>(messages)
+                };
+            }
         }
 
         public override void Dispose()
@@ -132,6 +114,12 @@ namespace IB.WatchCluster.Api.Services
             _kafkaConsumer.Close(); // Commit offsets and leave the group cleanly.
             _kafkaConsumer.Dispose();
             base.Dispose();
+        }
+
+        private T? deserializeMessage<T>(CollectedMessage[] messages)
+        {
+            return JsonSerializer
+                .Deserialize<T>(messages.SingleOrDefault(m => m.MessageType == typeof(T).Name)?.Message ?? "{}");
         }
     }
 }
