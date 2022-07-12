@@ -91,37 +91,48 @@ namespace IB.WatchCluster.Api.Services
 
         public async Task<WatchResponse> GetCollectedMessages(string requestId)
         {
-            using (_activitySource.StartActivity("CollectMessages"))
-            {
-                var messages = await _messageSubject
-                    .SkipWhile(m => m.RequestId != requestId)
-                    .Take(3)
-                    .TakeUntil(Observable.Timer(TimeSpan.FromSeconds(15)))
-                    .ToArray();
 
-                var watchResponse = new WatchResponse
+                using (_activitySource.StartActivity("CollectMessages"))
                 {
-                    RequestId = messages.Select(m => m.RequestId).FirstOrDefault(),
-                    LocationInfo = JsonSerializer.Deserialize<LocationInfo>(
-                        messages
-                            .Where(m => m.MessageType == nameof(LocationInfo))
-                            .Select(m => m.Message)
-                            .FirstOrDefault() ?? "{}"),
-                    WeatherInfo = JsonSerializer.Deserialize<WeatherInfo>(
-                        messages
-                            .Where(m => m.MessageType == nameof(WeatherInfo))
-                            .Select(m => m.Message)
-                            .FirstOrDefault() ?? "{}"),
-                    ExchangeRateInfo = JsonSerializer.Deserialize<ExchangeRateInfo>(
-                        messages
-                            .Where(m => m.MessageType == nameof(ExchangeRateInfo))
-                            .Select(m => m.Message)
-                            .DefaultIfEmpty("{}")
-                            .Single()),
-                };
+                    var messages = await _messageSubject
+                        .SkipWhile(m => m.RequestId != requestId)
+                        .Take(3)
+                        .TakeUntil(Observable.Timer(TimeSpan.FromSeconds(15)))
+                        .ToArray();
 
-                return watchResponse;
-            }
+                    try
+                    {
+                        var watchResponse = new WatchResponse
+                        {
+                            RequestId = messages.Select(m => m.RequestId).FirstOrDefault(),
+                            LocationInfo = JsonSerializer.Deserialize<LocationInfo>(
+                                messages
+                                    .Where(m => m.MessageType == nameof(LocationInfo))
+                                    .Select(m => m.Message)
+                                    .FirstOrDefault() ?? "{}"),
+                            WeatherInfo = JsonSerializer.Deserialize<WeatherInfo>(
+                                messages
+                                    .Where(m => m.MessageType == nameof(WeatherInfo))
+                                    .Select(m => m.Message)
+                                    .FirstOrDefault() ?? "{}"),
+                            ExchangeRateInfo = JsonSerializer.Deserialize<ExchangeRateInfo>(
+                                messages
+                                    .Where(m => m.MessageType == nameof(ExchangeRateInfo))
+                                    .Select(m => m.Message)
+                                    .DefaultIfEmpty("{}")
+                                    .Single()),
+                        };
+                        return watchResponse;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Collect Message Exception {@messages}", messages);
+                        throw;
+                    }
+
+               
+                }
+
         }
 
         public override void Dispose()

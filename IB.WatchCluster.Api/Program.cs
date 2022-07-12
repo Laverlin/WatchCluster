@@ -134,7 +134,7 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
-    app.UseMiddleware<ActiveRequestCounterMiddleware>();
+    app.UseMiddleware<MetricRequestCounterMiddleware>();
 
     app.MapControllers();
     app.MapHealthChecks(

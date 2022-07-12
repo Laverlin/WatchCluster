@@ -49,7 +49,7 @@ namespace IB.WatchCluster.Api.Controllers
         /// </summary>
         /// <param name="watchRequest">watchface data</param>
         /// <returns>weather, location and exchange rate info</returns>
-        [HttpGet, MapToApiVersion("2.0"), Authorize]
+        [HttpGet(Name = "WatchRequest"), MapToApiVersion("2.0"), Authorize]
         [ProducesResponseType(typeof(WatchResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
@@ -101,7 +101,7 @@ namespace IB.WatchCluster.Api.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Request processing error, {@WatchFaceRequest}", watchRequest);
+                _logger.LogError(ex, "Request processing error, {@WatchFaceRequest}", watchRequest);
                 return ex.ReturnErrorResponse();
             }
         }

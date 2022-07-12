@@ -119,7 +119,6 @@ namespace IB.WatchCluster.ServiceHost.Services
             _metrics.ExchangeRateGetCurrencyConverter.Add(1);
 
             var url = string.Format(_exchangeConfig.CurrencyConverterUrlTemplate, _exchangeConfig.CurrencyConverterKey, baseCurrency, targetCurrency);
-            _logger.LogInformation(url);
             using var response = await _httpClient.GetAsync(url);
             if (!response.IsSuccessStatusCode)
             {
