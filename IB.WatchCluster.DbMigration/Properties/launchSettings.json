@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "IB.WatchCluster.DbMigration": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}
