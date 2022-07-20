@@ -82,10 +82,10 @@ jobs:
         push: true
         tags: ilaverlin/watchcluster-dbsink:latest,ilaverlin/watchcluster-dbsink:${{ env.version }} 
         
-    - name: Build and push Migration
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        file: ./IB.WatchCluster.DbMigration/Dockerfile
-        push: true
-        tags: ilaverlin/watchcluster-migration:latest,ilaverlin/watchcluster-migration:${{ env.version }} 
+#    - name: Build and push Migration
+#      uses: docker/build-push-action@v2
+#      with:
+#        context: .
+#        file: ./IB.WatchCluster.DbMigration/Dockerfile
+#        push: true
+#        tags: ilaverlin/watchcluster-migration:latest,ilaverlin/watchcluster-migration:${{ env.version }} 

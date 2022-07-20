@@ -13,8 +13,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IB.WatchCluster.ServiceHost
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IB.WatchCluster.DbSink", "IB.WatchCluster.DbSink\IB.WatchCluster.DbSink.csproj", "{23D56221-046D-42D3-9A3F-B9014D63C9B4}"
 EndProject
-Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "WatchDb", "WatchDb\WatchDb.sqlproj", "{B9E7D255-B85D-4B04-8994-2AD867420A00}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IB.WatchCluster.DbMigration", "IB.WatchCluster.DbMigration\IB.WatchCluster.DbMigration.csproj", "{B43F8901-766A-408D-824C-ADE2BF222E9A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{85DF0F41-00D8-4AF0-A0EC-AEE4EEA3C277}"
@@ -48,12 +46,6 @@ Global
 		{23D56221-046D-42D3-9A3F-B9014D63C9B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{23D56221-046D-42D3-9A3F-B9014D63C9B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{23D56221-046D-42D3-9A3F-B9014D63C9B4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B9E7D255-B85D-4B04-8994-2AD867420A00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B9E7D255-B85D-4B04-8994-2AD867420A00}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B9E7D255-B85D-4B04-8994-2AD867420A00}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{B9E7D255-B85D-4B04-8994-2AD867420A00}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B9E7D255-B85D-4B04-8994-2AD867420A00}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B9E7D255-B85D-4B04-8994-2AD867420A00}.Release|Any CPU.Deploy.0 = Release|Any CPU
 		{B43F8901-766A-408D-824C-ADE2BF222E9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B43F8901-766A-408D-824C-ADE2BF222E9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B43F8901-766A-408D-824C-ADE2BF222E9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
