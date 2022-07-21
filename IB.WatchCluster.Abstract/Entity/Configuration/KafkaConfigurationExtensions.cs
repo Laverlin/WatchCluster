@@ -23,7 +23,7 @@ namespace IB.WatchCluster.Abstract.Entity.Configuration
         public static ConsumerConfig BuildConsumerConfig(this KafkaConfiguration kafkaConfig, string groupId = null)
         {
             var clientId = SolutionInfo.Name;
-            var consumerGroup = groupId ?? kafkaConfig.GroupId ?? SolutionInfo.Name.ToLower();
+            var consumerGroup = kafkaConfig.GroupId ?? groupId ?? SolutionInfo.Name.ToLower();
 
             return new ConsumerConfig 
             { 
