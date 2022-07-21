@@ -55,14 +55,12 @@ try
     //
     builder.Services.AddOpenTelemetryMetrics(builder => builder
         .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(OtMetrics.MetricName))
-//        .AddHttpClientInstrumentation()
         .AddAspNetCoreInstrumentation()
         .AddMeter(OtMetrics.MetricName)
         .AddOtlpExporter(options => options.Endpoint = new Uri(apiConfiguration.OpenTelemetryCollectorUrl)));
 
     builder.Services.AddOpenTelemetryTracing(builder => builder
         .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(SolutionInfo.Name))
-//        .AddHttpClientInstrumentation()
         .AddAspNetCoreInstrumentation()
         .AddSource(SolutionInfo.Name)
         .AddOtlpExporter(options => options.Endpoint = new Uri(apiConfiguration.OpenTelemetryCollectorUrl)));

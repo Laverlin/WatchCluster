@@ -14,40 +14,12 @@ namespace IB.WatchCluster.Abstract.Entity.Configuration
         [Required]
         public string BootstrapServers { get; set; } = default!;
 
-        public string GroupId { get; set; } = "collector-group";
+        public string GroupId { get; set; } = default!;
 
         public string WatchRequestTopic { get; set; } = "watch-request";
 
         public string WatchResponseTopic { get; set; } = "watch-response";
-    }
 
-    /// <summary>
-    /// Build Producer/consumer configs from kafka config
-    /// </summary>
-    public static class KafkaConfigurationExtensions
-    {
-        /// <summary>
-        /// Builds <see cref="ProducerConfig"/>
-        /// </summary>
-        /// <param name="kafkaConfig">loaded & verified kafka config</param>
-        public static ProducerConfig BuildProducerConfig(this KafkaConfiguration kafkaConfig)
-        {
-            return new ProducerConfig { BootstrapServers = kafkaConfig.BootstrapServers };
-        }
-
-        /// <summary>
-        /// Builds <see cref="ConsumerConfig"/>
-        /// </summary>
-        /// <param name="kafkaConfig">loaded & verified kafka config</param>
-        public static ConsumerConfig BuildConsumerConfig(this KafkaConfiguration kafkaConfig)
-        {
-            return new ConsumerConfig 
-            { 
-                BootstrapServers = kafkaConfig.BootstrapServers,
-                GroupId = kafkaConfig.GroupId,
-                ClientId = "Collector",
-                AllowAutoCreateTopics = true,
-            };
-        }
+        public AutoOffsetReset AutoOffsetReset { get; set; } = AutoOffsetReset.Latest;
     }
 }

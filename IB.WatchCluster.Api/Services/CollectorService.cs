@@ -27,7 +27,10 @@ namespace IB.WatchCluster.Api.Services
         private readonly ReplaySubject<CollectedMessage> _messageSubject = new(TimeSpan.FromMinutes(1));
 
         public CollectorService(
-            IConsumer<string, string> kafkaConsumer, KafkaConfiguration kafkaConfiguration, ILogger<CollectorService> logger, OtMetrics otMetrics)
+            IConsumer<string, string> kafkaConsumer,
+            KafkaConfiguration kafkaConfiguration, 
+            ILogger<CollectorService> logger, 
+            OtMetrics otMetrics)
         {
             _kafkaConsumer = kafkaConsumer;
             _kafkaConfiguration = kafkaConfiguration;
@@ -71,7 +74,7 @@ namespace IB.WatchCluster.Api.Services
                 }
                 catch (ConsumeException e)
                 {
-                    _logger.LogError("Consume error: {@error}", e.Error.Reason);
+                    _logger.LogError(e, "Consume error: {@error}", e.Error.Reason);
 
                     if (e.Error.IsFatal)
                     {
@@ -99,13 +102,15 @@ namespace IB.WatchCluster.Api.Services
                     .TakeUntil(Observable.Timer(TimeSpan.FromSeconds(15)))
                     .ToArray();
 
-                return new WatchResponse
+                var response = new WatchResponse
                 {
                     RequestId = messages.Select(m => m.RequestId).FirstOrDefault(),
                     LocationInfo = deserializeMessage<LocationInfo>(messages),
                     WeatherInfo = deserializeMessage<WeatherInfo>(messages),
                     ExchangeRateInfo = deserializeMessage<ExchangeRateInfo>(messages)
                 };
+
+                return response;
             }
         }
 

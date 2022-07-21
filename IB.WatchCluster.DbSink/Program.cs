@@ -39,10 +39,7 @@ await Host.CreateDefaultBuilder(args)
     {
         var appConfig = hostContext.Configuration.LoadVerifiedConfiguration<DbSinkConfiguration>();
         var kafkaConfig = hostContext.Configuration.LoadVerifiedConfiguration<KafkaConfiguration>();
-        var pgProviderConfig = hostContext.Configuration.LoadVerifiedConfiguration<IDbProviderConfiguration, PgProviderConfiguration>();
-        var consumerConfig = kafkaConfig.BuildConsumerConfig();
-        consumerConfig.AutoOffsetReset = AutoOffsetReset.Latest;
-        consumerConfig.GroupId = $"DbSink";
+        var consumerConfig = kafkaConfig.BuildConsumerConfig("watchface-dbsink");
 
         services.AddOpenTelemetryTracing(builder => builder
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(SolutionInfo.Name))
@@ -54,12 +51,12 @@ await Host.CreateDefaultBuilder(args)
              .AddMeter(OtMetrics.MetricName)
              .AddOtlpExporter(options => options.Endpoint = new Uri(appConfig.OpenTelemetryCollectorUrl)));
 
-        services.AddSingleton<IDbProviderConfiguration>(pgProviderConfig);
+        services.AddSingleton(
+            new DataConnectionFactory(hostContext.Configuration.LoadVerifiedConfiguration<PgProviderConfiguration>()));
         services.AddSingleton<OtMetrics>();
         services.AddSingleton(new ActivitySource(SolutionInfo.Name));
         services.AddSingleton(kafkaConfig);
         services.AddSingleton(new ConsumerBuilder<string, string>(consumerConfig).Build());
-        services.AddSingleton<DataConnectionFactory>();
         services.AddHostedService<SinkService>();
 
     })
