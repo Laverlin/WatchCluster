@@ -14,6 +14,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
+using Serilog.Enrichers.Span;
 using System.Diagnostics;
 
 // Set Bootstrap logger
@@ -37,6 +38,7 @@ try
     var logger = new LoggerConfiguration()
       .ReadFrom.Configuration(builder.Configuration)
       .Enrich.FromLogContext()
+      .Enrich.WithSpan()
       .Enrich.WithProperty("version", SolutionInfo.Version)
       .Enrich.WithProperty("Application", SolutionInfo.Name)
       .CreateLogger();
@@ -73,7 +75,7 @@ try
     builder.Services.AddSingleton<KafkaConfiguration>(kafkaConfig);
     builder.Services.AddSingleton<ProducerConfig>(kafkaConfig.BuildProducerConfig());
     builder.Services.AddSingleton<IConsumer<string, string>>(
-        new ConsumerBuilder<string, string>(kafkaConfig.BuildConsumerConfig()).Build());
+        new ConsumerBuilder<string, string>(kafkaConfig.BuildConsumerConfig("api-collector")).Build());
     builder.Services.AddSingleton<KafkaProducerCore>();
     builder.Services.AddSingleton<IKafkaProducer<string, string>, KafkaProducer<string, string>>();
     builder.Services.AddSingleton<CollectorService>();
@@ -100,7 +102,7 @@ try
     //
     builder.Services
         .AddHealthChecks()
-        .AddKafka(kafkaConfig.BuildProducerConfig());
+        .AddKafka(kafkaConfig.BuildProducerConfig(), "heathcheck");
 
     builder.Services.AddApiVersioning(options =>
     {

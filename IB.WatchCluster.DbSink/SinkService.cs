@@ -1,15 +1,13 @@
 ﻿using Confluent.Kafka;
-using IB.WatchCluster.Abstract;
 using IB.WatchCluster.Abstract.Entity.Configuration;
 using IB.WatchCluster.Abstract.Entity.WatchFace;
+using IB.WatchCluster.Abstract.Kafka;
 using IB.WatchCluster.DbSink.Infrastructure;
 using LinqToDB;
 using LinqToDB.Data;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Text;
-using System.Text.Json;
 
 namespace IB.WatchCluster.DbSink
 {
@@ -53,49 +51,34 @@ namespace IB.WatchCluster.DbSink
                             "Consumed message {@Key} at: {@TopicPartitionOffset}",
                             cr.Message.Key, cr.TopicPartitionOffset.ToString());
 
-                        // cr.Message.Headers.TryGetLastBytes("activityId", out var rawActivityId);
-                        cr.Message.Headers.TryGetLastBytes("type", out var rawMessageType);
-
                         using (_activitySource.StartActivity("SinkRequest"))
                         {
-                            var messageType = SolutionInfo.Assembly.GetTypes().FirstOrDefault(t => t.Name == Encoding.ASCII.GetString(rawMessageType));
-                            _logger.LogDebug("Got mssage type {@messageType}", messageType);
-                            if (messageType == null)
-                            {
-                                _logger.LogWarning("The message type of {@message} is null", cr.Message);
+                            if (!cr.Message.TryParseMessage(out var message))
                                 continue;
-                            }
-
-                            var message = JsonSerializer.Deserialize(cr.Message.Value, messageType);
-                            if (message == null)
-                            {
-                                _logger.LogWarning("Can not parse {@message} of type {@type}", cr.Message.Value, messageType);
-                                continue;
-                            }
 
                             _logger.LogDebug("Push to DB {@message}", message);
 
                             using (var db = _dataConnectionFactory.Create())
                             {
-                                if (messageType == typeof(WatchRequest))
+                                if (message.Header.MessageType == typeof(WatchRequest))
                                 {
-                                    await StoreWatchRequest((WatchRequest)message);
+                                    await StoreWatchRequest((WatchRequest)message.Value);
                                 }
-                                else if (messageType == typeof(LocationInfo))
+                                else if (message.Header.MessageType == typeof(LocationInfo))
                                 {
-                                    await StoreLocationInfo((LocationInfo)message);
+                                    await StoreLocationInfo((LocationInfo)message.Value);
                                 }
-                                else if (messageType == typeof(WeatherInfo))
+                                else if (message.Header.MessageType == typeof(WeatherInfo))
                                 {
-                                    await StoreWeatherInfo((WeatherInfo)message);
+                                    await StoreWeatherInfo((WeatherInfo)message.Value);
                                 }
-                                else if (messageType == typeof(ExchangeRateInfo))
+                                else if (message.Header.MessageType == typeof(ExchangeRateInfo))
                                 {
-                                    await StoreExchangeRateInfo((ExchangeRateInfo)message);
+                                    await StoreExchangeRateInfo((ExchangeRateInfo)message.Value);
                                 }
                                 else
                                 {
-                                    _logger.LogWarning("Unknown type: @{type}", messageType);
+                                    _logger.LogWarning("Unknown type: @{type}", message.Header.MessageType);
                                     continue;
                                 }
                             }

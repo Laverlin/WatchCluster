@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using IB.WatchCluster.DbSink.Infrastructure;
+using System.ComponentModel;
 using System.Reflection;
 using System.Text;
 
@@ -40,6 +41,14 @@ namespace IB.WatchCluster.DbSink.Configuration
             });
 
             return _connectionString.Value;
+        }
+
+        /// <summary>
+        /// creates new connection factory based on provided configuration
+        /// </summary>
+        public static DataConnectionFactory ConnectionFactory(this IDbProviderConfiguration dbProviderConfiguration)
+        {
+            return new DataConnectionFactory(dbProviderConfiguration);
         }
     }
 }

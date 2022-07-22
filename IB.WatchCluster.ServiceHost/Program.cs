@@ -40,9 +40,7 @@ await Host.CreateDefaultBuilder(args)
     {
         var appConfig = hostContext.Configuration.LoadVerifiedConfiguration<AppConfiguration>();
         var kafkaConfig = hostContext.Configuration.LoadVerifiedConfiguration<KafkaConfiguration>();
-        var consumerConfig = kafkaConfig.BuildConsumerConfig();
-        consumerConfig.AutoOffsetReset = AutoOffsetReset.Latest;
-        consumerConfig.GroupId = $"ServiceHost-{appConfig.Handler}";
+        var consumerConfig = kafkaConfig.BuildConsumerConfig($"sh-{appConfig.Handler.ToLower()}");
 
         services.AddOpenTelemetryTracing(builder => builder
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(SolutionInfo.Name))

@@ -39,7 +39,7 @@ await Host.CreateDefaultBuilder(args)
     {
         var appConfig = hostContext.Configuration.LoadVerifiedConfiguration<DbSinkConfiguration>();
         var kafkaConfig = hostContext.Configuration.LoadVerifiedConfiguration<KafkaConfiguration>();
-        var consumerConfig = kafkaConfig.BuildConsumerConfig("watchface-dbsink");
+        var consumerConfig = kafkaConfig.BuildConsumerConfig("dbsink-postgres");
 
         services.AddOpenTelemetryTracing(builder => builder
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(SolutionInfo.Name))
@@ -51,8 +51,9 @@ await Host.CreateDefaultBuilder(args)
              .AddMeter(OtMetrics.MetricName)
              .AddOtlpExporter(options => options.Endpoint = new Uri(appConfig.OpenTelemetryCollectorUrl)));
 
-        services.AddSingleton(
-            new DataConnectionFactory(hostContext.Configuration.LoadVerifiedConfiguration<PgProviderConfiguration>()));
+        services.AddSingleton(hostContext.Configuration
+            .LoadVerifiedConfiguration<PgProviderConfiguration>()
+            .ConnectionFactory());
         services.AddSingleton<OtMetrics>();
         services.AddSingleton(new ActivitySource(SolutionInfo.Name));
         services.AddSingleton(kafkaConfig);
