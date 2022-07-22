@@ -38,9 +38,9 @@ try
     var logger = new LoggerConfiguration()
       .ReadFrom.Configuration(builder.Configuration)
       .Enrich.FromLogContext()
-      .Enrich.WithSpan()
       .Enrich.WithProperty("version", SolutionInfo.Version)
       .Enrich.WithProperty("Application", SolutionInfo.Name)
+      .Enrich.WithSpan()
       .CreateLogger();
     Log.Logger = logger;
     builder.Logging.ClearProviders();
