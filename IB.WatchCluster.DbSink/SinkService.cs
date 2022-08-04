@@ -18,7 +18,7 @@ namespace IB.WatchCluster.DbSink
         private readonly DataConnectionFactory _dataConnectionFactory;
         private readonly ILogger _logger;
         private readonly ActivitySource _activitySource;
-        private readonly OtMetrics _otMetrics;
+        private readonly OtelMetrics _otelMetrics;
 
         public SinkService(
             KafkaConfiguration kafkaConfig,
@@ -26,14 +26,14 @@ namespace IB.WatchCluster.DbSink
             DataConnectionFactory dataConnectionFactory,
             ILogger<SinkService> logger,
             ActivitySource activitySource,
-            OtMetrics otMetrics)
+            OtelMetrics otelMetrics)
         {
             _kafkaConfig = kafkaConfig;
             _consumer = consumer;
             _dataConnectionFactory = dataConnectionFactory;
             _logger = logger;
             _activitySource = activitySource;
-            _otMetrics = otMetrics;
+            _otelMetrics = otelMetrics;
         }
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -60,27 +60,18 @@ namespace IB.WatchCluster.DbSink
 
                             using (var db = _dataConnectionFactory.Create())
                             {
-                                if (message.Header.MessageType == typeof(WatchRequest))
+                                switch (message.Value)
                                 {
-                                    await StoreWatchRequest((WatchRequest)message.Value);
+                                    case WatchRequest msg: await SinkMessage(msg); break;
+                                    case LocationInfo msg: await SinkMessage(msg); break;
+                                    case WeatherInfo msg: await SinkMessage(msg); break;
+                                    case ExchangeRateInfo msg: await SinkMessage(msg); break;
+                                    default:
+                                        _logger.LogWarning("Unknown type: @{type}", message.Header.MessageType);
+                                        continue;
                                 }
-                                else if (message.Header.MessageType == typeof(LocationInfo))
-                                {
-                                    await StoreLocationInfo((LocationInfo)message.Value);
-                                }
-                                else if (message.Header.MessageType == typeof(WeatherInfo))
-                                {
-                                    await StoreWeatherInfo((WeatherInfo)message.Value);
-                                }
-                                else if (message.Header.MessageType == typeof(ExchangeRateInfo))
-                                {
-                                    await StoreExchangeRateInfo((ExchangeRateInfo)message.Value);
-                                }
-                                else
-                                {
-                                    _logger.LogWarning("Unknown type: @{type}", message.Header.MessageType);
-                                    continue;
-                                }
+
+                                _otelMetrics.IncrementSink(message.Header.MessageType);
                             }
                         }
                     }
@@ -104,8 +95,7 @@ namespace IB.WatchCluster.DbSink
             }
         }
 
-
-        private async Task StoreWatchRequest(WatchRequest watchRequest)
+        private async Task SinkMessage(WatchRequest watchRequest)
         {
             using (var db = _dataConnectionFactory.Create())
             {
@@ -141,10 +131,9 @@ namespace IB.WatchCluster.DbSink
                         DeviceDataId = deviceData.Id,
                     });
             }
-            _otMetrics.WatchRequestSink.Add(1);
         }
 
-        private async Task StoreLocationInfo(LocationInfo locationInfo)
+        private async Task SinkMessage(LocationInfo locationInfo)
         {
             using (var db = _dataConnectionFactory.Create())
             {
@@ -158,10 +147,9 @@ namespace IB.WatchCluster.DbSink
                     CityName = locationInfo.CityName,
                 });
             }
-            _otMetrics.LocationSink.Add(1);
         }
 
-        private async Task StoreWeatherInfo(WeatherInfo weatherInfo)
+        private async Task SinkMessage(WeatherInfo weatherInfo)
         {
             using (var db = _dataConnectionFactory.Create())
             {
@@ -180,10 +168,9 @@ namespace IB.WatchCluster.DbSink
                     PrecipProbability = weatherInfo.PrecipProbability,
                 });
             }
-            _otMetrics.WeatherSink.Add(1);
         }
 
-        private async Task StoreExchangeRateInfo(ExchangeRateInfo exchangeRateInfo)
+        private async Task SinkMessage(ExchangeRateInfo exchangeRateInfo)
         {
             using (var db = _dataConnectionFactory.Create())
             {
@@ -197,7 +184,6 @@ namespace IB.WatchCluster.DbSink
                     ExchangeRate = exchangeRateInfo.ExchangeRate,
                 });
             }
-            _otMetrics.ExchangeRateSink.Add(1);
         }
     }
 }

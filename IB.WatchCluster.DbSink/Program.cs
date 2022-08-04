@@ -47,14 +47,14 @@ await Host.CreateDefaultBuilder(args)
             .AddOtlpExporter(options => options.Endpoint = new Uri(appConfig.OpenTelemetryCollectorUrl)));
 
         services.AddOpenTelemetryMetrics(builder => builder
-             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(OtMetrics.MetricName))
-             .AddMeter(OtMetrics.MetricName)
+             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(OtelMetrics.MetricName))
+             .AddMeter(OtelMetrics.MetricName)
              .AddOtlpExporter(options => options.Endpoint = new Uri(appConfig.OpenTelemetryCollectorUrl)));
 
         services.AddSingleton(hostContext.Configuration
             .LoadVerifiedConfiguration<PgProviderConfiguration>()
             .ConnectionFactory());
-        services.AddSingleton<OtMetrics>();
+        services.AddSingleton<OtelMetrics>();
         services.AddSingleton(new ActivitySource(SolutionInfo.Name));
         services.AddSingleton(kafkaConfig);
         services.AddSingleton(new ConsumerBuilder<string, string>(consumerConfig).Build());
