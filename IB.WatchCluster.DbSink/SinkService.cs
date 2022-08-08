@@ -7,6 +7,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using System.Diagnostics;
 
 namespace IB.WatchCluster.DbSink
@@ -78,6 +79,10 @@ namespace IB.WatchCluster.DbSink
                     catch (ConsumeException e)
                     {
                         _logger.LogWarning(e, "Consume Exception");
+                    }
+                    catch (NpgsqlException dbException)
+                    {
+                        _logger.LogError(dbException, "Database Exception");
                     }
                 }
             }

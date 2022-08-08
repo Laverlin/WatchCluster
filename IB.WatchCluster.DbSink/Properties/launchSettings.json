@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "IB.WatchCluster.PgSink": {
+    "IB.WatchCluster.DbSink": {
       "commandName": "Project",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
