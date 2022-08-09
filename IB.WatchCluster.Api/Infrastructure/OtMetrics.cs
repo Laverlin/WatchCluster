@@ -4,7 +4,6 @@ namespace IB.WatchCluster.Api.Infrastructure
 {
     public class OtMetrics
     {
-        public const string MetricName = "WatchCluster";
         public Counter<long> NoTokenCounter { get; }
         public Counter<long> WrongTokenCounter { get; }
         public Counter<long> OkTokenCounter { get; }
@@ -20,30 +19,36 @@ namespace IB.WatchCluster.Api.Infrastructure
 
         public Counter<long> ActiveRequestCounter { get; }
         public Counter<long> ActiveWSRequestCounter { get; }
-        public Counter<long> HttpRequestCount { get; }
 
-        public Counter<long> HttpErrorCount { get; }
+        private Counter<long> HttpRequestCount { get; }
 
 
-        public OtMetrics()
+
+        public OtMetrics(string metricJob = "WatchCluster", string metricSolution = "wc", string metricProject = "api")
         {
-            var meter = new Meter(MetricName);
-            NoTokenCounter = meter.CreateCounter<long>($"{MetricName}_token_no_token");
-            WrongTokenCounter = meter.CreateCounter<long>($"{MetricName}_token_wrong_token");
-            OkTokenCounter = meter.CreateCounter<long>($"{MetricName}_token_ok_token");
+            var meter = new Meter(metricJob);
+            MetricJob = metricJob;
 
-            ProducedCounter = meter.CreateCounter<long>($"{MetricName}_mesage_produced_count");
-            CollectedCounter = meter.CreateCounter<long>($"{MetricName}_mesage_collected_count");
-            LostCounter = meter.CreateCounter<long>($"{MetricName}_mesage_lost_count");
+            NoTokenCounter = meter.CreateCounter<long>($"{MetricJob}_token_no_token");
+            WrongTokenCounter = meter.CreateCounter<long>($"{MetricJob}_token_wrong_token");
+            OkTokenCounter = meter.CreateCounter<long>($"{MetricJob}_token_ok_token");
 
-            MessageBufferedCounter = meter.CreateCounter<long>($"{MetricName}_mesage_buffered_count");
-            BufferedFoundCounter = meter.CreateCounter<long>($"{MetricName}_buffered_found_count");
-            BufferedNotFoundCounter = meter.CreateCounter<long>($"{MetricName}_buffered_lost_count");
+            ProducedCounter = meter.CreateCounter<long>($"{MetricJob}_mesage_produced_count");
+            CollectedCounter = meter.CreateCounter<long>($"{MetricJob}_mesage_collected_count");
+            LostCounter = meter.CreateCounter<long>($"{MetricJob}_mesage_lost_count");
 
-            ActiveRequestCounter = meter.CreateCounter<long>($"{MetricName}_activerequest_count");
-            ActiveWSRequestCounter = meter.CreateCounter<long>($"{MetricName}_ws_activerequest_count");
-            HttpRequestCount = meter.CreateCounter<long>($"{MetricName}_httprequest_count");
-            HttpErrorCount = meter.CreateCounter<long>($"{MetricName}_httperror_count");
+            MessageBufferedCounter = meter.CreateCounter<long>($"{MetricJob}_mesage_buffered_count");
+            BufferedFoundCounter = meter.CreateCounter<long>($"{MetricJob}_buffered_found_count");
+            BufferedNotFoundCounter = meter.CreateCounter<long>($"{MetricJob}_buffered_lost_count");
+
+            ActiveRequestCounter = meter.CreateCounter<long>($"{MetricJob}_activerequest_count");
+            ActiveWSRequestCounter = meter.CreateCounter<long>($"{MetricJob}_ws_activerequest_count");
+
+            HttpRequestCount = meter.CreateCounter<long>($"{metricSolution}_{metricProject}_httprequest_count");
         }
+
+        public string MetricJob { get; }
+
+        public void IncrementRequestCounter(KeyValuePair<string, object?>[] tags) => HttpRequestCount.Add(1, tags);
     }
 }

@@ -52,13 +52,14 @@ try
     builder.Configuration.AddEnvironmentVariables();
     var apiConfiguration = builder.Configuration.LoadVerifiedConfiguration<ApiConfiguration>();
     var kafkaConfig = builder.Configuration.LoadVerifiedConfiguration<KafkaConfiguration>();
+    var otelMetrics = new OtMetrics();
 
     // Metrics & Tracing
     //
     builder.Services.AddOpenTelemetryMetrics(b => b
-        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(OtMetrics.MetricName))
+        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(otelMetrics.MetricJob))
         .AddAspNetCoreInstrumentation()
-        .AddMeter(OtMetrics.MetricName)
+        .AddMeter(otelMetrics.MetricJob)
         .AddOtlpExporter(options => options.Endpoint = new Uri(apiConfiguration.OpenTelemetryCollectorUrl)));
 
     builder.Services.AddOpenTelemetryTracing(b => b
@@ -71,8 +72,7 @@ try
     //
     builder.Services.AddScoped<RequestRateLimit>();
     builder.Services.AddSingleton(new ActivitySource(SolutionInfo.Name));
-    builder.Services.AddSingleton<OtMetrics>();
-    builder.Services.AddSingleton<OtelMetrics>();
+    builder.Services.AddSingleton(otelMetrics);
     builder.Services.AddSingleton<KafkaConfiguration>(kafkaConfig);
     builder.Services.AddSingleton<ProducerConfig>(kafkaConfig.BuildProducerConfig());
     builder.Services.AddSingleton<IConsumer<string, string>>(
