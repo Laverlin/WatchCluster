@@ -10,7 +10,8 @@ namespace IB.WatchCluster.DbSink.Infrastructure
         public const string TagName = "type";
 
         public void IncrementSink<T>() => IncrementSink(typeof(T));
-        public void IncrementSink(Type sinkType) => _sinkCounter.Add(1, new KeyValuePair<string, object?>(TagName, sinkType.Name.ToLower()));
+        public void IncrementSink(Type sinkType) => 
+            _sinkCounter.Add(1, new KeyValuePair<string, object?>(TagName, sinkType.Name.ToLower()));
 
         public OtelMetrics()
         {

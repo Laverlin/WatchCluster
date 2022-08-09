@@ -55,13 +55,13 @@ try
 
     // Metrics & Tracing
     //
-    builder.Services.AddOpenTelemetryMetrics(builder => builder
+    builder.Services.AddOpenTelemetryMetrics(b => b
         .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(OtMetrics.MetricName))
         .AddAspNetCoreInstrumentation()
         .AddMeter(OtMetrics.MetricName)
         .AddOtlpExporter(options => options.Endpoint = new Uri(apiConfiguration.OpenTelemetryCollectorUrl)));
 
-    builder.Services.AddOpenTelemetryTracing(builder => builder
+    builder.Services.AddOpenTelemetryTracing(b => b
         .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(SolutionInfo.Name))
         .AddAspNetCoreInstrumentation()
         .AddSource(SolutionInfo.Name)
@@ -72,6 +72,7 @@ try
     builder.Services.AddScoped<RequestRateLimit>();
     builder.Services.AddSingleton(new ActivitySource(SolutionInfo.Name));
     builder.Services.AddSingleton<OtMetrics>();
+    builder.Services.AddSingleton<OtelMetrics>();
     builder.Services.AddSingleton<KafkaConfiguration>(kafkaConfig);
     builder.Services.AddSingleton<ProducerConfig>(kafkaConfig.BuildProducerConfig());
     builder.Services.AddSingleton<IConsumer<string, string>>(
@@ -80,7 +81,7 @@ try
     builder.Services.AddSingleton<IKafkaProducer<string, string>, KafkaProducer<string, string>>();
     builder.Services.AddSingleton<CollectorService>();
     builder.Services.AddSingleton<ICollector>(provider => provider.GetRequiredService<CollectorService>());
-    builder.Services.AddHostedService<CollectorService>(provider => provider.GetRequiredService<CollectorService>());
+    builder.Services.AddHostedService(provider => provider.GetRequiredService<CollectorService>());
 
     builder.Services.AddControllers();
 
@@ -102,7 +103,7 @@ try
     //
     builder.Services
         .AddHealthChecks()
-        .AddKafka(kafkaConfig.BuildProducerConfig(), "heathcheck");
+        .AddKafka(kafkaConfig.BuildProducerConfig(), "healthcheck");
 
     builder.Services.AddApiVersioning(options =>
     {
@@ -125,6 +126,7 @@ try
     app.UseSerilogRequestLogging();
 
     // Configure the HTTP request pipeline.
+    //
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
