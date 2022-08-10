@@ -22,7 +22,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
             // Arrange
             //
             var loggerMock = new Mock<ILogger<YAFaceController>>();
-            var otMetricsMock = new Mock<OtMetrics>();
+            var otMetricsMock = new Mock<OtMetrics>("", "", "");
             var kafkaConfigMock = new Mock<KafkaConfiguration>();
             var activitySourceMock = new ActivitySource("test-source");
             var deliveryResult = new DeliveryResult<string, string> 
@@ -63,12 +63,12 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 
 
         [Fact]
-        public async Task GetShoudRetunResultInternalErrorIfRequestIdIsLost()
+        public async Task GetShouldReturnResultInternalErrorIfRequestIdIsLost()
         {
             // Arrange
             //
             var loggerMock = new Mock<ILogger<YAFaceController>>();
-            var otMetricsMock = new Mock<OtMetrics>();
+            var otMetricsMock = new Mock<OtMetrics>("", "", "");
             var kafkaConfigMock = new Mock<KafkaConfiguration>();
             var activitySourceMock = new ActivitySource("test-source");
             var deliveryResult = new DeliveryResult<string, string>
