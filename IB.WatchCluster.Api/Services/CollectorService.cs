@@ -22,7 +22,7 @@ public class CollectorService: BackgroundService, ICollector
     private readonly IConsumer<string, string> _kafkaConsumer;
     private readonly KafkaConfiguration _kafkaConfiguration;
     private readonly ILogger _logger;
-    private readonly OtMetrics _otMetrics;
+    private readonly OtelMetrics _otelMetrics;
     private readonly ActivitySource _activitySource;
     private readonly ReplaySubject<CollectedMessage> _messageSubject = new(TimeSpan.FromMinutes(1));
 
@@ -30,12 +30,12 @@ public class CollectorService: BackgroundService, ICollector
         IConsumer<string, string> kafkaConsumer,
         KafkaConfiguration kafkaConfiguration, 
         ILogger<CollectorService> logger, 
-        OtMetrics otMetrics)
+        OtelMetrics otelMetrics)
     {
         _kafkaConsumer = kafkaConsumer;
         _kafkaConfiguration = kafkaConfiguration;
         _logger = logger;
-        _otMetrics = otMetrics;
+        _otelMetrics = otelMetrics;
         _activitySource = new ActivitySource(SolutionInfo.Name);
     }
 
@@ -66,7 +66,7 @@ public class CollectorService: BackgroundService, ICollector
 
                 _logger.LogDebug("Collector got {@message}", message);
                 _messageSubject.OnNext(message);
-                _otMetrics.MessageBufferedCounter.Add(1);
+                _otelMetrics.MessageBufferedCounter.Add(1);
             }
             catch (OperationCanceledException)
             {

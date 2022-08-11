@@ -10,6 +10,33 @@ namespace IB.WatchCluster.Abstract.Kafka
 {
     public static class MessageExtensions
     {
+        public static KnownMessage CreateMessage<T>(string key, string activityId, T message)
+        {
+            return new KnownMessage
+            {
+                Key = key,
+                Value = message,
+                Header = new MessageHeader
+                {
+                    ActivityId = activityId,
+                    MessageType = typeof(T)
+                }
+            };
+        }
+
+        public static Message<string, string> ToKafkaMessage(this KnownMessage message)
+        {
+            return new Message<string, string>
+            {
+                Headers = new Headers
+                {
+                    new Header("activityId", Encoding.ASCII.GetBytes(message.Header.ActivityId)),
+                    new Header("type", Encoding.ASCII.GetBytes(message.Header.MessageType.Name))
+                },
+                Key = message.Key,
+                Value = JsonSerializer.Serialize(message.Value)
+            };
+        }
         public static MessageHeader GetHeader(this Message<string, string> message)
         {
             if (!message.Headers.TryGetLastBytes("type", out var rawMessageType))

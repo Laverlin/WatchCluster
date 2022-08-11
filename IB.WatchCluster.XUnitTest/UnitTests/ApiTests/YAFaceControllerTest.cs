@@ -21,8 +21,8 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
         {
             // Arrange
             //
-            var loggerMock = new Mock<ILogger<YAFaceController>>();
-            var otMetricsMock = new Mock<OtMetrics>("", "", "");
+            var loggerMock = new Mock<ILogger<YaFaceController>>();
+            var otMetricsMock = new Mock<OtelMetrics>("", "", "");
             var kafkaConfigMock = new Mock<KafkaConfiguration>();
             var activitySourceMock = new ActivitySource("test-source");
             var deliveryResult = new DeliveryResult<string, string> 
@@ -43,7 +43,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
                 .Verifiable();
 
             
-            var controller = new YAFaceController(
+            var controller = new YaFaceController(
                 loggerMock.Object, otMetricsMock.Object, activitySourceMock, kafkaConfigMock.Object, kafkaProducerMock.Object, collectorConsumerMock.Object);
             controller.ControllerContext.HttpContext = new DefaultHttpContext();
             controller.HttpContext.TraceIdentifier = requestId;
@@ -67,8 +67,8 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
         {
             // Arrange
             //
-            var loggerMock = new Mock<ILogger<YAFaceController>>();
-            var otMetricsMock = new Mock<OtMetrics>("", "", "");
+            var loggerMock = new Mock<ILogger<YaFaceController>>();
+            var otMetricsMock = new Mock<OtelMetrics>("", "", "");
             var kafkaConfigMock = new Mock<KafkaConfiguration>();
             var activitySourceMock = new ActivitySource("test-source");
             var deliveryResult = new DeliveryResult<string, string>
@@ -89,7 +89,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
                 .Verifiable();
 
 
-            var controller = new YAFaceController(
+            var controller = new YaFaceController(
                 loggerMock.Object, otMetricsMock.Object, activitySourceMock, kafkaConfigMock.Object, kafkaProducerMock.Object, collectorConsumerMock.Object);
             controller.ControllerContext.HttpContext = new DefaultHttpContext();
             controller.HttpContext.TraceIdentifier = requestId;

@@ -8,7 +8,6 @@ using Moq;
 using System.Text;
 using System.Threading;
 using Xunit;
-using OtMetrics = IB.WatchCluster.Api.Infrastructure.OtMetrics;
 
 namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 {
@@ -27,7 +26,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
             // Arrange
             //
             var loggerMock = new Mock<ILogger<CollectorService>>();
-            var otMetricsMock = new Mock<OtMetrics>("", "", "");
+            var otMetricsMock = new Mock<OtelMetrics>("", "", "");
             var kafkaConfigMock = new Mock<KafkaConfiguration>();
 
             var consumerMock = new Mock<IConsumer<string, string>>();
@@ -58,7 +57,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
             // Arrange
             //
             var loggerMock = new Mock<ILogger<CollectorService>>();
-            var otMetricsMock = new Moq.Mock<OtMetrics>("", "", "");
+            var otMetricsMock = new Moq.Mock<OtelMetrics>("", "", "");
             var kafkaConfigMock = new Mock<KafkaConfiguration>();
 
             var consumerMock = new Mock<IConsumer<string, string>>();
@@ -96,7 +95,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
             // Arrange
             //
             var loggerMock = new Mock<ILogger<CollectorService>>();
-            var otMetricsMock = new Mock<OtMetrics>("", "", "");
+            var otMetricsMock = new Mock<OtelMetrics>("", "", "");
             var kafkaConfigMock = new Mock<KafkaConfiguration>();
 
             var consumerMock = new Mock<IConsumer<string, string>>();
@@ -155,7 +154,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
             // Arrange
             //
             var loggerMock = new Mock<ILogger<CollectorService>>();
-            var otMetricsMock = new Mock<OtMetrics>("","","");
+            var otMetricsMock = new Mock<OtelMetrics>("","","");
             var kafkaConfigMock = new Mock<KafkaConfiguration>();
 
             var consumerMock = new Mock<IConsumer<string, string>>();

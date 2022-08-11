@@ -52,7 +52,7 @@ try
     builder.Configuration.AddEnvironmentVariables();
     var apiConfiguration = builder.Configuration.LoadVerifiedConfiguration<ApiConfiguration>();
     var kafkaConfig = builder.Configuration.LoadVerifiedConfiguration<KafkaConfiguration>();
-    var otelMetrics = new OtMetrics();
+    var otelMetrics = new OtelMetrics();
 
     // Metrics & Tracing
     //
@@ -122,6 +122,7 @@ try
     var app = builder.Build();
 
     app.UseSerilogRequestLogging();
+    app.UseMiddleware<MetricRequestCounterMiddleware>();
 
     // Configure the HTTP request pipeline.
     //
@@ -133,9 +134,7 @@ try
 
     app.UseAuthentication();
     app.UseAuthorization();
-
-    app.UseMiddleware<MetricRequestCounterMiddleware>();
-
+    
     app.MapControllers();
     app.MapHealthChecks(
         "/health",

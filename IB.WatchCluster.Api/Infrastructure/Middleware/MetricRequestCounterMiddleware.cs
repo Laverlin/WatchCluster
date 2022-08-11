@@ -3,14 +3,12 @@
     public class MetricRequestCounterMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly OtMetrics _oldMetrics;
+        private readonly OtelMetrics _otelMetrics;
 
-        public MetricRequestCounterMiddleware(
-            RequestDelegate next,
-            OtMetrics oldMetrics)
+        public MetricRequestCounterMiddleware(RequestDelegate next, OtelMetrics otelMetrics)
         {
             _next = next ?? throw new ArgumentNullException(nameof(next));
-            _oldMetrics = oldMetrics;
+            _otelMetrics = otelMetrics;
         }
 
         public async Task Invoke(HttpContext context)
@@ -29,7 +27,7 @@
 
         private void RequestCountIncrement(HttpContext context, int statusCode)
         {
-            _oldMetrics.IncrementRequestCounter(new [] 
+            _otelMetrics.IncrementRequestCounter(new [] 
             {
                 new KeyValuePair<string, object?>("status-code", statusCode),
                 new KeyValuePair<string, object?>("endpoint-name", GetCurrentResourceName(context)),

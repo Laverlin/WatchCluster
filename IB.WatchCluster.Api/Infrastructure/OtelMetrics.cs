@@ -2,12 +2,8 @@
 
 namespace IB.WatchCluster.Api.Infrastructure
 {
-    public class OtMetrics
+    public class OtelMetrics
     {
-        public Counter<long> ProducedCounter { get; }
-        public Counter<long> CollectedCounter { get; }
-        public Counter<long> LostCounter { get; }
-
         public Counter<long> MessageBufferedCounter { get; }
         public Counter<long> BufferedFoundCounter { get; }
         public Counter<long> BufferedNotFoundCounter { get; }
@@ -22,16 +18,12 @@ namespace IB.WatchCluster.Api.Infrastructure
 
 
 
-        public OtMetrics(string metricJob = "WatchCluster", string metricSolution = "wc", string metricProject = "api")
+        public OtelMetrics(string metricJob = "WatchCluster", string metricSolution = "wc", string metricProject = "api")
         {
             var meter = new Meter(metricJob);
             MetricJob = metricJob;
 
-            ProducedCounter = meter.CreateCounter<long>($"{MetricJob}_mesage_produced_count");
-            CollectedCounter = meter.CreateCounter<long>($"{MetricJob}_mesage_collected_count");
-            LostCounter = meter.CreateCounter<long>($"{MetricJob}_mesage_lost_count");
-
-            MessageBufferedCounter = meter.CreateCounter<long>($"{MetricJob}_mesage_buffered_count");
+            MessageBufferedCounter = meter.CreateCounter<long>($"{MetricJob}_message_buffered_count");
             BufferedFoundCounter = meter.CreateCounter<long>($"{MetricJob}_buffered_found_count");
             BufferedNotFoundCounter = meter.CreateCounter<long>($"{MetricJob}_buffered_lost_count");
 
