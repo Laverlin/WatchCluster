@@ -58,6 +58,9 @@ namespace IB.WatchCluster.Api.Controllers
         public async Task<ActionResult<WatchResponse>> Get([FromQuery] WatchRequest watchRequest)
         {
             var msgTimer = new Stopwatch();
+            var isProduced = false;
+            var isReceived = false;
+
             try
             {
                 using var activity = _activitySource.StartActivity("Request processing");
@@ -78,6 +81,7 @@ namespace IB.WatchCluster.Api.Controllers
                 var result = await _kafkaProducer.ProduceAsync(_kafkaConfiguration.WatchRequestTopic, message);
                 if (result.Status == PersistenceStatus.Persisted)
                 {
+                    isProduced = true;
                     _logger.LogDebug(
                         "{@Message} is delivered to {@TopicPartitionOffset}", 
                         result.Value, result.TopicPartitionOffset);
@@ -90,12 +94,12 @@ namespace IB.WatchCluster.Api.Controllers
                 var watchResponse = await _collectorConsumer.GetCollectedMessages(requestId);
                 if (watchResponse.RequestId != requestId)
                 {
-                    _otMetrics.LostCounter.Add(1);
-                    _logger.LogWarning("Request {@requestId} is lost, got {@messageRequestId}", requestId
-                        , watchResponse.RequestId);
+                    _logger.LogError("Request {@requestId} is lost, got {@messageRequestId}", 
+                        requestId, watchResponse.RequestId);
                     throw new ApiException(503, "Server Error: temporarily unable to process request");
                 }
-                
+
+                isReceived = true;
                 _logger.LogDebug(
                     new EventId(105, "WatchRequest"), "{@WatchRequest}, {@WatchResponse}, {@DeviceId}, {@CityName}",
                     watchRequest, watchResponse, watchRequest.DeviceId, watchResponse?.LocationInfo.CityName);
@@ -114,6 +118,11 @@ namespace IB.WatchCluster.Api.Controllers
                     _otMetrics.SetMessageDuration(msgTimer.ElapsedMilliseconds);
                 }
                 _otMetrics.DecrementActiveMessages();
+                if (isProduced)
+                    _otMetrics.IncrementMessageCounter(new[]
+                    {
+                        new KeyValuePair<string, object?>("is-received", isReceived),
+                    });
             }
         }
     }

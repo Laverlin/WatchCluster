@@ -13,13 +13,12 @@ namespace IB.WatchCluster.Api.Infrastructure
         public Counter<long> BufferedNotFoundCounter { get; }
 
 
-        public Counter<long> ActiveRequestCounter { get; }
-        public Counter<long> ActiveWSRequestCounter { get; }
 
         private Counter<long> HttpRequestCount { get; }
         private Histogram<long> MessageProcessDuration { get; }
 
         private int _activeMessages = 0;
+        private Counter<long> MessageCount { get; }
 
 
 
@@ -36,12 +35,12 @@ namespace IB.WatchCluster.Api.Infrastructure
             BufferedFoundCounter = meter.CreateCounter<long>($"{MetricJob}_buffered_found_count");
             BufferedNotFoundCounter = meter.CreateCounter<long>($"{MetricJob}_buffered_lost_count");
 
-            ActiveRequestCounter = meter.CreateCounter<long>($"{MetricJob}_activerequest_count");
-            ActiveWSRequestCounter = meter.CreateCounter<long>($"{MetricJob}_ws_activerequest_count");
+
 
             HttpRequestCount = meter.CreateCounter<long>($"{metricSolution}_{metricProject}_httprequest_count");
             MessageProcessDuration = meter.CreateHistogram<long>($"{metricSolution}_{metricProject}_message_duration");
             meter.CreateObservableGauge($"{metricSolution}_{metricProject}_active_messages", () => _activeMessages);
+            MessageCount = meter.CreateCounter<long>($"{metricSolution}_{metricProject}_message_count");
         }
 
         public string MetricJob { get; }
@@ -49,5 +48,6 @@ namespace IB.WatchCluster.Api.Infrastructure
         public void SetMessageDuration(long duration) => MessageProcessDuration.Record(duration);
         public void IncrementActiveMessages() => _activeMessages++;
         public void DecrementActiveMessages() => _activeMessages--;
+        public void IncrementMessageCounter(KeyValuePair<string, object?>[] tags) => MessageCount.Add(1, tags);
     }
 }
