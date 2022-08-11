@@ -2,7 +2,7 @@
 
 namespace IB.WatchCluster.Api.Infrastructure
 {
-    public static class AddSwaggerExtention
+    public static class AddSwaggerExtension
     {
         public static IServiceCollection AddSwagger(this IServiceCollection services, string authScheme, string authTokenName)
         {

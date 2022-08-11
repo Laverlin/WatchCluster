@@ -9,7 +9,6 @@ namespace IB.WatchCluster.Api.Infrastructure
         /// <summary>
         /// Generate error response related to API versioning
         /// </summary>
-        /// <param name="context">Contextual information used when generating HTTP error responses related to API versioning</param>
         public IActionResult CreateResponse(ErrorResponseContext context)
         {
             return new ObjectResult(new ErrorResponse

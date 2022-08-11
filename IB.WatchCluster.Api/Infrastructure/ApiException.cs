@@ -23,10 +23,10 @@ namespace IB.WatchCluster.Api.Infrastructure
             ErrorResponse.Description = message + Environment.NewLine + innerException.Message.ToString();
         }
 
-        public ApiException(int StatusCode, string message)
+        public ApiException(int statusCode, string message)
         {
-            HttpStatus = StatusCode;
-            ErrorResponse.StatusCode = StatusCode;
+            HttpStatus = statusCode;
+            ErrorResponse.StatusCode = statusCode;
             ErrorResponse.Description = message; 
         }
     }
@@ -44,7 +44,7 @@ namespace IB.WatchCluster.Api.Infrastructure
                 };
                 return result;
             }
-            return new(new ErrorResponse
+            return new ObjectResult(new ErrorResponse
             {
                 StatusCode = StatusCodes.Status500InternalServerError,
                 Description = $"Internal Error: {exception.Message}"

@@ -73,9 +73,9 @@ try
     builder.Services.AddScoped<RequestRateLimit>();
     builder.Services.AddSingleton(new ActivitySource(SolutionInfo.Name));
     builder.Services.AddSingleton(otelMetrics);
-    builder.Services.AddSingleton<KafkaConfiguration>(kafkaConfig);
-    builder.Services.AddSingleton<ProducerConfig>(kafkaConfig.BuildProducerConfig());
-    builder.Services.AddSingleton<IConsumer<string, string>>(
+    builder.Services.AddSingleton(kafkaConfig);
+    builder.Services.AddSingleton(kafkaConfig.BuildProducerConfig());
+    builder.Services.AddSingleton(
         new ConsumerBuilder<string, string>(kafkaConfig.BuildConsumerConfig("api-collector")).Build());
     builder.Services.AddSingleton<KafkaProducerCore>();
     builder.Services.AddSingleton<IKafkaProducer<string, string>, KafkaProducer<string, string>>();
@@ -116,8 +116,6 @@ try
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     //
     builder.Services.AddSwagger(apiConfiguration.AuthSettings.Scheme, apiConfiguration.AuthSettings.TokenName);
-
-    
 
     // Setup each request processors
     //

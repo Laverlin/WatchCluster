@@ -57,6 +57,7 @@ namespace IB.WatchCluster.Api.Controllers
         [RequestRateFactory(KeyField = "did", Seconds = 5)]
         public async Task<ActionResult<WatchResponse>> Get([FromQuery] WatchRequest watchRequest)
         {
+            var msgTimer = new Stopwatch();
             try
             {
                 using var activity = _activitySource.StartActivity("Request processing");
@@ -64,36 +65,37 @@ namespace IB.WatchCluster.Api.Controllers
                 watchRequest.RequestId = requestId;
                 var message = new Message<string, string>
                 {
-                    Headers = new Headers()
-                    { 
-                        new Header("activityId", Encoding.ASCII.GetBytes(activity?.Id ?? "")),
-                        new Header("type", Encoding.ASCII.GetBytes(nameof(WatchRequest)))
-                    },
-                    Key = requestId,
-                    Value = JsonSerializer.Serialize(watchRequest) 
+                    Headers = new Headers
+                    {
+                        new Header("activityId", Encoding.ASCII.GetBytes(activity?.Id ?? ""))
+                        , new Header("type", Encoding.ASCII.GetBytes(nameof(WatchRequest)))
+                    }
+                    , Key = requestId, Value = JsonSerializer.Serialize(watchRequest)
                 };
 
+                _otMetrics.IncrementActiveMessages();
+                msgTimer.Start();
                 var result = await _kafkaProducer.ProduceAsync(_kafkaConfiguration.WatchRequestTopic, message);
                 if (result.Status == PersistenceStatus.Persisted)
                 {
-                    _otMetrics.ProducedCounter.Add(1);
-                    _logger.LogDebug("{@Message} is delivered to {@TopicPartitionOffset}", result.Value, result.TopicPartitionOffset);
+                    _logger.LogDebug(
+                        "{@Message} is delivered to {@TopicPartitionOffset}", 
+                        result.Value, result.TopicPartitionOffset);
                 }
-                else 
+                else
                 {
-                    _logger.LogWarning("{@Message} was not delivered", result.Value);
+                    throw new ApiException(503, "Server Error: Unable deliver message to the queue");
                 }
                 
-
                 var watchResponse = await _collectorConsumer.GetCollectedMessages(requestId);
                 if (watchResponse.RequestId != requestId)
                 {
                     _otMetrics.LostCounter.Add(1);
-                    _logger.LogWarning("Request {@requestId} is lost, got {@messageRquestId}", requestId, watchResponse.RequestId);
+                    _logger.LogWarning("Request {@requestId} is lost, got {@messageRequestId}", requestId
+                        , watchResponse.RequestId);
                     throw new ApiException(503, "Server Error: temporarily unable to process request");
                 }
-
-                _otMetrics.CollectedCounter.Add(1);
+                
                 _logger.LogDebug(
                     new EventId(105, "WatchRequest"), "{@WatchRequest}, {@WatchResponse}, {@DeviceId}, {@CityName}",
                     watchRequest, watchResponse, watchRequest.DeviceId, watchResponse?.LocationInfo.CityName);
@@ -103,6 +105,15 @@ namespace IB.WatchCluster.Api.Controllers
             {
                 _logger.LogError(ex, "Request processing error, {@WatchFaceRequest}", watchRequest);
                 return ex.ReturnErrorResponse();
+            }
+            finally
+            {
+                if (msgTimer.IsRunning)
+                {
+                    msgTimer.Stop();
+                    _otMetrics.SetMessageDuration(msgTimer.ElapsedMilliseconds);
+                }
+                _otMetrics.DecrementActiveMessages();
             }
         }
     }
