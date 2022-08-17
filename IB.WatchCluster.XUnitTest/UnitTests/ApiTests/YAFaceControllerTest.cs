@@ -10,14 +10,15 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using IB.WatchCluster.Abstract.Kafka;
 using Xunit;
 
 namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 {
-    public class YAFaceControllerTest
+    public class YaFaceControllerTest
     {
         [Fact]
-        public async Task GetShoudRetunResultAfterProcessing()
+        public async Task GetShouldReturnResultAfterProcessing()
         {
             // Arrange
             //
@@ -36,7 +37,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
                 .Returns(Task.FromResult(deliveryResult))
                 .Verifiable();
             var requestId = "1";
-            var collectorConsumerMock = new Mock<ICollector>();
+            var collectorConsumerMock = new Mock<CollectorHandler>();
             collectorConsumerMock
                 .Setup(m => m.GetCollectedMessages(It.IsAny<string>()))
                 .Returns(Task.FromResult(new WatchResponse { RequestId = requestId }))
@@ -82,7 +83,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
                 .Returns(Task.FromResult(deliveryResult))
                 .Verifiable();
             var requestId = "1";
-            var collectorConsumerMock = new Mock<ICollector>();
+            var collectorConsumerMock = new Mock<CollectorHandler>();
             collectorConsumerMock
                 .Setup(m => m.GetCollectedMessages(It.IsAny<string>()))
                 .Returns(Task.FromResult(new WatchResponse { RequestId = "" }))

@@ -1,72 +1,57 @@
 ﻿using Confluent.Kafka;
-using IB.WatchCluster.Abstract;
 using IB.WatchCluster.Abstract.Entity.Configuration;
-using IB.WatchCluster.Abstract.Entity.WatchFace;
-using IB.WatchCluster.Api.Entity;
-using IB.WatchCluster.Api.Infrastructure;
-using System.Diagnostics;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Text;
-using System.Text.Json;
+using IB.WatchCluster.Abstract.Kafka;
 
 namespace IB.WatchCluster.Api.Services;
 
-public interface ICollector
-{
-    public Task<WatchResponse> GetCollectedMessages(string requestId);
-}
-
-public class CollectorService: BackgroundService, ICollector
+public sealed class CollectorService: BackgroundService
 {
     private readonly IConsumer<string, string> _kafkaConsumer;
     private readonly KafkaConfiguration _kafkaConfiguration;
     private readonly ILogger _logger;
-    private readonly OtelMetrics _otelMetrics;
-    private readonly ActivitySource _activitySource;
-    private readonly ReplaySubject<CollectedMessage> _messageSubject = new(TimeSpan.FromMinutes(1));
+    private readonly CollectorHandler _collectorHandler;
 
     public CollectorService(
         IConsumer<string, string> kafkaConsumer,
         KafkaConfiguration kafkaConfiguration, 
-        ILogger<CollectorService> logger, 
-        OtelMetrics otelMetrics)
+        ILogger<CollectorService> logger,
+        CollectorHandler collectorHandler)
     {
         _kafkaConsumer = kafkaConsumer;
         _kafkaConfiguration = kafkaConfiguration;
         _logger = logger;
-        _otelMetrics = otelMetrics;
-        _activitySource = new ActivitySource(SolutionInfo.Name);
+        _collectorHandler = collectorHandler;
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Start collector consumer loop");
-        new Thread(() => StartConsumerLoop(stoppingToken)).Start();
-
-        return Task.CompletedTask;
+        try
+        {
+            _logger.LogInformation("Start collector loop");
+            _collectorHandler.IsRunning = true;
+            await Task.Run(() => StartConsumerLoop(cancellationToken), CancellationToken.None);
+        }
+        finally
+        {
+            _collectorHandler.IsRunning = false;
+        }
     }
-
+    
     public void StartConsumerLoop(CancellationToken cancellationToken)
     {
         _kafkaConsumer.Subscribe(_kafkaConfiguration.WatchResponseTopic);
-
         while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
                 var cr = _kafkaConsumer.Consume(cancellationToken);
-                cr.Message.Headers.TryGetLastBytes("type", out var messageType);
-                var message = new CollectedMessage
+                if (!cr.Message.TryParseMessage(out var message))
                 {
-                    RequestId = cr.Message.Key,
-                    Message = cr.Message.Value,
-                    MessageType = Encoding.ASCII.GetString(messageType)
-                };
-
+                    _logger.LogWarning("Unable to parse message {@message}", cr.Message);
+                    continue;
+                }
                 _logger.LogDebug("Collector got {@message}", message);
-                _messageSubject.OnNext(message);
-                _otelMetrics.MessageBufferedCounter.Add(1);
+                _collectorHandler.OnNext(message);
             }
             catch (OperationCanceledException)
             {
@@ -75,43 +60,19 @@ public class CollectorService: BackgroundService, ICollector
             catch (ConsumeException e)
             {
                 _logger.LogError(e, "Consume error: {@error}", e.Error.Reason);
-
+                
+                // https://github.com/edenhill/librdkafka/blob/master/INTRODUCTION.md#fatal-consumer-errors
+                //
                 if (e.Error.IsFatal)
-                {
-                    // https://github.com/edenhill/librdkafka/blob/master/INTRODUCTION.md#fatal-consumer-errors
-                    //
                     break;
-                }
             }
             catch (Exception e)
             {
-                _logger.LogCritical(e, "Unexpected error");
+                _logger.LogCritical(e, "Unexpected error: {@message}", e.Message);
                 break;
             }
         }
-        _messageSubject.OnCompleted();
-    }
-
-    public async Task<WatchResponse> GetCollectedMessages(string requestId)
-    {
-        using (_activitySource.StartActivity("CollectMessages"))
-        {
-            var messages = await _messageSubject
-                .Where(m => m.RequestId == requestId)
-                .Take(3)
-                .TakeUntil(Observable.Timer(TimeSpan.FromSeconds(15)))
-                .ToArray();
-
-            var response = new WatchResponse
-            {
-                RequestId = messages.Select(m => m.RequestId).FirstOrDefault(),
-                LocationInfo = DeserializeMessage<LocationInfo>(messages),
-                WeatherInfo = DeserializeMessage<WeatherInfo>(messages),
-                ExchangeRateInfo = DeserializeMessage<ExchangeRateInfo>(messages)
-            };
-
-            return response;
-        }
+        _collectorHandler.OnCompleted();
     }
 
     public override void Dispose()
@@ -120,8 +81,4 @@ public class CollectorService: BackgroundService, ICollector
         _kafkaConsumer.Dispose();
         base.Dispose();
     }
-
-    private T? DeserializeMessage<T>(CollectedMessage[] messages) => 
-        JsonSerializer.Deserialize<T>(
-            messages.SingleOrDefault(m => m.MessageType == typeof(T).Name)?.Message ?? "{}");
 }

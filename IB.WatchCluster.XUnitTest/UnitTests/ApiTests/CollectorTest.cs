@@ -37,12 +37,13 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
                 .Returns(new ConsumeResult<string, string> { Message = new Message<string, string> { Headers = new Headers { _headerLocation }, Key = $"requestId-2", Value = _messageLocation } });
             consumerMock.Setup(m => m.Subscribe(It.IsAny<string>()));
 
-            var collector = new CollectorService(consumerMock.Object, kafkaConfigMock.Object, loggerMock.Object, otMetricsMock.Object);
+            var collectorHandler = new CollectorHandler();
+            var collector = new CollectorService(consumerMock.Object, kafkaConfigMock.Object, loggerMock.Object, collectorHandler);
 
             // Act
             //
             new Thread(() => collector.StartConsumerLoop(CancellationToken.None)).Start();
-            var result = await collector.GetCollectedMessages("requestId");
+            var result = await collectorHandler.GetCollectedMessages("requestId");
 
 
             // Assert
@@ -71,13 +72,14 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 
             consumerMock.Setup(m => m.Subscribe(It.IsAny<string>()));
 
-            var collector = new CollectorService(consumerMock.Object, kafkaConfigMock.Object, loggerMock.Object, otMetricsMock.Object);
+            var collectorHandler = new CollectorHandler();
+            var collector = new CollectorService(consumerMock.Object, kafkaConfigMock.Object, loggerMock.Object, collectorHandler);
 
             // Act
             //
             new Thread(() => collector.StartConsumerLoop(CancellationToken.None)).Start();
-            var result5 = await collector.GetCollectedMessages("requestId-5");
-            var result14 = await collector.GetCollectedMessages("requestId-14");
+            var result5 = await collectorHandler.GetCollectedMessages("requestId-5");
+            var result14 = await collectorHandler.GetCollectedMessages("requestId-14");
 
 
             // Assert
@@ -131,12 +133,13 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 
             consumerMock.Setup(m => m.Subscribe(It.IsAny<string>()));
 
-            var collector = new CollectorService(consumerMock.Object, kafkaConfigMock.Object, loggerMock.Object, otMetricsMock.Object);
+            var collectorHandler = new CollectorHandler();
+            var collector = new CollectorService(consumerMock.Object, kafkaConfigMock.Object, loggerMock.Object, collectorHandler);
 
             // Act
             //
             new Thread(() => collector.StartConsumerLoop(CancellationToken.None)).Start();
-            var result = await collector.GetCollectedMessages("requestId-1");
+            var result = await collectorHandler.GetCollectedMessages("requestId-1");
 
 
             // Assert
@@ -172,12 +175,13 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 
             consumerMock.Setup(m => m.Subscribe(It.IsAny<string>()));
 
-            var collector = new CollectorService(consumerMock.Object, kafkaConfigMock.Object, loggerMock.Object, otMetricsMock.Object);
+            var collectorHandler = new CollectorHandler();
+            var collector = new CollectorService(consumerMock.Object, kafkaConfigMock.Object, loggerMock.Object, collectorHandler);
 
             // Act
             //
             new Thread(() => collector.StartConsumerLoop(CancellationToken.None)).Start();
-            var result = await collector.GetCollectedMessages("requestId-1");
+            var result = await collectorHandler.GetCollectedMessages("requestId-1");
 
 
             // Assert

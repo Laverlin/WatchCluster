@@ -7,8 +7,8 @@ using Confluent.Kafka;
 using IB.WatchCluster.Api.Services;
 using IB.WatchCluster.Abstract.Entity.Configuration;
 using System.Diagnostics;
-using IB.WatchCluster.Abstract.Entity.Kafka;
 using IB.WatchCluster.Abstract.Kafka;
+using IB.WatchCluster.Abstract.Kafka.Entity;
 
 namespace IB.WatchCluster.Api.Controllers;
 
@@ -23,7 +23,7 @@ public class YaFaceController : Controller
 {
     private readonly ILogger<YaFaceController> _logger;
     private readonly IKafkaProducer<string, string> _kafkaProducer;
-    private readonly ICollector _collectorConsumer;
+    private readonly CollectorHandler _collectorHandler;
     private readonly OtelMetrics _otelMetrics;
     private readonly ActivitySource _activitySource;
     private readonly KafkaConfiguration _kafkaConfiguration;
@@ -37,11 +37,11 @@ public class YaFaceController : Controller
         ActivitySource activitySource,
         KafkaConfiguration kafkaConfiguration,
         IKafkaProducer<string, string> kafkaProducer,
-        ICollector collectorConsumer)
+        CollectorHandler collectorHandler)
     {
         _logger = logger;
         _kafkaProducer = kafkaProducer;
-        _collectorConsumer = collectorConsumer;
+        _collectorHandler = collectorHandler;
         _otelMetrics = otelMetrics;
         _activitySource = activitySource;
         _kafkaConfiguration = kafkaConfiguration;
@@ -63,7 +63,7 @@ public class YaFaceController : Controller
     {
         try
         {
-            // Setup the stage
+            // Set the stage
             //
             using var activity = _activitySource.StartActivity($"RequestProcessing");
             var requestId = Request.HttpContext.TraceIdentifier;
@@ -93,6 +93,11 @@ public class YaFaceController : Controller
         }
     }
 
+    /// <summary>
+    /// Produce a message to process request
+    /// </summary>
+    /// <param name="message"></param>
+    /// <exception cref="ApiException"></exception>
     private async Task ProduceMessage(KnownMessage message)
     {
         _otelMetrics.IncrementActiveMessages();
@@ -113,7 +118,7 @@ public class YaFaceController : Controller
 
     private async Task<WatchResponse> CollectResult(string requestId)
     {
-        var watchResponse = await _collectorConsumer.GetCollectedMessages(requestId);
+        var watchResponse = await _collectorHandler.GetCollectedMessages(requestId);
         if (watchResponse.RequestId != requestId)
         {
             _logger

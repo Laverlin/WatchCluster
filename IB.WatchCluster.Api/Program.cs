@@ -5,7 +5,6 @@ using IB.WatchCluster.Abstract.Entity.Configuration;
 using IB.WatchCluster.Api.Entity;
 using IB.WatchCluster.Api.Entity.Configuration;
 using IB.WatchCluster.Api.Infrastructure;
-using IB.WatchCluster.Api.Infrastructure.Middleware;
 using IB.WatchCluster.Api.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +15,9 @@ using OpenTelemetry.Trace;
 using Serilog;
 using Serilog.Enrichers.Span;
 using System.Diagnostics;
+using IB.WatchCluster.Abstract.Kafka;
+using IB.WatchCluster.Api.Middleware;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 // Set Bootstrap logger
 //
@@ -23,6 +25,7 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 Log.Information("Starting up");
+OtelMetrics? otelMetrics = null; 
 
 try
 {
@@ -52,10 +55,11 @@ try
     builder.Configuration.AddEnvironmentVariables();
     var apiConfiguration = builder.Configuration.LoadVerifiedConfiguration<ApiConfiguration>();
     var kafkaConfig = builder.Configuration.LoadVerifiedConfiguration<KafkaConfiguration>();
-    var otelMetrics = new OtelMetrics();
+    var collectorHandler = new CollectorHandler();
 
     // Metrics & Tracing
     //
+    otelMetrics = new OtelMetrics();
     builder.Services.AddOpenTelemetryMetrics(b => b
         .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(otelMetrics.MetricJob))
         .AddAspNetCoreInstrumentation()
@@ -77,11 +81,9 @@ try
     builder.Services.AddSingleton(kafkaConfig.BuildProducerConfig());
     builder.Services.AddSingleton(
         new ConsumerBuilder<string, string>(kafkaConfig.BuildConsumerConfig("api-collector")).Build());
-    builder.Services.AddSingleton<KafkaProducerCore>();
     builder.Services.AddSingleton<IKafkaProducer<string, string>, KafkaProducer<string, string>>();
-    builder.Services.AddSingleton<CollectorService>();
-    builder.Services.AddSingleton<ICollector>(provider => provider.GetRequiredService<CollectorService>());
-    builder.Services.AddHostedService(provider => provider.GetRequiredService<CollectorService>());
+    builder.Services.AddSingleton(collectorHandler);
+    builder.Services.AddHostedService<CollectorService>();
 
     builder.Services.AddControllers();
 
@@ -103,6 +105,7 @@ try
     //
     builder.Services
         .AddHealthChecks()
+        .AddCheck("self", () => collectorHandler.IsRunning ? HealthCheckResult.Healthy() : HealthCheckResult.Unhealthy())
         .AddKafka(kafkaConfig.BuildProducerConfig(), "healthcheck");
 
     builder.Services.AddApiVersioning(options =>
@@ -120,6 +123,8 @@ try
     // Setup each request processors
     //
     var app = builder.Build();
+    app.Lifetime.ApplicationStarted.Register(() => otelMetrics.SetInstanceUp());
+    app.Lifetime.ApplicationStopped.Register(() => otelMetrics.SetInstanceDown());
 
     app.UseSerilogRequestLogging();
     app.UseMiddleware<MetricRequestCounterMiddleware>();
@@ -137,9 +142,12 @@ try
     
     app.MapControllers();
     app.MapHealthChecks(
-        "/health",
+        "/health/ready",
         new HealthCheckOptions { ResponseWriter = HealthCheckExtensions.WriteHealthResultResponse });
-
+    app.MapHealthChecks(
+        "/health/live", 
+        new HealthCheckOptions{ Predicate = r => r.Name.Contains("self")});
+    
     app.Run();
 }
 catch (Exception ex)
@@ -148,6 +156,7 @@ catch (Exception ex)
 }
 finally
 {
+    otelMetrics?.SetInstanceDown();
     Log.Information("Shutdown complete");
     Log.CloseAndFlush();
 }

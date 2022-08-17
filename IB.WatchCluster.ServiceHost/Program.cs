@@ -80,6 +80,7 @@ await Host.CreateDefaultBuilder(args)
             default: 
                 throw new ArgumentException($"Unknown service type { appConfig.Handler }");
         }
+        
     })
     .RunConsoleAsync();
 
