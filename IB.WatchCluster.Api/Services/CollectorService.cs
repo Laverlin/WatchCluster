@@ -72,6 +72,7 @@ public sealed class CollectorService: BackgroundService
                 break;
             }
         }
+        _kafkaConsumer.Close();
         _collectorHandler.OnCompleted();
     }
 

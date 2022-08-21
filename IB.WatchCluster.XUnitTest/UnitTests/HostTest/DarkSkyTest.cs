@@ -25,7 +25,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.HostTest
             var lon = (decimal)-94.799712;
             var token = "test-token";
 
-            var otMetricsMock = new Mock<OtMetrics>();
+            var otMetricsMock = new Mock<OtelMetrics>("", "", "");
             var loggerMock = new Mock<ILogger<WeatherService>>();
 
             var handler = new Mock<HttpMessageHandler>();

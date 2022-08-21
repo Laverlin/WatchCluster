@@ -146,7 +146,7 @@ try
         new HealthCheckOptions { ResponseWriter = HealthCheckExtensions.WriteHealthResultResponse });
     app.MapHealthChecks(
         "/health/live", 
-        new HealthCheckOptions{ Predicate = r => r.Name.Contains("self")});
+        new HealthCheckOptions { Predicate = r => r.Name.Contains("self")});
     
     app.Run();
 }

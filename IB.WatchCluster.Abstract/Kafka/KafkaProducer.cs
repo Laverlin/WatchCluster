@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Confluent.Kafka;
+using IB.WatchCluster.Abstract.Entity.Configuration;
 
 namespace IB.WatchCluster.Abstract.Kafka
 {
     public sealed class KafkaProducer<TK, TV> : IKafkaProducer<TK, TV>, IDisposable
     {
         private readonly IProducer<TK, TV> _producer;
+
+        public KafkaProducer(KafkaConfiguration kafkaConfig): this(kafkaConfig.BuildProducerConfig()) {}
 
         public KafkaProducer(ProducerConfig producerConfig)
         {

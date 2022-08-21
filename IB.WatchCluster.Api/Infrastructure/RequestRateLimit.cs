@@ -15,8 +15,9 @@ namespace IB.WatchCluster.Api.Infrastructure;
 [AttributeUsage(AttributeTargets.Method)]
 public class RequestRateLimit : ActionFilterAttribute
 {
-    private static readonly MemoryCache _memoryCache = new(new MemoryCacheOptions());
+    private static readonly MemoryCache MemoryCache = new(new MemoryCacheOptions());
     private readonly ILogger<RequestRateLimit> _logger;
+    private readonly OtelMetrics _otelMetrics;
 
     /// <summary>
     /// The number of seconds during that subsequent requests from the same source will be prevented
@@ -28,9 +29,10 @@ public class RequestRateLimit : ActionFilterAttribute
     /// </summary>
     public string KeyField { get; set; } = default!;
 
-    public RequestRateLimit(ILogger<RequestRateLimit> logger)
+    public RequestRateLimit(ILogger<RequestRateLimit> logger, OtelMetrics otelMetrics)
     {
         _logger = logger;
+        _otelMetrics = otelMetrics;
     }
 
     /// <summary>
@@ -51,12 +53,12 @@ public class RequestRateLimit : ActionFilterAttribute
         string path = context.HttpContext.Request.Path;
         string memoryCacheKey = $"device-key:{keyValue}-{path}";
         _logger.LogDebug("@{memoryCacheKey}", memoryCacheKey);
-
-        if (!_memoryCache.TryGetValue(memoryCacheKey, out bool _))
+        
+        if (!MemoryCache.TryGetValue(memoryCacheKey, out bool _))
         {
             var cacheEntryOptions = new MemoryCacheEntryOptions()
                 .SetAbsoluteExpiration(TimeSpan.FromSeconds(Seconds));
-            _memoryCache.Set(memoryCacheKey, true, cacheEntryOptions);
+            MemoryCache.Set(memoryCacheKey, true, cacheEntryOptions);
         }
         else
         {
@@ -71,5 +73,7 @@ public class RequestRateLimit : ActionFilterAttribute
             context.HttpContext.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
             _logger.LogWarning("Too many requests from @{KeyValue}", keyValue);
         }
+
+        _otelMetrics.SetMemoryCacheGauge(MemoryCache.Count);
     }
 }

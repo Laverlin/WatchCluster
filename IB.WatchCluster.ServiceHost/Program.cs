@@ -12,8 +12,12 @@ using System.Diagnostics;
 using IB.WatchCluster.ServiceHost.Entity;
 using IB.WatchCluster.ServiceHost.Infrastructure;
 using IB.WatchCluster.Abstract.Entity.WatchFace;
+using IB.WatchCluster.Abstract.Kafka;
+using IB.WatchCluster.Abstract.Services;
 using IB.WatchCluster.ServiceHost.Services;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using OpenTelemetry.Metrics;
+using Serilog.Exceptions;
 
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
@@ -28,6 +32,7 @@ await Host.CreateDefaultBuilder(args)
         var logger = new LoggerConfiguration()
           .ReadFrom.Configuration(context.Configuration)
           .Enrich.FromLogContext()
+          .Enrich.WithExceptionDetails()
           .Enrich.WithProperty("version", SolutionInfo.Version)
           .Enrich.WithProperty("Application", SolutionInfo.Name)
           .CreateLogger();
@@ -41,6 +46,8 @@ await Host.CreateDefaultBuilder(args)
         var appConfig = hostContext.Configuration.LoadVerifiedConfiguration<AppConfiguration>();
         var kafkaConfig = hostContext.Configuration.LoadVerifiedConfiguration<KafkaConfiguration>();
         var consumerConfig = kafkaConfig.BuildConsumerConfig($"sh-{appConfig.Handler.ToLower()}");
+        var otelMetrics = new OtelMetrics(appConfig.Handler.ToLower());
+        var processingHandler = new ProcessingHandler();
 
         services.AddOpenTelemetryTracing(builder => builder
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(SolutionInfo.Name))
@@ -48,17 +55,35 @@ await Host.CreateDefaultBuilder(args)
             .AddSource(SolutionInfo.Name)
             .AddOtlpExporter(options => options.Endpoint = new Uri(appConfig.OpenTelemetryCollectorUrl)));
 
-       services.AddOpenTelemetryMetrics(builder => builder
-            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(OtMetrics.MetricName))
+        services.AddOpenTelemetryMetrics(builder => builder
+            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(otelMetrics.MetricJob))
             .AddHttpClientInstrumentation()
-            .AddMeter(OtMetrics.MetricName)
+            .AddMeter(otelMetrics.MetricJob)
             .AddOtlpExporter(options => options.Endpoint = new Uri(appConfig.OpenTelemetryCollectorUrl)));
 
-        services.AddSingleton<OtMetrics>();
+        services.AddSingleton(otelMetrics);
         services.AddSingleton(new ActivitySource(SolutionInfo.Name));
+        services.AddSingleton(processingHandler);
         services.AddSingleton(kafkaConfig);
-        services.AddSingleton<KafkaProducer<string, string>>();
+        services.AddSingleton<IKafkaProducer<string, string>, KafkaProducer<string, string>>();
         services.AddSingleton(new ConsumerBuilder<string, string>(consumerConfig).Build());
+
+        // healthcheck
+        //
+        services
+            .AddHealthChecks()
+            .AddCheck(
+                "self",
+                () => processingHandler.IsRunning ? HealthCheckResult.Healthy() : HealthCheckResult.Unhealthy(),
+                new[]{"live"})
+            .AddKafka(
+                kafkaConfig.BuildProducerConfig(), 
+                "healthcheck", 
+                "kafka", 
+                null, 
+                new[]{"readiness"}, 
+                TimeSpan.FromSeconds(30));
+        services.AddHostedService<HealthcheckPublisherService>();
 
         switch(appConfig.Handler)
         {
@@ -80,7 +105,6 @@ await Host.CreateDefaultBuilder(args)
             default: 
                 throw new ArgumentException($"Unknown service type { appConfig.Handler }");
         }
-        
-    })
-    .RunConsoleAsync();
+    }).RunConsoleAsync();
+
 

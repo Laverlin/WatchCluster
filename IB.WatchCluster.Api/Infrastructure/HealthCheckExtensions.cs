@@ -39,11 +39,9 @@ namespace IB.WatchCluster.Api.Infrastructure
                         writer.WritePropertyName(item.Key);
                         JsonSerializer.Serialize(writer, item.Value, item.Value?.GetType() ?? typeof(object));
                     }
-
                     writer.WriteEndObject();
                     writer.WriteEndObject();
                 }
-
                 writer.WriteEndObject();
                 writer.WriteEndObject();
             }
