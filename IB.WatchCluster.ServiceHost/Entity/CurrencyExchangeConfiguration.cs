@@ -13,5 +13,11 @@ namespace IB.WatchCluster.ServiceHost.Entity
 
         [Required]
         public string CurrencyConverterKey { get; set; } = default!;
+
+        [Required, Url]
+        public string TwelveDataUrlTemplate { get; set; } = default!;
+
+        [Required]
+        public string TwelveDataKey { get; set; } = default!;
     }
 }

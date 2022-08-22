@@ -28,7 +28,7 @@ namespace IB.WatchCluster.Abstract.Entity.WatchFace
         /// </summary>
         [JsonPropertyName("status")]
         public RequestStatus RequestStatus { get; set; } = new();
-        
-        public string RemoteSource { get; set; }
+
+        public string RemoteSource { get; set; } = "";
     }
 }

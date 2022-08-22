@@ -30,7 +30,7 @@ public class CurrencyExchangeService : IRequestHandler<ExchangeRateInfo>
         _httpClient = httpClient;
         _exchangeConfig = exchangeConfig;
         _metrics = metrics;
-        _fallbackPolicy = CreateRequestPolicy(RequestCurrencyConverter);  //CreateRequestPolicy(RequestExchangeHost);
+        _fallbackPolicy = CreateRequestPolicy(RequestExchangeHost);
     }
     
     public async Task<ExchangeRateInfo> ProcessAsync(WatchRequest? watchRequest)
@@ -45,7 +45,7 @@ public class CurrencyExchangeService : IRequestHandler<ExchangeRateInfo>
                 watchRequest.BaseCurrency == watchRequest.TargetCurrency)
                 return exchangeRateInfo;
 
-            string cacheKey = $"er-{watchRequest.BaseCurrency}-{watchRequest.TargetCurrency}";
+            var cacheKey = $"er-{watchRequest.BaseCurrency}-{watchRequest.TargetCurrency}";
             if (MemoryCache.TryGetValue(cacheKey, out exchangeRateInfo))
             {
                 sourceKind = DataSourceKind.Cache;
@@ -53,7 +53,8 @@ public class CurrencyExchangeService : IRequestHandler<ExchangeRateInfo>
             }
 
             exchangeRateInfo = await _fallbackPolicy.ExecuteAsync(async _ =>
-                await RequestExchangeHost(watchRequest.BaseCurrency, watchRequest.TargetCurrency),
+                await RequestTwelveData(watchRequest.BaseCurrency, watchRequest.TargetCurrency),
+                    // await RequestExchangeHost(watchRequest.BaseCurrency, watchRequest.TargetCurrency),
                     //await RequestCurrencyConverter(watchRequest.BaseCurrency, watchRequest.TargetCurrency),
                 new Dictionary<string, object> { { nameof(WatchRequest), watchRequest } });
 
@@ -70,10 +71,12 @@ public class CurrencyExchangeService : IRequestHandler<ExchangeRateInfo>
         {
             _metrics.IncreaseProcessedCounter(
                 sourceKind, exchangeRateInfo.RequestStatus.StatusCode, exchangeRateInfo.RemoteSource,
-                new [] 
-                {
-                    new KeyValuePair<string, object?>("pair", $"{watchRequest?.BaseCurrency}:{watchRequest?.TargetCurrency}"), 
-                });
+                sourceKind == DataSourceKind.Empty
+                    ? Enumerable.Empty<KeyValuePair<string, object?>>()
+                    : new [] 
+                    {
+                        new KeyValuePair<string, object?>("pair", $"{watchRequest?.BaseCurrency}:{watchRequest?.TargetCurrency}") 
+                    });
         }
     }
 
@@ -140,6 +143,30 @@ public class CurrencyExchangeService : IRequestHandler<ExchangeRateInfo>
                 ? rate.GetDecimal() : 0,
             RequestStatus = new RequestStatus(RequestStatusCode.Ok),
             RemoteSource = "CurrencyConverter"
+        };
+    }
+    
+    public async Task<ExchangeRateInfo> RequestTwelveData(string baseCurrency, string targetCurrency)
+    {
+        var url = string.Format(
+            _exchangeConfig.TwelveDataUrlTemplate, _exchangeConfig.TwelveDataKey, baseCurrency, targetCurrency);
+        using var response = await _httpClient.GetAsync(url);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning(response.StatusCode == HttpStatusCode.Unauthorized
+                ? "Unauthorized access to TwelveData.com"
+                : $"Error TwelveData.com request, status: {response.StatusCode}");
+            return new ExchangeRateInfo { RequestStatus = new RequestStatus(response.StatusCode) };
+        }
+
+        await using var content = await response.Content.ReadAsStreamAsync();
+        using var json = await JsonDocument.ParseAsync(content);
+
+        return new ExchangeRateInfo
+        {
+            ExchangeRate = json.RootElement.TryGetProperty("rate", out var rate) ? rate.GetDecimal() : 0,
+            RequestStatus = new RequestStatus(RequestStatusCode.Ok),
+            RemoteSource = "TwelveData"
         };
     }
 
