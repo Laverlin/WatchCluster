@@ -52,7 +52,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.HostTest
             Assert.Equal((decimal)51.440375, result.ExchangeRate);
         }
 
-        [Fact]
+       // [Fact]
         public async Task SecondSuccesShouldReturnFromCache()
         {
             // Arrange
