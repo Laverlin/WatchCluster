@@ -1,16 +1,13 @@
 ﻿
+using System;
 using IB.WatchCluster.Abstract.Entity.WatchFace;
 using IB.WatchCluster.ServiceHost.Infrastructure;
 using IB.WatchCluster.ServiceHost.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Moq.Contrib.HttpClient;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
+using IB.WatchCluster.ServiceHost.Services.CurrencyExchange;
+
 using Xunit;
 
 namespace IB.WatchCluster.XUnitTest.UnitTests.HostTest
@@ -22,6 +19,38 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.HostTest
         {
             // Arrange
             //
+            var otelMetricsMock = new Mock<OtelMetrics>("","","");
+            var loggerMock = new Mock<ILogger<CurrencyExchangeService>>();
+            var psMock = new Mock<TwelveData>(null, null, null);
+            var fbMock = new Mock<ExchangeHost>(null, null, null);
+            
+            psMock
+                .Setup(t=>t.GetExchangeRateAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(Task.FromResult(new ExchangeRateInfo
+                    { ExchangeRate = (decimal)51.440375, RequestStatus = new RequestStatus(RequestStatusCode.Ok)}))
+                .Verifiable();
+
+            var client = new CurrencyExchangeService(
+                loggerMock.Object,
+                otelMetricsMock.Object,
+                psMock.Object,
+                fbMock.Object);
+
+            // Act
+            //
+            var result = await client.ProcessAsync(new WatchRequest{BaseCurrency = "EUR", TargetCurrency = "PHP"});
+
+            // Assert
+            //
+            Assert.Equal(RequestStatusCode.Ok, result.RequestStatus.StatusCode);
+            Assert.Equal((decimal)51.440375, result.ExchangeRate);
+        }
+
+       [Fact]
+        public async Task SecondSuccessShouldReturnFromCache()
+        {
+            // Arrange
+            //
             var config = new ServiceHost.Entity.CurrencyExchangeConfiguration
             {
                 CurrencyConverterKey = "test_Key",
@@ -29,59 +58,25 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.HostTest
             };
             var otelMetricsMock = new Mock<OtelMetrics>("","","");
             var loggerMock = new Mock<ILogger<CurrencyExchangeService>>();
-            var handler = new Mock<HttpMessageHandler>();
-            var ccResponse = "{\"EUR_PHP\": 51.440375}";
+            var psMock = new Mock<TwelveData>(null, null, null);
+            var fbMock = new Mock<ExchangeHost>(null, null, null);
 
-            handler
-                .SetupAnyRequest()
-                .ReturnsResponse(ccResponse, "application/json");
-
-            var client = new CurrencyExchangeService(
-                loggerMock.Object,
-                handler.CreateClient(),
-                config,
-                otelMetricsMock.Object);
-
-            // Act
-            //
-            var result = await client.RequestCurrencyConverter("EUR", "PHP");
-
-            // Assert
-            //
-            Assert.Equal(RequestStatusCode.Ok, result.RequestStatus.StatusCode);
-            Assert.Equal((decimal)51.440375, result.ExchangeRate);
-        }
-
-       // [Fact]
-        public async Task SecondSuccesShouldReturnFromCache()
-        {
-            // Arrange
-            //
-            var config = new ServiceHost.Entity.CurrencyExchangeConfiguration
-            {
-                CurrencyConverterKey = "test_Key",
-                CurrencyConverterUrlTemplate = "https://free.currconv.com/api/v7/convert?apiKey={0}&q={1}_{2}&compact=ultra"
-            };
-            var otMetricsMock = new Mock<OtelMetrics>("","","");
-            var loggerMock = new Mock<ILogger<CurrencyExchangeService>>();
-            var handler = new Mock<HttpMessageHandler>();
-            var ccResponse = "{\"EUR_PHP\": 51.440375}";
-
-            handler
-                .SetupAnyRequest()
-                .ReturnsResponse(ccResponse, "application/json")
+            psMock
+                .Setup(t=>t.GetExchangeRateAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(Task.FromResult(new ExchangeRateInfo
+                    { ExchangeRate = (decimal)51.440375, RequestStatus = new RequestStatus(RequestStatusCode.Ok)}))
                 .Verifiable();
 
             var client = new CurrencyExchangeService(
                 loggerMock.Object,
-                handler.CreateClient(),
-                config,
-                otMetricsMock.Object);
+                otelMetricsMock.Object,
+                psMock.Object,
+                fbMock.Object);
 
             // Act
             //
-            await client.ProcessAsync(new WatchRequest { DeviceId = "2", BaseCurrency = "EUR", TargetCurrency="PHP" });
-            var result = await client.ProcessAsync(new WatchRequest { DeviceId = "2", BaseCurrency = "EUR", TargetCurrency = "PHP" });
+            await client.ProcessAsync(new WatchRequest { DeviceId = "2", BaseCurrency = "USD", TargetCurrency="PHP" });
+            var result = await client.ProcessAsync(new WatchRequest { DeviceId = "2", BaseCurrency = "USD", TargetCurrency = "PHP" });
             await client.ProcessAsync(new WatchRequest { DeviceId = "2", BaseCurrency = "EUR", TargetCurrency = "USD" });
             await client.ProcessAsync(new WatchRequest { DeviceId = "2", BaseCurrency = "RUR", TargetCurrency = "PHP" });
 
@@ -89,7 +84,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.HostTest
             //
             Assert.Equal(RequestStatusCode.Ok, result.RequestStatus.StatusCode);
             Assert.Equal((decimal)51.440375, result.ExchangeRate);
-            handler.VerifyAnyRequest(Times.Exactly(3));
+            psMock.Verify( t=>t.GetExchangeRateAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Exactly(3));
         }
 
         [Fact]
@@ -97,35 +92,26 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.HostTest
         {
             // Arrange
             //
-            var config = new ServiceHost.Entity.CurrencyExchangeConfiguration
-            {
-                CurrencyConverterKey = "test_Key",
-                CurrencyConverterUrlTemplate = "https://free.currconv.com/api/v7/convert?apiKey={0}&q={1}_{2}&compact=ultra",
-                ExchangeHostUrlTemplate = "https://api.exchangerate.host/convert?from={0}&to={1}"
-
-            };
-            var otMetricsMock = new Mock<OtelMetrics>("","","");
+            var otelMetricsMock = new Mock<OtelMetrics>("","","");
             var loggerMock = new Mock<ILogger<CurrencyExchangeService>>();
-            var handler = new Mock<HttpMessageHandler>();
-            var ccResponse = "{\"info\": {\"rate\": 70.155903}}";
+            var psMock = new Mock<TwelveData>(null, null, null);
+            var fbMock = new Mock<ExchangeHost>(null, null, null);
 
-            var ccRequest = "https://free.currconv.com/api/v7/convert?apiKey=test_Key&q=EUR_RUB&compact=ultra";
-            var ehRequest = "https://api.exchangerate.host/convert?from=EUR&to=RUB";
-
-            handler
-                .SetupRequest(HttpMethod.Get, ccRequest)
-                .ReturnsResponse(System.Net.HttpStatusCode.BadRequest)
+            psMock
+                .Setup(t=>t.GetExchangeRateAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .Throws(new ApplicationException())
                 .Verifiable();
-            handler
-                .SetupRequest(HttpMethod.Get, ehRequest)
-                .ReturnsResponse(ccResponse, "application/json")
+            fbMock
+                .Setup(t=>t.GetExchangeRateAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(Task.FromResult(new ExchangeRateInfo
+                    { ExchangeRate = (decimal)51.440375, RequestStatus = new RequestStatus(RequestStatusCode.Ok)}))
                 .Verifiable();
 
             var client = new CurrencyExchangeService(
                 loggerMock.Object,
-                handler.CreateClient(),
-                config,
-                otMetricsMock.Object);
+                otelMetricsMock.Object,
+                psMock.Object,
+                fbMock.Object);
 
             // Act
             //
@@ -134,48 +120,37 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.HostTest
             // Assert
             //
             Assert.Equal(RequestStatusCode.Ok, result.RequestStatus.StatusCode);
-            Assert.Equal((decimal)70.155903, result.ExchangeRate);
-//            handler.VerifyRequest(ccRequest, Times.Exactly(1));
-            handler.VerifyRequest(ehRequest, Times.Exactly(1));
+            Assert.Equal((decimal)51.440375, result.ExchangeRate);
+            psMock.Verify(t=>t.GetExchangeRateAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Exactly(1));
+            fbMock.Verify(t=>t.GetExchangeRateAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Exactly(1));
         }
 
-       // [Fact]
+        [Fact]
         public async Task IfFailureTwiceCircuitShouldCallFallbackDirectly()
         {
             // Arrange
             //
-            var config = new ServiceHost.Entity.CurrencyExchangeConfiguration
-            {
-                CurrencyConverterKey = "test_Key",
-                CurrencyConverterUrlTemplate = "https://free.currconv.com/api/v7/convert?apiKey={0}&q={1}_{2}&compact=ultra",
-                ExchangeHostUrlTemplate = "https://api.exchangerate.host/convert?from={0}&to={1}"
-
-            };
-            var otMetricsMock = new Mock<OtelMetrics>("","","");
+            var otelMetricsMock = new Mock<OtelMetrics>("","","");
             var loggerMock = new Mock<ILogger<CurrencyExchangeService>>();
-            var handler = new Mock<HttpMessageHandler>();
-            var ccResponse = "{\"info\": {\"rate\": 70.155903}}";
+            var psMock = new Mock<TwelveData>(null, null, null);
+            var fbMock = new Mock<ExchangeHost>(null, null, null);
 
-            //var ccRequest = "https://free.currconv.com/api/v7/convert?apiKey=test_Key&q=EUR_RUB&compact=ultra";
-            //var ehRequest = "https://api.exchangerate.host/convert?from=AAA&to=ZZZ";
-            
-            var ehRequest = "https://free.currconv.com/api/v7/convert?apiKey=test_Key&q=EUR_RUB&compact=ultra";
-            var ccRequest = "https://api.exchangerate.host/convert?from=AAA&to=ZZZ";
-
-            handler
-                .SetupRequest(HttpMethod.Get, ccRequest)
-                .ReturnsResponse(System.Net.HttpStatusCode.BadRequest)
+            psMock
+                .Setup(t=>t.GetExchangeRateAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .Throws(new ApplicationException())
                 .Verifiable();
-            handler
-                .SetupRequest(HttpMethod.Get, ehRequest)
-                .ReturnsResponse(ccResponse, "application/json")
+            fbMock
+                .Setup(t=>t.GetExchangeRateAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(Task.FromResult(new ExchangeRateInfo
+                    { ExchangeRate = (decimal)51.440375, RequestStatus = new RequestStatus(RequestStatusCode.Ok)}))
                 .Verifiable();
 
             var client = new CurrencyExchangeService(
                 loggerMock.Object,
-                handler.CreateClient(),
-                config,
-                otMetricsMock.Object);
+                otelMetricsMock.Object,
+                psMock.Object,
+                fbMock.Object);
+            
 
             // Act
             //
@@ -186,9 +161,9 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.HostTest
             // Assert
             //
             Assert.Equal(RequestStatusCode.Ok, result.RequestStatus.StatusCode);
-            Assert.Equal((decimal)70.155903, result.ExchangeRate);
-            handler.VerifyRequest(r => r.RequestUri?.Host == "free.currconv.com", Times.Exactly(2));
-            handler.VerifyRequest(r => r.RequestUri?.Host == "api.exchangerate.host", Times.Exactly(3));
+            Assert.Equal((decimal)51.440375, result.ExchangeRate);
+            psMock.Verify(t=>t.GetExchangeRateAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Exactly(2));
+            fbMock.Verify(t=>t.GetExchangeRateAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Exactly(3));
         }
     }
 }

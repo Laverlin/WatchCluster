@@ -24,16 +24,15 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
             //
             var loggerMock = new Mock<ILogger<YaFaceController>>();
             var otMetricsMock = new Mock<OtelMetrics>("", "", "");
-            var kafkaConfigMock = new Mock<KafkaConfiguration>();
             var activitySourceMock = new ActivitySource("test-source");
             var deliveryResult = new DeliveryResult<string, string> 
             { 
                 Message = new Message<string, string> { Value = "" }, 
                 Status = PersistenceStatus.Persisted 
             };
-            var kafkaProducerMock = new Mock<IKafkaProducer<string, string>>();
-            kafkaProducerMock
-                .Setup(m => m.ProduceAsync(It.IsAny<string>(), It.IsAny<Message<string, string>>()))
+            var kafkaBrokerMock = new Mock<IKafkaBroker>();
+            kafkaBrokerMock
+                .Setup(m => m.ProduceRequestAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<WatchRequest>()))
                 .Returns(Task.FromResult(deliveryResult))
                 .Verifiable();
             var requestId = "1";
@@ -45,7 +44,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 
             
             var controller = new YaFaceController(
-                loggerMock.Object, otMetricsMock.Object, activitySourceMock, kafkaConfigMock.Object, kafkaProducerMock.Object, collectorConsumerMock.Object);
+                loggerMock.Object, otMetricsMock.Object, activitySourceMock, kafkaBrokerMock.Object, collectorConsumerMock.Object);
             controller.ControllerContext.HttpContext = new DefaultHttpContext();
             controller.HttpContext.TraceIdentifier = requestId;
 
@@ -58,7 +57,8 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
             Assert.NotNull(result.Value);
             Assert.IsType<WatchResponse>(result.Value);
 
-            kafkaProducerMock.Verify(_ => _.ProduceAsync(It.IsAny<string>(), It.IsAny<Message<string, string>>()), Times.Once);
+            kafkaBrokerMock.Verify(_ => _.ProduceRequestAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<WatchRequest>()), Times.Once);
             collectorConsumerMock.Verify(_ => _.GetCollectedMessages(It.IsAny<string>()), Times.Once);
         }
 
@@ -77,9 +77,9 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
                 Message = new Message<string, string> { Value = "" },
                 Status = PersistenceStatus.Persisted
             };
-            var kafkaProducerMock = new Mock<IKafkaProducer<string, string>>();
-            kafkaProducerMock
-                .Setup(m => m.ProduceAsync(It.IsAny<string>(), It.IsAny<Message<string, string>>()))
+            var kafkaBrokerMock = new Mock<IKafkaBroker>();
+            kafkaBrokerMock
+                .Setup(m => m.ProduceRequestAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<WatchRequest>()))
                 .Returns(Task.FromResult(deliveryResult))
                 .Verifiable();
             var requestId = "1";
@@ -91,7 +91,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 
 
             var controller = new YaFaceController(
-                loggerMock.Object, otMetricsMock.Object, activitySourceMock, kafkaConfigMock.Object, kafkaProducerMock.Object, collectorConsumerMock.Object);
+                loggerMock.Object, otMetricsMock.Object, activitySourceMock, kafkaBrokerMock.Object, collectorConsumerMock.Object);
             controller.ControllerContext.HttpContext = new DefaultHttpContext();
             controller.HttpContext.TraceIdentifier = requestId;
 
@@ -104,7 +104,8 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
             Assert.IsType<ObjectResult>(result.Result);
             Assert.Equal(503, ((ObjectResult)result.Result!).StatusCode);
 
-            kafkaProducerMock.Verify(_ => _.ProduceAsync(It.IsAny<string>(), It.IsAny<Message<string, string>>()), Times.Once);
+            kafkaBrokerMock.Verify(_ => _.ProduceRequestAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<WatchRequest>()), Times.Once);
             collectorConsumerMock.Verify(_ => _.GetCollectedMessages(It.IsAny<string>()), Times.Once);
         }
     }

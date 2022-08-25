@@ -5,10 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Confluent.Kafka;
 using IB.WatchCluster.Api.Services;
-using IB.WatchCluster.Abstract.Entity.Configuration;
 using System.Diagnostics;
 using IB.WatchCluster.Abstract.Kafka;
-using IB.WatchCluster.Abstract.Kafka.Entity;
 
 namespace IB.WatchCluster.Api.Controllers;
 
@@ -22,11 +20,10 @@ namespace IB.WatchCluster.Api.Controllers;
 public class YaFaceController : Controller
 {
     private readonly ILogger<YaFaceController> _logger;
-    private readonly IKafkaProducer<string, string> _kafkaProducer;
     private readonly CollectorHandler _collectorHandler;
     private readonly OtelMetrics _otelMetrics;
     private readonly ActivitySource _activitySource;
-    private readonly KafkaConfiguration _kafkaConfiguration;
+    private readonly IKafkaBroker _kafkaBroker;
     private readonly Stopwatch _processTimer = new ();
     private bool _isProduced = false;
     private bool _isCollected = false;
@@ -35,16 +32,14 @@ public class YaFaceController : Controller
         ILogger<YaFaceController> logger,
         OtelMetrics otelMetrics,
         ActivitySource activitySource,
-        KafkaConfiguration kafkaConfiguration,
-        IKafkaProducer<string, string> kafkaProducer,
+        IKafkaBroker kafkaBroker,
         CollectorHandler collectorHandler)
     {
         _logger = logger;
-        _kafkaProducer = kafkaProducer;
         _collectorHandler = collectorHandler;
         _otelMetrics = otelMetrics;
         _activitySource = activitySource;
-        _kafkaConfiguration = kafkaConfiguration;
+        _kafkaBroker = kafkaBroker;
     }
 
     /// <summary>
@@ -71,7 +66,7 @@ public class YaFaceController : Controller
             
             // Produce a message to process
             //
-            await ProduceMessage(MessageExtensions.CreateMessage(requestId, activity?.Id ?? "", watchRequest));
+            await ProduceMessage(requestId, activity?.Id ?? "", watchRequest);
 
             // Wait for the result of processing
             //
@@ -96,24 +91,17 @@ public class YaFaceController : Controller
     /// <summary>
     /// Produce a message to process request
     /// </summary>
-    /// <param name="message"></param>
     /// <exception cref="ApiException"></exception>
-    private async Task ProduceMessage(KnownMessage message)
+    private async Task ProduceMessage(string key, string activityId, WatchRequest watchRequest)
     {
         _otelMetrics.IncrementActiveMessages();
         _processTimer.Start();
-        
-        var result = await _kafkaProducer.ProduceAsync(_kafkaConfiguration.WatchRequestTopic, message.ToKafkaMessage());
+
+        var result = await _kafkaBroker.ProduceRequestAsync(key, activityId, watchRequest);
         if (result.Status == PersistenceStatus.Persisted)
-        {
             _isProduced = true;
-            _logger
-                .LogDebug("{@Message} is delivered to {@TopicPartitionOffset}", result.Value, result.TopicPartitionOffset);
-        }
         else
-        {
             throw new ApiException(503, "Server Error: Unable deliver message to the queue");
-        }
     }
 
     private async Task<WatchResponse> CollectResult(string requestId)

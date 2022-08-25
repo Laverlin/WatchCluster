@@ -1,5 +1,4 @@
 ﻿using Confluent.Kafka;
-using IB.WatchCluster.Abstract.Entity.Configuration;
 using IB.WatchCluster.Abstract.Entity.WatchFace;
 using IB.WatchCluster.ServiceHost.Services;
 using Microsoft.Extensions.Hosting;
@@ -11,28 +10,23 @@ namespace IB.WatchCluster.ServiceHost.Infrastructure;
 
 public class ProcessingService<THandler>: BackgroundService where THandler: IHandlerResult
 {
-    private readonly KafkaConfiguration _kafkaConfig;
-    private readonly IConsumer<string, string> _consumer;
-    private readonly IKafkaProducer<string, string> _producer;
+    private readonly KafkaBroker _kafkaBroker;
     private readonly ILogger _logger;
     private readonly ActivitySource _activitySource;
     private readonly IRequestHandler<THandler> _requestHandler;
     private readonly ProcessingHandler _processingHandler;
 
-    public ProcessingService(
-        KafkaConfiguration kafkaConfig, 
-        IConsumer<string, string> consumer, 
-        IKafkaProducer<string, string> producer, 
+    public ProcessingService( 
         ILogger<ProcessingService<THandler>> logger,
+        OtelMetrics otelMetrics,
         ActivitySource activitySource,
         IRequestHandler<THandler> requestHandler,
         ProcessingHandler processingHandler,
-        IHostApplicationLifetime appLifetime,
-        OtelMetrics otelMetrics)
+        KafkaBroker kafkaBroker,
+        IHostApplicationLifetime appLifetime
+        )
     {
-        _kafkaConfig = kafkaConfig;
-        _consumer = consumer;
-        _producer = producer;
+        _kafkaBroker = kafkaBroker;
         _logger = logger;
         _activitySource = activitySource;
         _requestHandler = requestHandler;
@@ -58,31 +52,20 @@ public class ProcessingService<THandler>: BackgroundService where THandler: IHan
 
     private async Task HandleMessageLoop(CancellationToken cancellationToken)
     {
-        _consumer.Subscribe(_kafkaConfig.WatchRequestTopic);
+        _kafkaBroker.SubscribeRequests();
         while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
-                var cr = _consumer.Consume(cancellationToken);
-                if (!cr.Message.TryParseMessage(out var message) ||
-                    message.Header.MessageType.Name != nameof(WatchRequest))
-                {
-                    _logger.LogWarning("Unable to parse message {@msg}", cr.Message);
+                var message = _kafkaBroker.Consume(cancellationToken);
+                if (message == null)
                     continue;
-                }
 
                 using (_activitySource.StartActivity(typeof(THandler).Name, ActivityKind.Consumer, message.Header.ActivityId))
                 {
                     var result = await _requestHandler.ProcessAsync(message.Value as WatchRequest);
                     result.RequestId = message.Key;
-                    var dr = await _producer.ProduceAsync(
-                        _kafkaConfig.WatchResponseTopic,
-                        MessageExtensions
-                            .CreateMessage(message.Key, message.Header.ActivityId, result)
-                            .ToKafkaMessage());
-                    _logger.LogDebug(
-                        "Push processed message {@Key} at: {@TopicPartitionOffset}",
-                        dr.Message.Key, dr.TopicPartitionOffset.ToString());
+                    await _kafkaBroker.ProduceResponseAsync(message.Key, message.Header.ActivityId, result);
                 }
             }
             catch (ConsumeException e)
@@ -101,6 +84,6 @@ public class ProcessingService<THandler>: BackgroundService where THandler: IHan
                 break;
             }
         }
-        _consumer.Close();
+        _kafkaBroker.ConsumerClose();
     }
 }

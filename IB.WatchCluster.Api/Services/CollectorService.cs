@@ -1,25 +1,21 @@
 ﻿using Confluent.Kafka;
-using IB.WatchCluster.Abstract.Entity.Configuration;
 using IB.WatchCluster.Abstract.Kafka;
 
 namespace IB.WatchCluster.Api.Services;
 
 public sealed class CollectorService: BackgroundService
 {
-    private readonly IConsumer<string, string> _kafkaConsumer;
-    private readonly KafkaConfiguration _kafkaConfiguration;
     private readonly ILogger _logger;
+    private readonly IKafkaBroker _kafkaBroker;
     private readonly CollectorHandler _collectorHandler;
 
     public CollectorService(
-        IConsumer<string, string> kafkaConsumer,
-        KafkaConfiguration kafkaConfiguration, 
         ILogger<CollectorService> logger,
+        IKafkaBroker kafkaBroker,
         CollectorHandler collectorHandler)
     {
-        _kafkaConsumer = kafkaConsumer;
-        _kafkaConfiguration = kafkaConfiguration;
         _logger = logger;
+        _kafkaBroker = kafkaBroker;
         _collectorHandler = collectorHandler;
     }
 
@@ -39,17 +35,14 @@ public sealed class CollectorService: BackgroundService
     
     public void StartConsumerLoop(CancellationToken cancellationToken)
     {
-        _kafkaConsumer.Subscribe(_kafkaConfiguration.WatchResponseTopic);
+        _kafkaBroker.SubscribeResponses();
         while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
-                var cr = _kafkaConsumer.Consume(cancellationToken);
-                if (!cr.Message.TryParseMessage(out var message))
-                {
-                    _logger.LogWarning("Unable to parse message {@message}", cr.Message);
+                var message = _kafkaBroker.Consume(cancellationToken);
+                if (message == null)
                     continue;
-                }
                 _logger.LogDebug("Collector got {@message}", message);
                 _collectorHandler.OnNext(message);
             }
@@ -72,14 +65,13 @@ public sealed class CollectorService: BackgroundService
                 break;
             }
         }
-        _kafkaConsumer.Close();
+        _kafkaBroker.ConsumerClose();
         _collectorHandler.OnCompleted();
     }
 
     public override void Dispose()
     {
-        _kafkaConsumer.Close(); // Commit offsets and leave the group cleanly.
-        _kafkaConsumer.Dispose();
+        _kafkaBroker.Dispose();
         base.Dispose();
     }
 }

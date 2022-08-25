@@ -34,5 +34,10 @@ namespace IB.WatchCluster.Abstract.Entity.Configuration
                 AutoOffsetReset = kafkaConfig.AutoOffsetReset
             };
         }
+
+        public static void SetDefaults(this KafkaConfiguration kafkaConfig, string consumerGroup)
+        {
+            kafkaConfig.GroupId = kafkaConfig.GroupId ?? consumerGroup;
+        }
     }
 }

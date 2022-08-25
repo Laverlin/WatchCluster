@@ -1,5 +1,4 @@
-﻿using Confluent.Kafka;
-using IB.WatchCluster.Abstract;
+﻿using IB.WatchCluster.Abstract;
 using IB.WatchCluster.Abstract.Configuration;
 using IB.WatchCluster.Abstract.Entity.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +14,7 @@ using IB.WatchCluster.Abstract.Entity.WatchFace;
 using IB.WatchCluster.Abstract.Kafka;
 using IB.WatchCluster.Abstract.Services;
 using IB.WatchCluster.ServiceHost.Services;
+using IB.WatchCluster.ServiceHost.Services.CurrencyExchange;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using OpenTelemetry.Metrics;
 using Serilog.Exceptions;
@@ -45,7 +45,7 @@ await Host.CreateDefaultBuilder(args)
     {
         var appConfig = hostContext.Configuration.LoadVerifiedConfiguration<AppConfiguration>();
         var kafkaConfig = hostContext.Configuration.LoadVerifiedConfiguration<KafkaConfiguration>();
-        var consumerConfig = kafkaConfig.BuildConsumerConfig($"sh-{appConfig.Handler.ToLower()}");
+        kafkaConfig.SetDefaults($"sh-{appConfig.Handler.ToLower()}");
         var otelMetrics = new OtelMetrics(appConfig.Handler.ToLower());
         var processingHandler = new ProcessingHandler();
 
@@ -65,8 +65,7 @@ await Host.CreateDefaultBuilder(args)
         services.AddSingleton(new ActivitySource(SolutionInfo.Name));
         services.AddSingleton(processingHandler);
         services.AddSingleton(kafkaConfig);
-        services.AddSingleton<IKafkaProducer<string, string>, KafkaProducer<string, string>>();
-        services.AddSingleton(new ConsumerBuilder<string, string>(consumerConfig).Build());
+        services.AddSingleton<KafkaBroker>();
 
         // healthcheck
         //
@@ -98,8 +97,10 @@ await Host.CreateDefaultBuilder(args)
                 services.AddHostedService<ProcessingService<WeatherInfo>>();
                 break;
             case nameof(ExchangeRateInfo):
-                services.AddHttpClient<IRequestHandler<ExchangeRateInfo>, CurrencyExchangeService>();
                 services.AddSingleton(hostContext.Configuration.LoadVerifiedConfiguration<CurrencyExchangeConfiguration>());
+                services.AddHttpClient<TwelveData>();
+                services.AddHttpClient<ExchangeHost>();
+                services.AddSingleton<IRequestHandler<ExchangeRateInfo>, CurrencyExchangeService>();
                 services.AddHostedService<ProcessingService<ExchangeRateInfo>>();
                 break;
             default: 

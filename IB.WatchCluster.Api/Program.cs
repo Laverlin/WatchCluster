@@ -55,6 +55,7 @@ try
     builder.Configuration.AddEnvironmentVariables();
     var apiConfiguration = builder.Configuration.LoadVerifiedConfiguration<ApiConfiguration>();
     var kafkaConfig = builder.Configuration.LoadVerifiedConfiguration<KafkaConfiguration>();
+    kafkaConfig.SetDefaults("api-collector");
     var collectorHandler = new CollectorHandler();
 
     // Metrics & Tracing
@@ -78,10 +79,7 @@ try
     builder.Services.AddSingleton(new ActivitySource(SolutionInfo.Name));
     builder.Services.AddSingleton(otelMetrics);
     builder.Services.AddSingleton(kafkaConfig);
-    builder.Services.AddSingleton(kafkaConfig.BuildProducerConfig());
-    builder.Services.AddSingleton(
-        new ConsumerBuilder<string, string>(kafkaConfig.BuildConsumerConfig("api-collector")).Build());
-    builder.Services.AddSingleton<IKafkaProducer<string, string>, KafkaProducer<string, string>>();
+    builder.Services.AddSingleton<IKafkaBroker, KafkaBroker>();
     builder.Services.AddSingleton(collectorHandler);
     builder.Services.AddHostedService<CollectorService>();
 

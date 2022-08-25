@@ -4,7 +4,7 @@ using Confluent.Kafka;
 
 namespace IB.WatchCluster.Abstract.Kafka;
 
-public interface IKafkaProducer<TK, TV>
+public interface IKafkaProducerOld<TK, TV>
 {
     /// <summary>
     ///     Asynchronously produce a message and expose delivery information
