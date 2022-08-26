@@ -16,6 +16,7 @@ using Serilog;
 using Serilog.Enrichers.Span;
 using System.Diagnostics;
 using IB.WatchCluster.Abstract.Kafka;
+using IB.WatchCluster.Abstract.Services;
 using IB.WatchCluster.Api.Middleware;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -141,7 +142,7 @@ try
     app.MapControllers();
     app.MapHealthChecks(
         "/health/ready",
-        new HealthCheckOptions { ResponseWriter = HealthCheckExtensions.WriteHealthResultResponse });
+        new HealthCheckOptions { ResponseWriter = HealthcheckStatic.HealthResultResponseJsonFull });
     app.MapHealthChecks(
         "/health/live", 
         new HealthCheckOptions { Predicate = r => r.Name.Contains("self")});

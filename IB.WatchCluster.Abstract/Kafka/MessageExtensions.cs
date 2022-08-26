@@ -10,55 +10,6 @@ namespace IB.WatchCluster.Abstract.Kafka;
 
 public static class MessageExtensions
 {
-    public static KnownMessage CreateMessage<T>(string key, string activityId, T message)
-    {
-        return new KnownMessage
-        {
-            Key = key,
-            Value = message,
-            Header = new MessageHeader
-            {
-                ActivityId = activityId,
-                MessageType = typeof(T)
-            }
-        };
-    }
-
-    public static Message<string, string> ToKafkaMessage(this KnownMessage message)
-    {
-        return new Message<string, string>
-        {
-            Headers = new Headers
-            {
-                new Header("activityId", Encoding.ASCII.GetBytes(message.Header.ActivityId)),
-                new Header("type", Encoding.ASCII.GetBytes(message.Header.MessageType.Name))
-            },
-            Key = message.Key,
-            Value = JsonSerializer.Serialize(message.Value)
-        };
-    }
-    public static MessageHeader GetHeader(this Message<string, string> message)
-    {
-        if (!message.Headers.TryGetLastBytes("type", out var rawMessageType))
-            throw new InvalidOperationException("Can not parse message without type");
-
-        var messageType = SolutionInfo.Assembly.GetTypes().FirstOrDefault(
-            t => t.Name == Encoding.ASCII.GetString(rawMessageType));
-        if (messageType == null)
-            throw new InvalidOperationException(
-                $"Can not parse message of unknown type. Type {rawMessageType} not found");
-
-        var activityId = message.Headers.TryGetLastBytes("activityId", out var rawActivityId) 
-            ? Encoding.ASCII.GetString(rawActivityId)
-            : null;
-
-        return new MessageHeader
-        {
-            MessageType = messageType,
-            ActivityId = activityId
-        };
-    }
-
     public static bool TryParseHeader(this Message<string, string> message, out MessageHeader messageHeader)
     {
         messageHeader = null;

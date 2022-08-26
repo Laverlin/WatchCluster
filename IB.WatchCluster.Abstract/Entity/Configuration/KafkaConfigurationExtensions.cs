@@ -20,10 +20,10 @@ namespace IB.WatchCluster.Abstract.Entity.Configuration
         /// Builds <see cref="ConsumerConfig"/>
         /// </summary>
         /// <param name="kafkaConfig">loaded & verified kafka config</param>
-        public static ConsumerConfig BuildConsumerConfig(this KafkaConfiguration kafkaConfig, string groupId = null)
+        public static ConsumerConfig BuildConsumerConfig(this KafkaConfiguration kafkaConfig)
         {
             var clientId = SolutionInfo.Name;
-            var consumerGroup = kafkaConfig.GroupId ?? groupId ?? SolutionInfo.Name.ToLower();
+            var consumerGroup = kafkaConfig.GroupId ?? SolutionInfo.Name.ToLower();
 
             return new ConsumerConfig 
             { 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -26,16 +27,16 @@ public sealed class KafkaBroker: IKafkaBroker
     }
 
     public async Task<DeliveryResult<string, string>> ProduceRequestAsync<T>(string key, string activityId, T msgObject)
-        => await ProduceAsync(_kafkaConfiguration.WatchRequestTopic, key, activityId, msgObject);
+        => await ProduceAsync(Topics.RequestTopic, key, activityId, msgObject);
     
     public async Task ProduceResponseAsync<T>(string key, string activityId, T msgObject)
-        => await ProduceAsync(_kafkaConfiguration.WatchResponseTopic, key, activityId, msgObject);
+        => await ProduceAsync(Topics.ResponseTopic, key, activityId, msgObject);
 
     public void Flush(TimeSpan timeout) => _producer.Flush(timeout);
 
-    public void SubscribeRequests() => _consumer.Subscribe(_kafkaConfiguration.WatchRequestTopic);
+    public void SubscribeRequests() => _consumer.Subscribe(Topics.RequestTopic);
     
-    public void SubscribeResponses() => _consumer.Subscribe(_kafkaConfiguration.WatchResponseTopic);
+    public void SubscribeResponses() => _consumer.Subscribe(Topics.ResponseTopic);
 
     public void ConsumerClose() => _consumer.Close();
 
@@ -48,6 +49,66 @@ public sealed class KafkaBroker: IKafkaBroker
         }
         _logger.LogDebug("Collector got {@message}", message);
         return message;
+    }
+
+    public async Task StartConsumingLoop(
+        string topic, 
+        Func<KnownMessage, Task> messageHandler, 
+        Action<bool> consumerLoopStatus, 
+        CancellationToken cancellationToken)
+        => await StartConsumingLoop(new[] { topic }, messageHandler, consumerLoopStatus, cancellationToken);
+    
+    public async Task StartConsumingLoop(
+        IEnumerable<string> topics,
+        Func<KnownMessage, Task> messageHandler, 
+        Action<bool> consumerLoopStatus, 
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            consumerLoopStatus(true);
+            _logger.LogInformation("Start consuming {@consumerGroup}", _kafkaConfiguration.GroupId);
+            _consumer.Subscribe(topics);
+            await Task.Run(() => HandleLoopMessages(messageHandler, cancellationToken), CancellationToken.None);
+        }
+        finally
+        {
+            ConsumerClose();
+            consumerLoopStatus(false);
+            _logger.LogInformation("Stop consuming {@consumerGroup}", _kafkaConfiguration.GroupId);
+        }
+    }
+
+    private void HandleLoopMessages(Func<KnownMessage, Task> messageHandler, CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                var message = Consume(cancellationToken);
+                if (message == null)
+                    continue;
+                messageHandler(message);
+            }
+            catch (ConsumeException e) when (e.Error.IsFatal)
+            {
+                _logger.LogCritical(e, "Consume Fatal Exception {@msg}", e.Message);
+                break;                
+            }
+            catch (ConsumeException e)
+            {
+                _logger.LogWarning(e, "Consume Exception {@msg}", e.Message);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Unhandled exception, shutting down");
+                break;
+            }
+        }
     }
         
     private async Task<DeliveryResult<string, string>> ProduceAsync<T>(string topic, string key, string activityId, T msgObject)

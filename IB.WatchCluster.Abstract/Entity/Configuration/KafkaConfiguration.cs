@@ -15,11 +15,7 @@ namespace IB.WatchCluster.Abstract.Entity.Configuration
         public string BootstrapServers { get; set; } = default!;
 
         public string GroupId { get; set; } = default!;
-
-        public string WatchRequestTopic { get; set; } = "watch-request";
-
-        public string WatchResponseTopic { get; set; } = "watch-response";
-
+        
         public AutoOffsetReset AutoOffsetReset { get; set; } = AutoOffsetReset.Latest;
     }
 }

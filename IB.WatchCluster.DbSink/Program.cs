@@ -39,7 +39,8 @@ await Host.CreateDefaultBuilder(args)
     {
         var appConfig = hostContext.Configuration.LoadVerifiedConfiguration<DbSinkConfiguration>();
         var kafkaConfig = hostContext.Configuration.LoadVerifiedConfiguration<KafkaConfiguration>();
-        var consumerConfig = kafkaConfig.BuildConsumerConfig("dbsink-postgres");
+        kafkaConfig.SetDefaults("dbsink-postgres");
+        var consumerConfig = kafkaConfig.BuildConsumerConfig();
 
         services.AddOpenTelemetryTracing(builder => builder
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(SolutionInfo.Name))

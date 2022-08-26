@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System.Diagnostics;
+using IB.WatchCluster.Abstract.Kafka.Entity;
 
 namespace IB.WatchCluster.DbSink
 {
@@ -39,7 +40,7 @@ namespace IB.WatchCluster.DbSink
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            _consumer.Subscribe(new[] { _kafkaConfig.WatchRequestTopic, _kafkaConfig.WatchResponseTopic });
+            _consumer.Subscribe(Topics.AllTopics);
             try
             {
                 _logger.LogInformation("Start sink to {@Provider}", _dataConnectionFactory.ProviderName);

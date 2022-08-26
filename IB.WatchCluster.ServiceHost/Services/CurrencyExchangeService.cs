@@ -54,7 +54,7 @@ public class CurrencyExchangeService : IRequestHandler<ExchangeRateInfo>
 
             if (exchangeRateInfo.RequestStatus.StatusCode == RequestStatusCode.Ok && exchangeRateInfo.ExchangeRate != 0)
             {
-                MemoryCache.Set(cacheKey, exchangeRateInfo, TimeSpan.FromMinutes(60));
+                MemoryCache.Set(cacheKey, exchangeRateInfo, TimeSpan.FromMinutes(90));
                 _metrics.SetMemoryCacheGauge(MemoryCache.Count);
             }
             
@@ -78,15 +78,19 @@ public class CurrencyExchangeService : IRequestHandler<ExchangeRateInfo>
     {
         var circuitBreaker = Policy
             .Handle<Exception>()
+            .OrResult<ExchangeRateInfo>(r => r.RequestStatus.StatusCode == RequestStatusCode.Error)
+            .OrResult(r => r.ExchangeRate == 0)
             .CircuitBreakerAsync(
-                exceptionsAllowedBeforeBreaking: 2,
-                durationOfBreak: TimeSpan.FromHours(10),
-                onBreak: (exception, _) => _logger.LogWarning(exception, "Circuit is broken, go direct to fallback"),
+                handledEventsAllowedBeforeBreaking: 2,
+                durationOfBreak: TimeSpan.FromHours(1),
+                onBreak: (dr, _) 
+                    => _logger.LogDebug(dr.Exception, "Circuit is broken, go direct to fallback {@erInfo}", dr.Result),
                 onReset: () => _logger.LogWarning("Back to normal"));
 
         return Policy<ExchangeRateInfo>
             .Handle<Exception>()
             .OrResult(result => result.RequestStatus.StatusCode == RequestStatusCode.Error)
+            .OrResult(result => result.ExchangeRate == 0)
             .FallbackAsync(
                 fallbackAction: async (context, _) =>
                 {
@@ -95,7 +99,7 @@ public class CurrencyExchangeService : IRequestHandler<ExchangeRateInfo>
                 },
                 onFallbackAsync: async (result, context) =>
                 {
-                    _logger.LogWarning(
+                    _logger.LogDebug(
                         result.Exception, 
                         "Fallback, object state: {@ExchangeRateInfo}, params: {@params}", 
                         result.Result, 

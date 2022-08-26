@@ -21,4 +21,10 @@ public interface IKafkaBroker: IDisposable
     public void ConsumerClose();
 
     public KnownMessage Consume(CancellationToken cancellationToken);
+
+    public Task StartConsumingLoop(
+        string topic,
+        Func<KnownMessage, Task> messageHandler,
+        Action<bool> consumerLoopStatus,
+        CancellationToken cancellationToken);
 }
