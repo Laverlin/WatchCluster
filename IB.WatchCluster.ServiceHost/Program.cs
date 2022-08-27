@@ -44,6 +44,7 @@ await Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
     {
         var appConfig = hostContext.Configuration.LoadVerifiedConfiguration<AppConfiguration>();
+        var healthCheckConfig = hostContext.Configuration.LoadVerifiedConfiguration<HealthcheckConfig>();
         var kafkaConfig = hostContext.Configuration.LoadVerifiedConfiguration<KafkaConfiguration>();
         kafkaConfig.SetDefaults($"sh-{appConfig.Handler.ToLower()}");
         var otelMetrics = new OtelMetrics(appConfig.Handler.ToLower());
@@ -61,14 +62,13 @@ await Host.CreateDefaultBuilder(args)
             .AddMeter(otelMetrics.MetricJob)
             .AddOtlpExporter(options => options.Endpoint = new Uri(appConfig.OpenTelemetryCollectorUrl)));
 
-        services.AddSingleton(appConfig.HealthCheckConfig);
+        services.AddSingleton(healthCheckConfig);
         services.AddSingleton(otelMetrics);
         services.AddSingleton(new ActivitySource(SolutionInfo.Name));
         services.AddSingleton(processingHandler);
         services.AddSingleton(kafkaConfig);
         services.AddSingleton<KafkaBroker>();
         
-
         // healthcheck
         //
         services
@@ -76,13 +76,13 @@ await Host.CreateDefaultBuilder(args)
             .AddCheck(
                 "self",
                 () => processingHandler.IsRunning ? HealthCheckResult.Healthy() : HealthCheckResult.Unhealthy(),
-                new[]{appConfig.HealthCheckConfig.LiveFilterTag})
+                new[] { healthCheckConfig.LiveFilterTag })
             .AddKafka(
                 kafkaConfig.BuildProducerConfig(), 
                 "healthcheck", 
                 "kafka", 
                 null, 
-                new[]{"readiness"}, 
+                new[]{ "readiness" }, 
                 TimeSpan.FromSeconds(30));
         services.AddHostedService<HealthcheckPublisherService>();
 

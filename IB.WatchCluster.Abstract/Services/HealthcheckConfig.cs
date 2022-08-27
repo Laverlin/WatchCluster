@@ -5,7 +5,7 @@ namespace IB.WatchCluster.Abstract.Services;
 /// <summary>
 /// HeathCheck publisher configuration
 /// </summary>
-public class HealthCheckConfig
+public class HealthcheckConfig
 {
     /// <summary>
     /// Port number where probes are published
@@ -16,15 +16,17 @@ public class HealthCheckConfig
     /// <summary>
     /// The url of liveliness probe
     /// </summary>
-    [Required]
-    [RegularExpression(@"^[\/][a-zA-Z0-9]*[\/]$|^$", ErrorMessage = "If not empty, must starts and ends with '/' character.")]
+    [RegularExpression(
+        "^[/][a-zA-Z0-9/-]*[/]$|^$", 
+        ErrorMessage = "If a LiveProbeUrl is not empty, it must starts and ends with '/' character.")]
     public string LiveProbeUrl { get; set; } = "/health/live/";
     
     /// <summary>
     /// The Url of the readiness probe
     /// </summary>
-    [Required]
-    [RegularExpression(@"^[\/][a-zA-Z0-9]*[\/]$|^$", ErrorMessage = "If not empty, must starts and ends with '/' character.")]
+    [RegularExpression(
+        "^[/][a-zA-Z0-9/-]*[/]$|^$", 
+        ErrorMessage = "If a ReadyProbeUrl is not empty, it must starts and ends with '/' character.")]
     public string ReadyProbeUrl { get; set; } = "/health/ready/";
     
     /// <summary>

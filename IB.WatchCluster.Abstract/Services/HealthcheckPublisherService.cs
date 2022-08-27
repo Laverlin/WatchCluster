@@ -11,21 +11,21 @@ namespace IB.WatchCluster.Abstract.Services;
 public class HealthcheckPublisherService : BackgroundService
 {
     private readonly ILogger<HealthcheckPublisherService> _logger;
-    private readonly HealthCheckConfig _healthCheckConfig;
+    private readonly HealthcheckConfig _healthcheckConfig;
     private readonly HealthCheckService _healthCheckService;
 
     public HealthcheckPublisherService(
-        ILogger<HealthcheckPublisherService> logger, HealthCheckConfig healthCheckConfig, HealthCheckService healthCheckService)
+        ILogger<HealthcheckPublisherService> logger, HealthcheckConfig healthcheckConfig, HealthCheckService healthCheckService)
     {
         _logger = logger;
-        _healthCheckConfig = healthCheckConfig;
+        _healthcheckConfig = healthcheckConfig;
         _healthCheckService = healthCheckService;
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (string.IsNullOrWhiteSpace(_healthCheckConfig.LiveProbeUrl) &&
-            string.IsNullOrWhiteSpace(_healthCheckConfig.ReadyProbeUrl))
+        if (string.IsNullOrWhiteSpace(_healthcheckConfig.LiveProbeUrl) &&
+            string.IsNullOrWhiteSpace(_healthcheckConfig.ReadyProbeUrl))
         {
             _logger.LogWarning("Could not start health check publisher, as no healthcheck endpoints defined");
             return;
@@ -33,22 +33,22 @@ public class HealthcheckPublisherService : BackgroundService
             
         using var listener = new HttpListener();
 
-        if (!string.IsNullOrWhiteSpace(_healthCheckConfig.LiveProbeUrl))
+        if (!string.IsNullOrWhiteSpace(_healthcheckConfig.LiveProbeUrl))
         {
-            listener.Prefixes.Add($"http://*:{_healthCheckConfig.HttpPort}{_healthCheckConfig.LiveProbeUrl}");
+            listener.Prefixes.Add($"http://*:{_healthcheckConfig.HttpPort}{_healthcheckConfig.LiveProbeUrl}");
             _logger.LogInformation(
                 "Healthcheck Live probe listens on port {@port}, url {@url}", 
-                _healthCheckConfig.HttpPort, 
-                _healthCheckConfig.LiveProbeUrl);
+                _healthcheckConfig.HttpPort, 
+                _healthcheckConfig.LiveProbeUrl);
         }
 
-        if (!string.IsNullOrWhiteSpace(_healthCheckConfig.ReadyProbeUrl))
+        if (!string.IsNullOrWhiteSpace(_healthcheckConfig.ReadyProbeUrl))
         {
-            listener.Prefixes.Add($"http://*:{_healthCheckConfig.HttpPort}{_healthCheckConfig.ReadyProbeUrl}");           
+            listener.Prefixes.Add($"http://*:{_healthcheckConfig.HttpPort}{_healthcheckConfig.ReadyProbeUrl}");           
             _logger.LogInformation(
                 "Healthcheck Ready probe listens on port {@port}, url {@url}", 
-                _healthCheckConfig.HttpPort, 
-                _healthCheckConfig.ReadyProbeUrl);
+                _healthcheckConfig.HttpPort, 
+                _healthcheckConfig.ReadyProbeUrl);
         }
 
         listener.Start();
@@ -60,10 +60,10 @@ public class HealthcheckPublisherService : BackgroundService
                 var context = await listener.GetContextAsync().ConfigureAwait(false);
 
                 Func<HealthCheckRegistration, bool> predicate = null;
-                if (!string.IsNullOrWhiteSpace(_healthCheckConfig.LiveProbeUrl) &&
-                    (context.Request.RawUrl?.StartsWith(_healthCheckConfig.LiveProbeUrl) ?? false))
+                if (!string.IsNullOrWhiteSpace(_healthcheckConfig.LiveProbeUrl) &&
+                    (context.Request.RawUrl?.StartsWith(_healthcheckConfig.LiveProbeUrl.TrimEnd('/')) ?? false))
                 {
-                    predicate = r => r.Tags.Contains(_healthCheckConfig.LiveFilterTag);
+                    predicate = r => r.Tags.Contains(_healthcheckConfig.LiveFilterTag);
                 }
 
                 var healthReport = await _healthCheckService.CheckHealthAsync(predicate, stoppingToken);

@@ -13,6 +13,4 @@ public class AppConfiguration
     /// </summary>
     [Required]
     public string OpenTelemetryCollectorUrl { get; set; } = default!;
-
-    public HealthCheckConfig HealthCheckConfig { get; set; } = new ();
 }

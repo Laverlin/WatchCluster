@@ -13,7 +13,7 @@ namespace IB.WatchCluster.Abstract.Configuration
         /// </summary>
         /// <typeparam name="TSettings">Type of settings class</typeparam>
         /// <param name="configuration">IConfiguration object<see cref="IConfiguration"/></param>
-        public static TSettings LoadVerifiedConfiguration<TSettings>(this IConfiguration configuration)
+        public static TSettings LoadVerifiedConfiguration<TSettings>(this IConfiguration configuration) where TSettings : new()
             => LoadVerifiedConfiguration<TSettings, TSettings>(configuration);
 
         /// <summary>
@@ -24,15 +24,19 @@ namespace IB.WatchCluster.Abstract.Configuration
         /// <typeparam name="TSettings">Type of settings class</typeparam>
         /// <param name="configuration">IConfiguration object<see cref="IConfiguration"/></param>
         public static ISettings LoadVerifiedConfiguration<ISettings, TSettings>(this IConfiguration configuration)
-            where TSettings : ISettings
+            where TSettings : ISettings, new()
         {
             var logger = Log.Logger.ForContext<TSettings>();
             logger.Information($"validate :: { typeof(TSettings).Name }");
             try
             {
-                var settings = configuration.GetSection(typeof(TSettings).Name).Get<TSettings>();
-                if (settings == null)
-                    throw new ArgumentException($"Can not find section for {typeof(TSettings).Name} in config"); 
+                if(!configuration.GetSection(typeof(TSettings).Name).Exists())
+                    logger.Warning(
+                        "Config section {@section} not found, the default object is using", 
+                        typeof(TSettings).Name);
+                
+                var settings = new TSettings();
+                configuration.Bind(typeof(TSettings).Name, settings);
                 Validator.ValidateObject(settings, new ValidationContext(settings), validateAllProperties: true);
                 return settings;
             }
