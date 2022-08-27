@@ -61,11 +61,13 @@ await Host.CreateDefaultBuilder(args)
             .AddMeter(otelMetrics.MetricJob)
             .AddOtlpExporter(options => options.Endpoint = new Uri(appConfig.OpenTelemetryCollectorUrl)));
 
+        services.AddSingleton(appConfig.HealthCheckConfig);
         services.AddSingleton(otelMetrics);
         services.AddSingleton(new ActivitySource(SolutionInfo.Name));
         services.AddSingleton(processingHandler);
         services.AddSingleton(kafkaConfig);
         services.AddSingleton<KafkaBroker>();
+        
 
         // healthcheck
         //
@@ -74,7 +76,7 @@ await Host.CreateDefaultBuilder(args)
             .AddCheck(
                 "self",
                 () => processingHandler.IsRunning ? HealthCheckResult.Healthy() : HealthCheckResult.Unhealthy(),
-                new[]{"live"})
+                new[]{appConfig.HealthCheckConfig.LiveFilterTag})
             .AddKafka(
                 kafkaConfig.BuildProducerConfig(), 
                 "healthcheck", 
