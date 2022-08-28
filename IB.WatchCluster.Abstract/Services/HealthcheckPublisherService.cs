@@ -69,8 +69,14 @@ public class HealthcheckPublisherService : BackgroundService
                 var healthReport = await _healthCheckService.CheckHealthAsync(predicate, stoppingToken);
                 await HealthcheckStatic.HealthResultResponseJsonFull(context, healthReport).ConfigureAwait(false);
             }
+            catch (HttpListenerException e)
+            {
+                _logger.LogCritical(e, "HttpListenerException {@code}, {@msg}", e.ErrorCode, e.Message);
+                break;
+            }
             catch (Exception e)
             {
+                
                 _logger.LogCritical(e, "Fatal error on HealthCheck publisher {@msg}", e.Message);
                 throw;
             }
