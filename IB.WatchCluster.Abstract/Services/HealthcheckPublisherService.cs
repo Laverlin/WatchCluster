@@ -59,22 +59,24 @@ public class HealthcheckPublisherService : BackgroundService
             {
                 var context = await listener.GetContextAsync().ConfigureAwait(false);
 
-                Func<HealthCheckRegistration, bool> predicate = null;
+                using var response = context.Response;
                 if (!string.IsNullOrWhiteSpace(_healthcheckConfig.LiveProbeUrl) &&
                     (context.Request.RawUrl?.StartsWith(_healthcheckConfig.LiveProbeUrl.TrimEnd('/')) ?? false))
                 {
-                    predicate = r => r.Tags.Contains(_healthcheckConfig.LiveFilterTag);
+                    bool Predicate(HealthCheckRegistration r) => r.Tags.Contains(_healthcheckConfig.LiveFilterTag);
+                    var healthReport = await _healthCheckService.CheckHealthAsync(Predicate, stoppingToken);
+                    await HealthcheckFormatter.HealthResultResponsePlain(response, healthReport).ConfigureAwait(false);
                 }
-
-                using var response = context.Response;
-                var healthReport = await _healthCheckService.CheckHealthAsync(predicate, stoppingToken);
-                await HealthcheckStatic.HealthResultResponseJsonFull(response, healthReport).ConfigureAwait(false);
-                //context.Response.Close();
+                else
+                {
+                    var healthReport = await _healthCheckService.CheckHealthAsync(stoppingToken);
+                    await HealthcheckFormatter.HealthResultResponseJsonFull(response, healthReport).ConfigureAwait(false);
+                }
             }
             catch (HttpListenerException e)
             {
                 _logger.LogCritical(e, "HttpListenerException {@code}, {@msg}", e.ErrorCode, e.Message);
-                break;
+                //break;
             }
             catch (Exception e)
             {

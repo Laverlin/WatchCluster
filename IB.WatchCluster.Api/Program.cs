@@ -142,7 +142,7 @@ try
     app.MapControllers();
     app.MapHealthChecks(
         "/health/ready",
-        new HealthCheckOptions { ResponseWriter = HealthcheckStatic.HealthResultResponseJsonFull });
+        new HealthCheckOptions { ResponseWriter = HealthcheckFormatter.HealthResultResponseJsonFull });
     app.MapHealthChecks(
         "/health/live", 
         new HealthCheckOptions { Predicate = r => r.Name.Contains("self")});
