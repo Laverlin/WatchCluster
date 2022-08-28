@@ -58,32 +58,31 @@ public class HealthcheckPublisherService : BackgroundService
             string requestUrl = null;
             try
             {
-                var context = listener.GetContext(); //await listener.GetContextAsync().ConfigureAwait(false);
+                var context = await listener.GetContextAsync().ConfigureAwait(false);
                 requestUrl = context.Request.RawUrl;
-
                 using var response = context.Response;
                 if (!string.IsNullOrWhiteSpace(_healthcheckConfig.LiveProbeUrl) &&
                     (requestUrl?.StartsWith(_healthcheckConfig.LiveProbeUrl.TrimEnd('/')) ?? false))
                 {
                     bool Predicate(HealthCheckRegistration r) => r.Tags.Contains(_healthcheckConfig.LiveFilterTag);
                     var healthReport = await _healthCheckService.CheckHealthAsync(Predicate, stoppingToken);
-                    HealthcheckFormatter.HealthResultResponsePlain(response, healthReport);
+                    HealthcheckWriter.HealthResultResponseStatus(response, healthReport);
                 }
                 else
                 {
                     var healthReport = await _healthCheckService.CheckHealthAsync(stoppingToken);
-                    await HealthcheckFormatter.HealthResultResponseJsonFull(response, healthReport).ConfigureAwait(false);
+                    await HealthcheckWriter.HealthResultResponseJsonFull(response, healthReport).ConfigureAwait(false);
                 }
             }
-            catch (HttpListenerException e)
+            
+            // Ignore writing to broken pipe error as it happened because of connection closed from receiver
+            //
+            catch (HttpListenerException e) when (e.ErrorCode == -2146232800)
             {
-                _logger.LogCritical(e, "Url: {@url} \n HttpListenerException {@code}, {@msg}", 
-                    requestUrl, e.ErrorCode, e.Message);
-                //break;
+                _logger.LogDebug(e,"Error stream writing on {@url}", requestUrl);
             }
             catch (Exception e)
             {
-                
                 _logger.LogCritical(e, "Fatal error on HealthCheck publisher {@msg}", e.Message);
                 throw;
             }
