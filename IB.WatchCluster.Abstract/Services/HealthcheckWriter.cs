@@ -12,23 +12,28 @@ public static class HealthcheckWriter
 {
     public static async Task HealthResultResponseJsonFull(HttpListenerResponse response, HealthReport result)
     {
-        var jsonStream = FormatJsonOutput(result);
+        var jsonOutput = FormatJsonOutput(result).ToArray();
         response.ContentType = "application/json; charset=utf-8";
         response.Headers.Add(HttpResponseHeader.CacheControl, "no-store, no-cache");
         response.Headers.Add(HttpResponseHeader.Connection, "close");
         response.StatusCode = result.Status == HealthStatus.Healthy 
             ? (int)HttpStatusCode.OK 
             : (int)HttpStatusCode.ServiceUnavailable;
-        await response.OutputStream.WriteAsync(jsonStream.ToArray());
+        response.ContentLength64 = jsonOutput.Length;
+        await response.OutputStream.WriteAsync(jsonOutput, 0, jsonOutput.Length);
     }
     
     public static void HealthResultResponseStatus(HttpListenerResponse response, HealthReport result)
     {
+        var jsonOutput = FormatJsonOutput(result).ToArray();
+        response.ContentType = "application/json; charset=utf-8";
         response.Headers.Add(HttpResponseHeader.CacheControl, "no-store, no-cache");
         response.Headers.Add(HttpResponseHeader.Connection, "close");
         response.StatusCode = result.Status == HealthStatus.Healthy 
             ? (int)HttpStatusCode.OK 
             : (int)HttpStatusCode.ServiceUnavailable;
+        response.ContentLength64 = jsonOutput.Length;
+        response.OutputStream.Write(jsonOutput, 0, jsonOutput.Length);
     }
 
     /// <summary>
