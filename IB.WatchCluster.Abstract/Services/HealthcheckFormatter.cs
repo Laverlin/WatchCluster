@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -22,15 +23,18 @@ public static class HealthcheckFormatter
         await response.OutputStream.WriteAsync(jsonStream.ToArray());
     }
     
-    public static async Task HealthResultResponsePlain(HttpListenerResponse response, HealthReport result)
+    public static void HealthResultResponsePlain(HttpListenerResponse response, HealthReport result)
     {
         response.ContentType = "application/text; charset=utf-8";
         response.Headers.Add(HttpResponseHeader.CacheControl, "no-store, no-cache");
         response.Headers.Add(HttpResponseHeader.Connection, "close");
+        response.KeepAlive = false;
         response.StatusCode = result.Status == HealthStatus.Healthy 
             ? (int)HttpStatusCode.OK 
             : (int)HttpStatusCode.ServiceUnavailable;
-        await response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes(result.Status.ToString()));
+        response.ProtocolVersion = new Version(1, 1);
+        response.OutputStream.Write(Encoding.UTF8.GetBytes(result.Status.ToString()));
+        //await response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes(result.Status.ToString()));
     }
 
     /// <summary>

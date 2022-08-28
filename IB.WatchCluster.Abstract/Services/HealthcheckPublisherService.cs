@@ -55,17 +55,19 @@ public class HealthcheckPublisherService : BackgroundService
 
         while (!stoppingToken.IsCancellationRequested)
         {
+            string requestUrl = null;
             try
             {
-                var context = await listener.GetContextAsync().ConfigureAwait(false);
+                var context = listener.GetContext(); //await listener.GetContextAsync().ConfigureAwait(false);
+                requestUrl = context.Request.RawUrl;
 
                 using var response = context.Response;
                 if (!string.IsNullOrWhiteSpace(_healthcheckConfig.LiveProbeUrl) &&
-                    (context.Request.RawUrl?.StartsWith(_healthcheckConfig.LiveProbeUrl.TrimEnd('/')) ?? false))
+                    (requestUrl?.StartsWith(_healthcheckConfig.LiveProbeUrl.TrimEnd('/')) ?? false))
                 {
                     bool Predicate(HealthCheckRegistration r) => r.Tags.Contains(_healthcheckConfig.LiveFilterTag);
                     var healthReport = await _healthCheckService.CheckHealthAsync(Predicate, stoppingToken);
-                    await HealthcheckFormatter.HealthResultResponsePlain(response, healthReport).ConfigureAwait(false);
+                    HealthcheckFormatter.HealthResultResponsePlain(response, healthReport);
                 }
                 else
                 {
@@ -75,7 +77,8 @@ public class HealthcheckPublisherService : BackgroundService
             }
             catch (HttpListenerException e)
             {
-                _logger.LogCritical(e, "HttpListenerException {@code}, {@msg}", e.ErrorCode, e.Message);
+                _logger.LogCritical(e, "Url: {@url} \n HttpListenerException {@code}, {@msg}", 
+                    requestUrl, e.ErrorCode, e.Message);
                 //break;
             }
             catch (Exception e)
