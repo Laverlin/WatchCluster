@@ -22,7 +22,9 @@ public sealed class CollectorService: BackgroundService
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         await _kafkaBroker.StartConsumingLoop(
-            Topics.ResponseTopic, MessageHandler, status => _collectorHandler.IsRunning = status, cancellationToken);
+            Topics.ResponseTopic, 
+            MessageHandler, 
+            status => _collectorHandler.IsRunning = status == ConsumerLoopStatus.Running, cancellationToken);
         _collectorHandler.OnCompleted();
     }
 

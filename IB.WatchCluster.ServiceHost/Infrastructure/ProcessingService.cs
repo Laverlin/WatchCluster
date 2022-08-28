@@ -35,7 +35,7 @@ public sealed class ProcessingService<THandler>: BackgroundService where THandle
         await _kafkaBroker.StartConsumingLoop(
             Topics.RequestTopic, 
             MessageHandler, 
-            status => _processingHandler.IsRunning = status, 
+            status => _processingHandler.IsRunning = status == ConsumerLoopStatus.Running, 
             cancellationToken);
     }
 

@@ -25,6 +25,6 @@ public interface IKafkaBroker: IDisposable
     public Task StartConsumingLoop(
         string topic,
         Func<KnownMessage, Task> messageHandler,
-        Action<bool> consumerLoopStatus,
+        Action<ConsumerLoopStatus> consumerLoopStatus,
         CancellationToken cancellationToken);
 }

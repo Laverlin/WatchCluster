@@ -15,6 +15,7 @@ using IB.WatchCluster.Abstract.Kafka;
 using IB.WatchCluster.Abstract.Services;
 using IB.WatchCluster.ServiceHost.Services;
 using IB.WatchCluster.ServiceHost.Services.CurrencyExchange;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using OpenTelemetry.Metrics;
 using Serilog.Exceptions;
@@ -35,6 +36,7 @@ await Host.CreateDefaultBuilder(args)
           .Enrich.WithExceptionDetails()
           .Enrich.WithProperty("version", SolutionInfo.Version)
           .Enrich.WithProperty("Application", SolutionInfo.Name)
+          .Enrich.WithProperty("service", context.Configuration.GetValue<string>("AppConfiguration:Handler"))
           .CreateLogger();
         Log.Logger = logger;
 
@@ -44,6 +46,7 @@ await Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
     {
         var appConfig = hostContext.Configuration.LoadVerifiedConfiguration<AppConfiguration>();
+        
         var healthCheckConfig = hostContext.Configuration.LoadVerifiedConfiguration<HealthcheckConfig>();
         var kafkaConfig = hostContext.Configuration.LoadVerifiedConfiguration<KafkaConfiguration>();
         kafkaConfig.SetDefaults($"sh-{appConfig.Handler.ToLower()}");

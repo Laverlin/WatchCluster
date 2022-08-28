@@ -54,19 +54,19 @@ public sealed class KafkaBroker: IKafkaBroker
     public async Task StartConsumingLoop(
         string topic, 
         Func<KnownMessage, Task> messageHandler, 
-        Action<bool> consumerLoopStatus, 
+        Action<ConsumerLoopStatus> consumerLoopStatus, 
         CancellationToken cancellationToken)
         => await StartConsumingLoop(new[] { topic }, messageHandler, consumerLoopStatus, cancellationToken);
     
     public async Task StartConsumingLoop(
         IEnumerable<string> topics,
         Func<KnownMessage, Task> messageHandler, 
-        Action<bool> consumerLoopStatus, 
+        Action<ConsumerLoopStatus> consumerLoopStatus, 
         CancellationToken cancellationToken)
     {
         try
         {
-            consumerLoopStatus(true);
+            consumerLoopStatus(ConsumerLoopStatus.Running);
             _logger.LogInformation("Start consuming {@consumerGroup}", _kafkaConfiguration.GroupId);
             _consumer.Subscribe(topics);
             await Task.Run(() => HandleLoopMessages(messageHandler, cancellationToken), CancellationToken.None);
@@ -74,7 +74,7 @@ public sealed class KafkaBroker: IKafkaBroker
         finally
         {
             ConsumerClose();
-            consumerLoopStatus(false);
+            consumerLoopStatus(ConsumerLoopStatus.Stopped);
             _logger.LogInformation("Stop consuming {@consumerGroup}", _kafkaConfiguration.GroupId);
         }
     }
@@ -145,7 +145,7 @@ public sealed class KafkaBroker: IKafkaBroker
 
     public void Dispose()
     {
-        _producer.Dispose();
         _consumer.Dispose();
+        _producer.Dispose();
     }
 }
