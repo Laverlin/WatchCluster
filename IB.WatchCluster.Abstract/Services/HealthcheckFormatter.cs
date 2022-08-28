@@ -10,19 +10,20 @@ namespace IB.WatchCluster.Abstract.Services;
 
 public static class HealthcheckStatic
 {
-    public static async Task HealthResultResponseJsonFull(HttpListenerContext context, HealthReport result)
+    public static async Task HealthResultResponseJsonFull(HttpListenerResponse response, HealthReport result)
     {
         var jsonStream = FormatJsonOutput(result);
-        context.Response.ContentType = "application/json; charset=utf-8";
-        context.Response.Headers.Add(HttpResponseHeader.CacheControl, "no-store, no-cache");
-        context.Response.StatusCode = result.Status == HealthStatus.Healthy 
+        response.ContentType = "application/json; charset=utf-8";
+        response.Headers.Add(HttpResponseHeader.CacheControl, "no-store, no-cache");
+        response.Headers.Add(HttpResponseHeader.Connection, "close");
+        response.StatusCode = result.Status == HealthStatus.Healthy 
             ? (int)HttpStatusCode.OK 
             : (int)HttpStatusCode.ServiceUnavailable;
-        var buffer = jsonStream.ToArray();
-        await context.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-        context.Response.OutputStream.Close();
-        context.Response.Close();
+        await response.OutputStream.WriteAsync(jsonStream.ToArray());
+        // var buffer = jsonStream.ToArray();
+        // await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
     }
+
     /// <summary>
     /// Custom JSON output for HealthReport
     /// </summary>

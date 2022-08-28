@@ -66,8 +66,10 @@ public class HealthcheckPublisherService : BackgroundService
                     predicate = r => r.Tags.Contains(_healthcheckConfig.LiveFilterTag);
                 }
 
+                using var response = context.Response;
                 var healthReport = await _healthCheckService.CheckHealthAsync(predicate, stoppingToken);
-                await HealthcheckStatic.HealthResultResponseJsonFull(context, healthReport).ConfigureAwait(false);
+                await HealthcheckStatic.HealthResultResponseJsonFull(response, healthReport).ConfigureAwait(false);
+                //context.Response.Close();
             }
             catch (HttpListenerException e)
             {
