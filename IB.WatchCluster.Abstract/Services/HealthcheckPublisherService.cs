@@ -66,7 +66,7 @@ public class HealthcheckPublisherService : BackgroundService
                 {
                     bool Predicate(HealthCheckRegistration r) => r.Tags.Contains(_healthcheckConfig.LiveFilterTag);
                     var healthReport = await _healthCheckService.CheckHealthAsync(Predicate, stoppingToken);
-                    HealthcheckWriter.HealthResultResponseStatus(response, healthReport);
+                    await HealthcheckWriter.HealthResultResponseTextStatus(response, healthReport);
                 }
                 else
                 {

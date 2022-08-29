@@ -23,17 +23,17 @@ public static class HealthcheckWriter
         await response.OutputStream.WriteAsync(jsonOutput, 0, jsonOutput.Length);
     }
     
-    public static void HealthResultResponseStatus(HttpListenerResponse response, HealthReport result)
+    public static async Task HealthResultResponseTextStatus(HttpListenerResponse response, HealthReport result)
     {
-        var jsonOutput = FormatJsonOutput(result).ToArray();
-        response.ContentType = "application/json; charset=utf-8";
+        var textOutput = Encoding.UTF8.GetBytes(result.Status.ToString());
+        response.ContentType = "application/text; charset=utf-8";
         response.Headers.Add(HttpResponseHeader.CacheControl, "no-store, no-cache");
         response.Headers.Add(HttpResponseHeader.Connection, "close");
         response.StatusCode = result.Status == HealthStatus.Healthy 
             ? (int)HttpStatusCode.OK 
             : (int)HttpStatusCode.ServiceUnavailable;
-        response.ContentLength64 = jsonOutput.Length;
-        response.OutputStream.Write(jsonOutput, 0, jsonOutput.Length);
+        response.ContentLength64 = textOutput.Length;
+        await response.OutputStream.WriteAsync(textOutput, 0, textOutput.Length);
     }
 
     /// <summary>
