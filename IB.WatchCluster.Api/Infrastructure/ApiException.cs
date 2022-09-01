@@ -1,57 +1,17 @@
-﻿using IB.WatchCluster.Abstract.Entity;
-using Microsoft.AspNetCore.Mvc;
+﻿namespace IB.WatchCluster.Api.Infrastructure;
 
-namespace IB.WatchCluster.Api.Infrastructure
+public class ApiException : ApplicationException
 {
-    public class ApiException : ApplicationException
+    public int HttpStatus { get; set; } = StatusCodes.Status500InternalServerError;
+        
+    public ApiException() : base() {}
+    
+    public ApiException(string message) : base(message) {}
+
+    public ApiException(string message, Exception innerException) : base(message, innerException) {}
+
+    public ApiException(int statusCode, string message): base(message)
     {
-        public int HttpStatus { get; set; } = StatusCodes.Status500InternalServerError;
-        public ErrorResponse ErrorResponse { get; set; } = new ErrorResponse
-        {
-            StatusCode = StatusCodes.Status500InternalServerError,
-            Description = "Internal Server Error"
-        };
-
-        public ApiException() : base() {}
-        public ApiException(string message) : base(message) 
-        {
-            ErrorResponse.Description = message;
-        }
-
-        public ApiException(string message, Exception innerException) : base(message, innerException) 
-        {
-            ErrorResponse.Description = message + Environment.NewLine + innerException.Message.ToString();
-        }
-
-        public ApiException(int statusCode, string message)
-        {
-            HttpStatus = statusCode;
-            ErrorResponse.StatusCode = statusCode;
-            ErrorResponse.Description = message; 
-        }
-    }
-
-    public static class ErrorExtension
-    {
-        public static ObjectResult ReturnErrorResponse(this Exception exception)
-        {
-
-            if (exception is ApiException ex)
-            {
-                ObjectResult result = new(ex.ErrorResponse)
-                {
-                    StatusCode = ex.HttpStatus
-                };
-                return result;
-            }
-            return new ObjectResult(new ErrorResponse
-            {
-                StatusCode = StatusCodes.Status500InternalServerError,
-                Description = $"Internal Error: {exception.Message}"
-            })
-            {
-                StatusCode = StatusCodes.Status500InternalServerError
-            };
-          }
+        HttpStatus = statusCode;
     }
 }

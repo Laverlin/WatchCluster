@@ -1,5 +1,4 @@
-﻿using Confluent.Kafka;
-using IB.WatchCluster.Abstract;
+﻿using IB.WatchCluster.Abstract;
 using IB.WatchCluster.Abstract.Configuration;
 using IB.WatchCluster.Abstract.Entity.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,6 +8,7 @@ using Serilog;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Resources;
 using System.Diagnostics;
+using IB.WatchCluster.Abstract.Database;
 using IB.WatchCluster.Abstract.Kafka;
 using IB.WatchCluster.Abstract.Services;
 using OpenTelemetry.Metrics;
@@ -66,6 +66,7 @@ await Host.CreateDefaultBuilder(args)
         services.AddSingleton(healthcheckConfig);
         services.AddSingleton<KafkaBroker>();
         services.AddSingleton(sinkServiceHandler);
+        
         services.AddHostedService<SinkService>();
         
         // healthcheck
@@ -85,6 +86,5 @@ await Host.CreateDefaultBuilder(args)
                 TimeSpan.FromSeconds(30))
             .AddNpgSql(pgConfig.BuildConnectionString());
         services.AddHostedService<HealthcheckPublisherService>();
-
     })
     .RunConsoleAsync();

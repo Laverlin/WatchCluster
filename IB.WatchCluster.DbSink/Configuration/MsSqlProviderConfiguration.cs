@@ -1,6 +1,7 @@
 ﻿using LinqToDB.DataProvider.SqlServer;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using IB.WatchCluster.Abstract.Database;
 
 
 namespace IB.WatchCluster.DbSink.Configuration

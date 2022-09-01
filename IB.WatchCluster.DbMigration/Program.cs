@@ -9,6 +9,7 @@ using IB.WatchCluster.Abstract.Entity.WatchFace;
 using IB.WatchCluster.DbMigration;
 using LinqToDB.Data;
 using System.Reflection;
+using IB.WatchCluster.Abstract.Database;
 
 IConfiguration config = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")

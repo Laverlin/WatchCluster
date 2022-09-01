@@ -1,7 +1,7 @@
-﻿using LinqToDB.Data;
-using IB.WatchCluster.DbSink.Configuration;
+﻿using System;
+using LinqToDB.Data;
 
-namespace IB.WatchCluster.DbSink.Infrastructure;
+namespace IB.WatchCluster.Abstract.Database;
 
 /// <summary>
 /// Factory to work with Data Connection from DI 

@@ -1,6 +1,6 @@
 ﻿using LinqToDB.DataProvider;
 
-namespace IB.WatchCluster.DbSink.Configuration
+namespace IB.WatchCluster.Abstract.Database
 {
     /// <summary>
     /// The contract for Connection providers

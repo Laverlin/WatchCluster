@@ -15,6 +15,7 @@ using OpenTelemetry.Trace;
 using Serilog;
 using Serilog.Enrichers.Span;
 using System.Diagnostics;
+using IB.WatchCluster.Abstract.Database;
 using IB.WatchCluster.Abstract.Kafka;
 using IB.WatchCluster.Abstract.Services;
 using IB.WatchCluster.Api.Middleware;
@@ -70,7 +71,7 @@ try
 
     builder.Services.AddOpenTelemetryTracing(b => b
         .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(SolutionInfo.Name))
-        .AddAspNetCoreInstrumentation()
+        //.AddAspNetCoreInstrumentation()
         .AddSource(SolutionInfo.Name)
         .AddOtlpExporter(options => options.Endpoint = new Uri(apiConfiguration.OpenTelemetryCollectorUrl)));
 
@@ -83,6 +84,9 @@ try
     builder.Services.AddSingleton<IKafkaBroker, KafkaBroker>();
     builder.Services.AddSingleton(collectorHandler);
     builder.Services.AddHostedService<CollectorService>();
+    
+    var pgConfig = builder.Configuration.LoadVerifiedConfiguration<PgProviderConfiguration>();
+    builder.Services.AddSingleton(pgConfig.ConnectionFactory());
 
     builder.Services.AddControllers();
 
@@ -126,6 +130,7 @@ try
     app.Lifetime.ApplicationStopped.Register(() => otelMetrics.SetInstanceDown());
 
     app.UseSerilogRequestLogging();
+    app.UseMiddleware<ExceptionHandlerMiddleware>();
     app.UseMiddleware<MetricRequestCounterMiddleware>();
 
     // Configure the HTTP request pipeline.

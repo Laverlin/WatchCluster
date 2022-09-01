@@ -1,9 +1,9 @@
-﻿using IB.WatchCluster.DbSink.Infrastructure;
+﻿using System;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text;
 
-namespace IB.WatchCluster.DbSink.Configuration;
+namespace IB.WatchCluster.Abstract.Database;
 
 /// <summary>
 /// Helper class to get data from configuration object

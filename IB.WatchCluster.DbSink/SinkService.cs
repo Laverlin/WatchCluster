@@ -6,6 +6,7 @@ using LinqToDB.Data;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using IB.WatchCluster.Abstract.Database;
 using IB.WatchCluster.Abstract.Kafka.Entity;
 
 namespace IB.WatchCluster.DbSink

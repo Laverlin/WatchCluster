@@ -80,7 +80,7 @@ public class YaFaceController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Request processing error, {@WatchFaceRequest}", watchRequest);
-            return ex.ReturnErrorResponse();
+            throw;
         }
         finally
         {

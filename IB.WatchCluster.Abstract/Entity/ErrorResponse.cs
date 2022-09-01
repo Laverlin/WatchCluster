@@ -8,12 +8,6 @@ namespace IB.WatchCluster.Abstract.Entity
     public class ErrorResponse : BaseApiResponse
     {
         /// <summary>
-        /// Error Description
-        /// </summary>
-        [JsonPropertyName("description")]
-        public string Description { get; set; }
-
-        /// <summary>
         /// HTTP status Code
         /// </summary>
         [JsonPropertyName("statusCode")]
@@ -24,6 +18,12 @@ namespace IB.WatchCluster.Abstract.Entity
         /// </summary>
         [JsonPropertyName("statusMessage")]
         public string StatusMessage { get; set; }
+        
+        /// <summary>
+        /// Error Description
+        /// </summary>
+        [JsonPropertyName("description")]
+        public string Description { get; set; }
 
     }
 }
