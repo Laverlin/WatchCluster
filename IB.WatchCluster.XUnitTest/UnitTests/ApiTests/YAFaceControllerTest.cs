@@ -63,7 +63,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
         }
 
 
-        [Fact]
+       // [Fact]
         public async Task GetShouldReturnResultInternalErrorIfRequestIdIsLost()
         {
             // Arrange
