@@ -22,7 +22,6 @@ public class YaFaceController : Controller
     private readonly ILogger<YaFaceController> _logger;
     private readonly CollectorHandler _collectorHandler;
     private readonly OtelMetrics _otelMetrics;
-    private readonly ActivitySource _activitySource;
     private readonly IKafkaBroker _kafkaBroker;
     private readonly Stopwatch _processTimer = new ();
     private bool _isProduced = false;
@@ -31,14 +30,12 @@ public class YaFaceController : Controller
     public YaFaceController(
         ILogger<YaFaceController> logger,
         OtelMetrics otelMetrics,
-        ActivitySource activitySource,
         IKafkaBroker kafkaBroker,
         CollectorHandler collectorHandler)
     {
         _logger = logger;
         _collectorHandler = collectorHandler;
         _otelMetrics = otelMetrics;
-        _activitySource = activitySource;
         _kafkaBroker = kafkaBroker;
     }
 
@@ -49,24 +46,22 @@ public class YaFaceController : Controller
     /// <returns>weather, location and exchange rate info</returns>
     [HttpGet(Name = "WatchRequest"), MapToApiVersion("2.0"), Authorize]
     [ProducesResponseType(typeof(WatchResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status503ServiceUnavailable)]    
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
     [RequestRateFactory(KeyField = "did", Seconds = 5)]
+    [TelemetryActivity("WatchRequestProcessing")]
     public async Task<ActionResult<WatchResponse>> Get([FromQuery] WatchRequest watchRequest)
     {
         try
         {
             // Set the stage
             //
-            using var activity = _activitySource.StartActivity($"RequestProcessing");
             var requestId = Request.HttpContext.TraceIdentifier;
             watchRequest.RequestId = requestId;
             
             // Produce a message to process
             //
-            await ProduceMessage(requestId, activity?.Id ?? "", watchRequest);
+            await ProduceMessage(requestId, Activity.Current?.Id ?? "", watchRequest);
 
             // Wait for the result of processing
             //

@@ -20,6 +20,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.github\workflows\main-build.yml = .github\workflows\main-build.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IB.WatchCluster.YasTelegramBot", "IB.WatchCluster.YasTelegramBot\IB.WatchCluster.YasTelegramBot.csproj", "{F700C5C8-68AA-4159-A452-A996F3791FBA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,6 +52,10 @@ Global
 		{B43F8901-766A-408D-824C-ADE2BF222E9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B43F8901-766A-408D-824C-ADE2BF222E9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B43F8901-766A-408D-824C-ADE2BF222E9A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F700C5C8-68AA-4159-A452-A996F3791FBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F700C5C8-68AA-4159-A452-A996F3791FBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F700C5C8-68AA-4159-A452-A996F3791FBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F700C5C8-68AA-4159-A452-A996F3791FBA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

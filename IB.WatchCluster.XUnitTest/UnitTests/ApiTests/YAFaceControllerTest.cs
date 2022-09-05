@@ -24,7 +24,6 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
             //
             var loggerMock = new Mock<ILogger<YaFaceController>>();
             var otMetricsMock = new Mock<OtelMetrics>("", "", "");
-            var activitySourceMock = new ActivitySource("test-source");
             var deliveryResult = new DeliveryResult<string, string> 
             { 
                 Message = new Message<string, string> { Value = "" }, 
@@ -44,7 +43,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 
             
             var controller = new YaFaceController(
-                loggerMock.Object, otMetricsMock.Object, activitySourceMock, kafkaBrokerMock.Object, collectorConsumerMock.Object);
+                loggerMock.Object, otMetricsMock.Object, kafkaBrokerMock.Object, collectorConsumerMock.Object);
             controller.ControllerContext.HttpContext = new DefaultHttpContext();
             controller.HttpContext.TraceIdentifier = requestId;
 
@@ -70,8 +69,6 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
             //
             var loggerMock = new Mock<ILogger<YaFaceController>>();
             var otMetricsMock = new Mock<OtelMetrics>("", "", "");
-            var kafkaConfigMock = new Mock<KafkaConfiguration>();
-            var activitySourceMock = new ActivitySource("test-source");
             var deliveryResult = new DeliveryResult<string, string>
             {
                 Message = new Message<string, string> { Value = "" },
@@ -91,7 +88,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 
 
             var controller = new YaFaceController(
-                loggerMock.Object, otMetricsMock.Object, activitySourceMock, kafkaBrokerMock.Object, collectorConsumerMock.Object);
+                loggerMock.Object, otMetricsMock.Object, kafkaBrokerMock.Object, collectorConsumerMock.Object);
             controller.ControllerContext.HttpContext = new DefaultHttpContext();
             controller.HttpContext.TraceIdentifier = requestId;
 

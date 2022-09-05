@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using IB.WatchCluster.Abstract.Services;
 
 namespace IB.WatchCluster.ServiceHost.Entity;
 

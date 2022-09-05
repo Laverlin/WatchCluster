@@ -25,5 +25,7 @@ namespace IB.WatchCluster.Abstract.Entity
         [JsonPropertyName("description")]
         public string Description { get; set; }
 
+        [JsonPropertyName("traceId")]
+        public string TraceId { get; set; }
     }
 }

@@ -71,7 +71,7 @@ try
 
     builder.Services.AddOpenTelemetryTracing(b => b
         .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(SolutionInfo.Name))
-        //.AddAspNetCoreInstrumentation()
+        .AddAspNetCoreInstrumentation()
         .AddSource(SolutionInfo.Name)
         .AddOtlpExporter(options => options.Endpoint = new Uri(apiConfiguration.OpenTelemetryCollectorUrl)));
 

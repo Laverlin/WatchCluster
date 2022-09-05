@@ -28,6 +28,7 @@
   <ItemGroup>
     <ProjectReference Include="..\IB.WatchCluster.Api\IB.WatchCluster.Api.csproj" />
     <ProjectReference Include="..\IB.WatchCluster.ServiceHost\IB.WatchCluster.ServiceHost.csproj" />
+    <ProjectReference Include="..\IB.WatchCluster.YasTelegramBot\IB.WatchCluster.YasTelegramBot.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using IB.WatchCluster.Abstract.Entity;
 using IB.WatchCluster.Api.Infrastructure;
@@ -31,25 +32,30 @@ public class ExceptionHandlerMiddleware
     {
         _logger.LogError(exception, "Handling exception: {@message}", exception.Message);
 
+        var activity = Activity.Current;
+        
         var responseObject = exception switch
         {
             ApiException ex => new ErrorResponse
             {
                 StatusCode = ex.HttpStatus,
                 StatusMessage = "API Exception",
-                Description = ex.Message
+                Description = ex.Message,
+                TraceId = activity?.TraceId.ToString()
             },
             KeyNotFoundException ex => new ErrorResponse
             {
                 StatusCode = (int)HttpStatusCode.NotFound,
                 StatusMessage = "Not Found",
-                Description = ex.Message 
+                Description = ex.Message, 
+                TraceId = activity?.TraceId.ToString()
             },
             _ => new ErrorResponse
             {
                 StatusCode = (int)HttpStatusCode.InternalServerError,
                 StatusMessage = "Internal Server Error",
-                Description = exception.Message
+                Description = exception.Message,
+                TraceId = activity?.TraceId.ToString()
             }
         };
         

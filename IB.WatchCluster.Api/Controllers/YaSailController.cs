@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using IB.WatchCluster.Abstract.Database;
 using IB.WatchCluster.Abstract.Entity.SailingApp;
+using IB.WatchCluster.Api.Entity;
 using IB.WatchCluster.Api.Infrastructure;
 using LinqToDB;
 using LinqToDB.Data;
@@ -17,14 +17,11 @@ namespace IB.WatchCluster.Api.Controllers;
 public class YaSailController
 {
     private readonly ILogger<YaSailController> _logger;
-    private readonly ActivitySource _activitySource;
     private readonly DataConnectionFactory _dataConnectionFactory;
 
-    public YaSailController(
-        ILogger<YaSailController> logger, ActivitySource activitySource, DataConnectionFactory dataConnectionFactory)
+    public YaSailController(ILogger<YaSailController> logger, DataConnectionFactory dataConnectionFactory)
     {
         _logger = logger;
-        _activitySource = activitySource;
         _dataConnectionFactory = dataConnectionFactory;
     }
     
@@ -47,7 +44,7 @@ public class YaSailController
             throw new ApiException(StatusCodes.Status404NotFound, "User not found");
         return yasUser;
     }
-    
+
     /// <summary>
     /// Add new user
     /// resource: post /
@@ -55,17 +52,22 @@ public class YaSailController
     /// <returns>User Id</returns>
     [HttpPost(Name = "AddUser")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [TelemetryActivity("AddUser")]
-    public async Task<ActionResult<YasUser>> AddUser([FromBody] YasUser yasUser)
+    public async Task<ActionResult<YasUser>> AddUser([FromBody] YasUserCreateRequest yasUserCreateRequest)
     {
         await using var db = _dataConnectionFactory.Create();
 
-        yasUser.PublicId = shortid.ShortId.Generate(
-            new GenerationOptions(useNumbers: true, useSpecialCharacters: false, length: 10));
+        var yasUser = new YasUser
+        {
+            PublicId = shortid.ShortId.Generate(
+                new GenerationOptions(useNumbers: true, useSpecialCharacters: false, length: 10)),
+            TelegramId = yasUserCreateRequest.TelegramId,
+            UserName = yasUserCreateRequest.UserName
+        };
+
         yasUser.UserId = await db.GetTable<YasUser>().DataContext.InsertWithInt64IdentityAsync(yasUser);
 
-        return yasUser;
+        return new CreatedResult(yasUser.PublicId, null);
     }
 
     /// <summary>
@@ -201,14 +203,13 @@ public class YaSailController
     {
         await using var db = _dataConnectionFactory.Create();
 
-        var route = db.GetTable<YasRoute>()
+        var route = await db.GetTable<YasRoute>()
             .Join(db.GetTable<YasUser>(), r => r.UserId, u => u.UserId, (r, u) => new { r, u })
             .Where(j => j.u.PublicId == userId)
             .OrderByDescending(j => j.r.RouteId)
             .Select(j => j.r)
-            .Take(1)
-            .SingleOrDefault();
-        
+            .FirstOrDefaultAsync();
+  
         if (route == null)
             throw new ApiException(StatusCodes.Status404NotFound, "No route found");
         

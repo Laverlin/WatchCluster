@@ -45,9 +45,10 @@ await Host.CreateDefaultBuilder(args)
     })
     .ConfigureServices((hostContext, services) =>
     {
+        var healthCheckConfig = hostContext.Configuration.LoadVerifiedConfiguration<HealthcheckConfig>();
         var appConfig = hostContext.Configuration.LoadVerifiedConfiguration<AppConfiguration>();
         
-        var healthCheckConfig = hostContext.Configuration.LoadVerifiedConfiguration<HealthcheckConfig>();
+        
         var kafkaConfig = hostContext.Configuration.LoadVerifiedConfiguration<KafkaConfiguration>();
         kafkaConfig.SetDefaults($"sh-{appConfig.Handler.ToLower()}");
         var otelMetrics = new OtelMetrics(appConfig.Handler.ToLower());
