@@ -69,7 +69,7 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
             if (yasUser == null)
                 throw new ApplicationException($"Unable to find user with id {update.Message.From?.Id}");
 
-            var output = update.Message switch
+            commandResult = update.Message switch
             {
                 var msg when msg.Document != null => await CommandAddRoute(botClient, yasUser, msg.Document),
                 var msg when msg.Text == "/start" => await CommandStart(),
@@ -84,12 +84,13 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
                         _renameRegex.Match(msg.Text!).Groups[2].Value),
                 var msg when _deleteRegex.IsMatch(msg.Text!) =>
                     await CommandDelete(yasUser, _deleteRegex.Match(msg.Text!).Groups[1].Value),
+                var msg when msg.Text?.EndsWith("#BoatingApp") ?? false => CommandResult.SuccessResult(""),
                 _ => CommandResult.ErrorResult("Unknown command", "DefaultHandler")
             };
 
-            await botClient.SendTextMessageAsync(
-                update.Message.Chat, output.Output, ParseMode.Html,
-                cancellationToken: cancellationToken);
+            if (!string.IsNullOrWhiteSpace(commandResult.Output))
+                await botClient.SendTextMessageAsync(
+                    update.Message.Chat, commandResult.Output, ParseMode.Html, cancellationToken: cancellationToken);
             _logger.LogDebug("Message {@msg} from {@from}", update.Message.Text, update.Message.From);
         }
         catch (Exception exception)
@@ -101,11 +102,12 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
         }
         finally
         {
-            _otelMetrics.IncrementCounter(new[]
-            {
-                new KeyValuePair<string, object?>("command", commandResult.Command),
-                new KeyValuePair<string, object?>("is-success", commandResult.IsSuccess)
-            });
+            if (!string.IsNullOrWhiteSpace(commandResult.Output))
+                _otelMetrics.IncrementCounter(new[]
+                {
+                    new KeyValuePair<string, object?>("command", commandResult.Command),
+                    new KeyValuePair<string, object?>("is-success", commandResult.IsSuccess)
+                });
         }
     }
 

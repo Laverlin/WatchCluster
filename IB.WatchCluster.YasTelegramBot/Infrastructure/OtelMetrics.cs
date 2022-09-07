@@ -16,7 +16,11 @@ public class OtelMetrics
         
         meter.CreateObservableGauge(
             $"{metricSolution}_{metricProject}_uptime_gauge", 
-            () => new Measurement<long>(_serviceUptime, new KeyValuePair<string, object?>("app", SolutionInfo.Name)));
+            () => new Measurement<long>(_serviceUptime,new[]
+            {
+                new KeyValuePair<string, object?>("app", SolutionInfo.Name),
+                new KeyValuePair<string, object?>("version", SolutionInfo.Version)
+            } ));
 
         _messageCount = meter.CreateCounter<long>($"{metricSolution}_{metricProject}_message_counter");
     }
