@@ -82,6 +82,14 @@ jobs:
         push: true
         tags: ilaverlin/watchcluster-dbsink:latest,ilaverlin/watchcluster-dbsink:${{ env.version }} 
         
+    - name: Build and push YasTelegramBot
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./IB.WatchCluster.YasTelegramBot/Dockerfile
+        push: true
+        tags: ilaverlin/watchcluster-yasbot:latest,ilaverlin/watchcluster-yasbot:${{ env.version }}
+
 #    - name: Build and push Migration
 #      uses: docker/build-push-action@v2
 #      with:

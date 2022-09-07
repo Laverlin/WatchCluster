@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using IB.WatchCluster.ServiceHost.Infrastructure;
 using IB.WatchCluster.YasTelegramBot.Service;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -13,6 +14,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using Xunit;
+using OtelMetrics = IB.WatchCluster.YasTelegramBot.Infrastructure.OtelMetrics;
 
 namespace IB.WatchCluster.XUnitTest.UnitTests.BotTest;
 
@@ -30,6 +32,8 @@ public class BotTest
         var client = httpFactory.CreateClient();
         client.BaseAddress = new Uri(baseUrl);
 
+        var otelMock = new Mock<OtelMetrics>("", "", "");
+        
         var botClientMock = new Mock<ITelegramBotClient>();
 
         var update = new Update
@@ -53,7 +57,7 @@ public class BotTest
             .SetupRequest(HttpMethod.Get, new Uri($"{baseUrl}123456"))
             .ReturnsResponse(HttpStatusCode.OK, yasUserResponse);
         Mock<ILogger<YasUpdateHandler>> loggerMock = new Mock<ILogger<YasUpdateHandler>>();
-        var updateHandler = new YasUpdateHandler(loggerMock.Object, client);
+        var updateHandler = new YasUpdateHandler(loggerMock.Object, client, otelMock.Object);
 
         await updateHandler.HandleUpdateAsync(botClientMock.Object, update, CancellationToken.None);
 
@@ -70,6 +74,8 @@ public class BotTest
         var httpFactory = handler.CreateClientFactory();
         var client = httpFactory.CreateClient();
         client.BaseAddress = new Uri(baseUrl);
+
+        var otelMock = new Mock<OtelMetrics>("", "", "");
 
         var botClientMock = new Mock<ITelegramBotClient>();
 
@@ -99,7 +105,7 @@ public class BotTest
             .ReturnsResponse(
                 HttpStatusCode.Created, c => c.Headers.Add("Location", "123456"));
         Mock<ILogger<YasUpdateHandler>> loggerMock = new Mock<ILogger<YasUpdateHandler>>();
-        var updateHandler = new YasUpdateHandler(loggerMock.Object, client);
+        var updateHandler = new YasUpdateHandler(loggerMock.Object, client, otelMock.Object);
 
         await updateHandler.HandleUpdateAsync(botClientMock.Object, update, CancellationToken.None);
         

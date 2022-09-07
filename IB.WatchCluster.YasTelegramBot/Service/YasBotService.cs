@@ -37,6 +37,8 @@ public class YasBotService : BackgroundService
 
             // Running in infinity loop to consume telegram updates
             //
+            _logger.LogInformation("Start listening {@botId}, {@botName}", 
+                _botClient.BotId, (await _botClient.GetMeAsync(stoppingToken)).FirstName);
             await _botClient.ReceiveAsync(
                 updateHandler: _yasUpdateHandler,
                 receiverOptions: new ReceiverOptions

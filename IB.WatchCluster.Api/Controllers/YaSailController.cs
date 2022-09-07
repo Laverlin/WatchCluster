@@ -114,7 +114,7 @@ public class YaSailController
     /// </summary>
     /// <param name="publicId">public user id</param>
     /// <param name="yasRoute"></param>
-    /// <returns>Route ID</returns>
+    /// <returns>Route ID as Json</returns>
     [HttpPost(template: "{publicId:length(7, 14)}/route", Name = "AddRoute")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -137,7 +137,7 @@ public class YaSailController
         await db.BulkCopyAsync(yasRoute.Waypoints);
         await db.CommitTransactionAsync();
         
-        return new CreatedResult($"/Route/{yasRoute.RouteId}", yasRoute.RouteId);
+        return new CreatedResult($"/Route/{yasRoute.RouteId}", new { yasRoute.RouteId });
     }
     
     /// <summary>
