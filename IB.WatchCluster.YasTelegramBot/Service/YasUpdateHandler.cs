@@ -141,7 +141,11 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
         }
 
         if (!getResponse.IsSuccessStatusCode)
+        {
+            _logger.LogWarning(
+                "Error requesting API server result: {@errorCode}", getResponse.StatusCode);
             return null;
+        }
 
         return await getResponse.Content.ReadFromJsonAsync<YasUser>();
     }
