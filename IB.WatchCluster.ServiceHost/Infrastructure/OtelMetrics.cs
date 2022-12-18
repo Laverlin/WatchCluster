@@ -10,6 +10,7 @@ public class OtelMetrics
     private long _serviceUptime = 0;
     private int _memoryItemCount = 0;
     private readonly Counter<long> _processedCounter;
+    private readonly Histogram<long> _processingDuration;
 
     public OtelMetrics(string metricProject, string metricSolution = "wc", string metricJob = "WatchCluster" )
     {
@@ -23,6 +24,7 @@ public class OtelMetrics
             $"{metricSolution}_{metricProject}_memoryitems_gauge", 
             () => new Measurement<long>(_memoryItemCount, new KeyValuePair<string, object?>("app", SolutionInfo.Name)));
         _processedCounter = meter.CreateCounter<long>($"{metricSolution}_{metricProject}_processed_counter");
+        _processingDuration = meter.CreateHistogram<long>($"{metricSolution}_{metricProject}_processing_duration");
     }
 
     /// <summary>
@@ -45,6 +47,24 @@ public class OtelMetrics
         tags = tags ?? Enumerable.Empty<KeyValuePair<string, object?>>();
         _processedCounter.Add(1, defaultTags.Concat(tags).ToArray());
     }
+
+    public void SetProcessingDuration(
+        long duration,
+        DataSourceKind sourceKind,
+        RequestStatusCode statusCode,
+        string remoteSource,
+        IEnumerable<KeyValuePair<string, object?>> tags = default!)
+    {
+        var defaultTags = new[]
+        {
+            new KeyValuePair<string, object?>("source-kind", sourceKind.ToString()),
+            new KeyValuePair<string, object?>("status", statusCode.ToString()),
+            new KeyValuePair<string, object?>("remote-source", remoteSource)
+        };
+        tags = tags ?? Enumerable.Empty<KeyValuePair<string, object?>>();
+        _processingDuration.Record(duration, defaultTags.Concat(tags).ToArray());
+    }
+        
 
     public void SetInstanceUp() => _serviceUptime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
     public void SetInstanceDown() => _serviceUptime = 0;

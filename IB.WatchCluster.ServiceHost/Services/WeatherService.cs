@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using IB.WatchCluster.Abstract.Entity;
 using IB.WatchCluster.Abstract.Entity.WatchFace;
@@ -28,11 +29,14 @@ public class WeatherService : IRequestHandler<WeatherInfo>
         var sourceKind = DataSourceKind.Empty;
         var weatherInfo = new WeatherInfo();
         var weatherProvider = WeatherProvider.OpenWeather;
+        Stopwatch processTimer = new ();
         try
         {
             if (watchRequest is not { Lat: { }, Lon: { } })
                 return weatherInfo;
 
+            processTimer.Start();
+            
             Enum.TryParse(watchRequest.WeatherProvider, true, out weatherProvider);
 
             weatherInfo = weatherProvider == WeatherProvider.DarkSky
@@ -43,7 +47,11 @@ public class WeatherService : IRequestHandler<WeatherInfo>
         }
         finally
         {
-            _metrics.IncreaseProcessedCounter(sourceKind, weatherInfo.RequestStatus.StatusCode, weatherProvider.ToString());
+            processTimer.Stop();
+            _metrics.SetProcessingDuration(
+                processTimer.ElapsedMilliseconds, sourceKind, weatherInfo.RequestStatus.StatusCode, weatherProvider.ToString());
+            _metrics.IncreaseProcessedCounter(
+                sourceKind, weatherInfo.RequestStatus.StatusCode, weatherProvider.ToString());
         }
     }
 

@@ -2,7 +2,7 @@
   "profiles": {
     "IB.WatchCluster.ServiceHost": {
       "commandName": "Project",
-      "commandLineArgs": "--AppConfiguration:handler ExchangeRateInfo",
+
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
       }

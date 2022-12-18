@@ -1,4 +1,6 @@
-﻿using IB.WatchCluster.Abstract.Entity.WatchFace;
+﻿using System.Diagnostics;
+using System.Globalization;
+using IB.WatchCluster.Abstract.Entity.WatchFace;
 using IB.WatchCluster.ServiceHost.Entity;
 using IB.WatchCluster.ServiceHost.Infrastructure;
 using Microsoft.Extensions.Caching.Memory;
@@ -64,8 +66,10 @@ public class VirtualEarthService : IRequestHandler<LocationInfo>
     {
         var sourceKind = DataSourceKind.Empty;
         var locationInfo = new LocationInfo();
+        Stopwatch processTimer = new ();
         try
         {
+            processTimer.Start();
             if (watchRequest is not { Lat: { }, Lon: { } })
                 return locationInfo;
 
@@ -77,6 +81,9 @@ public class VirtualEarthService : IRequestHandler<LocationInfo>
         }
         finally
         {
+            processTimer.Stop();
+            _metrics.SetProcessingDuration(
+                processTimer.ElapsedMilliseconds, sourceKind, locationInfo.RequestStatus.StatusCode, "VirtualEarth");
             _metrics.IncreaseProcessedCounter(sourceKind, locationInfo.RequestStatus.StatusCode, "VirtualEarth");
         }
     }
@@ -122,7 +129,10 @@ public class VirtualEarthService : IRequestHandler<LocationInfo>
     public async Task<LocationInfo> RequestLocationName(decimal lat, decimal lon)
     {
         var requestUrl = string.Format(
-            _virtualEarthConfig.UrlTemplate, lat.ToString("G"), lon.ToString("G"), _virtualEarthConfig.AuthKey);
+            _virtualEarthConfig.UrlTemplate, 
+            lat.ToString("G", CultureInfo.InvariantCulture), 
+            lon.ToString("G", CultureInfo.InvariantCulture), 
+            _virtualEarthConfig.AuthKey);
         using var response = await _httpClient.GetAsync(requestUrl);
         if (!response.IsSuccessStatusCode)
         {
@@ -132,7 +142,7 @@ public class VirtualEarthService : IRequestHandler<LocationInfo>
             return new LocationInfo { RequestStatus = new RequestStatus(response.StatusCode) };
         }
 
-        var content = await response.Content.ReadAsStreamAsync();
+        await using var content = await response.Content.ReadAsStreamAsync();
         using var document = await JsonDocument.ParseAsync(content);
         var resource = document.RootElement
             .GetProperty("resourceSets")[0]

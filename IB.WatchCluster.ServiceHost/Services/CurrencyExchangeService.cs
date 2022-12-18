@@ -1,4 +1,5 @@
-﻿using IB.WatchCluster.Abstract.Entity.WatchFace;
+﻿using System.Diagnostics;
+using IB.WatchCluster.Abstract.Entity.WatchFace;
 using IB.WatchCluster.ServiceHost.Infrastructure;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -33,8 +34,10 @@ public class CurrencyExchangeService : IRequestHandler<ExchangeRateInfo>
     {
         var sourceKind = DataSourceKind.Empty;
         ExchangeRateInfo exchangeRateInfo = new ();
+        Stopwatch processTimer = new ();
         try
         {
+            processTimer.Start();
             if (watchRequest == null ||
                 string.IsNullOrEmpty(watchRequest.BaseCurrency) ||
                 string.IsNullOrEmpty(watchRequest.TargetCurrency) ||
@@ -63,6 +66,12 @@ public class CurrencyExchangeService : IRequestHandler<ExchangeRateInfo>
         }
         finally
         {
+            processTimer.Stop();
+            _metrics.SetProcessingDuration(
+                processTimer.ElapsedMilliseconds, 
+                sourceKind, 
+                exchangeRateInfo.RequestStatus.StatusCode, 
+                exchangeRateInfo.RemoteSource);
             _metrics.IncreaseProcessedCounter(
                 sourceKind, exchangeRateInfo.RequestStatus.StatusCode, exchangeRateInfo.RemoteSource,
                 sourceKind == DataSourceKind.Empty
