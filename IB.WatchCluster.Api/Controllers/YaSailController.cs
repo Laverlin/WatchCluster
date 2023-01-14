@@ -215,6 +215,4 @@ public class YaSailController
         
         return await RenameRoute(userId, route.RouteId, newName);
     }
-
-
 }

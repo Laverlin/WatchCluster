@@ -1,0 +1,15 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "database/query.sql"
+    schema: "database/schema.sql"
+    gen:
+      go:
+        sql_package: "pgx/v4"
+        package: "yasdb"
+        out: "yasdb"
+        overrides:
+        - column: "yas_waypoint.lat"
+          go_type: "float64"
+        - column: "yas_waypoint.lon"
+          go_type: "float64"

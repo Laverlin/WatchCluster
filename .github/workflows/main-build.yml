@@ -13,6 +13,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
       with:
@@ -30,7 +31,6 @@ jobs:
     - name: Set environment
       run: |
         echo "version=1.0.${{steps.current-time.outputs.formattedTime}}.${{github.run_number}}" >> $GITHUB_ENV
-
 
     - name: Write version
       shell: pwsh
@@ -97,3 +97,11 @@ jobs:
 #        file: ./IB.WatchCluster.DbMigration/Dockerfile
 #        push: true
 #        tags: ilaverlin/watchcluster-migration:latest,ilaverlin/watchcluster-migration:${{ env.version }} 
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+
+    - name: Build
+      run: go build -v ./IB.YasDataApi
