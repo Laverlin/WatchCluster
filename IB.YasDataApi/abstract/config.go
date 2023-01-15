@@ -19,7 +19,7 @@ func LoadConfig() (Config, error) {
 	viper.SetDefault("LogLevel", 2) // Warning
 
 	viper.AutomaticEnv()
-	viper.BindEnv("PGURL")
+	viper.BindEnv("POSTGREURL")
 	viper.BindEnv("LOGLEVEL")
 
 	err := viper.ReadInConfig()
