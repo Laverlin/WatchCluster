@@ -1,6 +1,9 @@
 package abstract
 
 import (
+	"os"
+	"strconv"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
@@ -30,8 +33,15 @@ func LoadConfig() (Config, error) {
 		log.Warn().Err(err).Msg("Unable to load config file")
 	}
 
-	viper.BindEnv("PostgreUrl", "pgUrl")
-	viper.BindEnv("LogLevel")
+	if i, err := strconv.Atoi(os.Getenv("LOGLEVEL")); err == nil {
+    	config.LogLevel = i
+	}
+	if s := os.Getenv("PGURL"); s != "" {
+		config.PostgreUrl = os.Getenv("PGURL")
+	}
+
+	// viper.BindEnv("PostgreUrl", "pgUrl")
+	// viper.BindEnv("LogLevel")
 
 	log.Debug().Interface("Config values", config).Send()
 	return config, nil
