@@ -9,10 +9,10 @@ RUN go mod download
 
 #COPY ../../abstract/*.go ./abstract/
 #COPY ../../abstract/*.go ./abstract/
-COPY ../../*.go ./
+COPY ../../ ./
 
 RUN ls -la
-RUN cd ./IB.YasDataApi/cmd/reader && go build -v -o /release
+RUN cd ./cmd/reader && go build -v -o /release
 
 ## Deploy
 FROM alpine:3.17 as final
