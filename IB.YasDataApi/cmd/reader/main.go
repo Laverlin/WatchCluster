@@ -30,7 +30,7 @@ func main() {
 	//
 	config, err := abstract.LoadConfig()
 	if err != nil {
-		log.Fatal().Stack().Err(err).Msg("Fatal: unable to load config")
+		log.Fatal().Err(err).Msg("Fatal: unable to load config")
 	}
 
 	// Adjust logger with config

@@ -16,7 +16,6 @@ func LoadConfig() (Config, error) {
     viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 
-	viper.SetDefault("LogFile", "ReaderDataApi.log")
 	viper.SetDefault("LogLevel", 2) // Warning
 
 	viper.AutomaticEnv()
@@ -24,18 +23,17 @@ func LoadConfig() (Config, error) {
 	viper.BindEnv("LOGLEVEL")
 
 	err := viper.ReadInConfig()
-	if err != nil {
-		log.Error().Err(err).Msg("Config not found")
-		return Config{}, err
+	if err == nil {
+		err = viper.Unmarshal(&config)
+		if err != nil {
+			log.Error().Err(err).Msg("Unable to parse config")
+			return Config{}, err
+		}
+		log.Info().Str("file", viper.ConfigFileUsed()).Msg("Config loaded")
+	} else {
+		log.Warn().Err(err).Msg("Unable to load config file")
 	}
 
-	err = viper.Unmarshal(&config)
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to parse config")
-		return Config{}, err
-	}
-
-	log.Info().Str("file", viper.ConfigFileUsed()).Msg("Config loaded")
 	log.Debug().Interface("Config values", config).Send()
 	return config, nil
 }
