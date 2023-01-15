@@ -11,7 +11,7 @@ type RouteListParams struct {
 	UserId string `uri:"userId" binding:"required,min=7,max=9"`
 }
 
-func (httpRoutes *HttpRoutes) RouteList (context *gin.Context) {
+func (httpRoutes *HttpRoutes) GetRouteList (context *gin.Context) {
 
 		var params RouteListParams
 		if err := context.ShouldBindUri(&params); err != nil {

@@ -3,14 +3,14 @@ package main
 import (
 	"os"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/logger"
+	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"IB.YasDataApi/abstract"
-	"IB.YasDataApi/dal"
 	"IB.YasDataApi/cmd/reader/httproutes"
+	"IB.YasDataApi/dal"
 )
 
 func main() {
@@ -52,7 +52,7 @@ func main() {
 	router.Use(gin.Recovery())
 
 	router.GET("/user-store/users/:userId", httpRoutes.GetUser)
-	router.GET("/route-store/users/:userId/routes", httpRoutes.RouteList)
+	router.GET("/route-store/users/:userId/routes", httpRoutes.GetRouteList)
 	
 	router.Run(":8989")
 }
