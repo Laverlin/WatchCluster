@@ -18,10 +18,6 @@ func LoadConfig() (Config, error) {
 
 	viper.SetDefault("LogLevel", 2) // Warning
 
-	viper.AutomaticEnv()
-	viper.BindEnv("PostgreUrl", "pgUrl")
-	viper.BindEnv("LogLevel")
-
 	err := viper.ReadInConfig()
 	if err == nil {
 		err = viper.Unmarshal(&config)
@@ -33,6 +29,9 @@ func LoadConfig() (Config, error) {
 	} else {
 		log.Warn().Err(err).Msg("Unable to load config file")
 	}
+
+	viper.BindEnv("PostgreUrl", "pgUrl")
+	viper.BindEnv("LogLevel")
 
 	log.Debug().Interface("Config values", config).Send()
 	return config, nil
