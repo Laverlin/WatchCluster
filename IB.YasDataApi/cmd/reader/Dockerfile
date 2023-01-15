@@ -3,16 +3,14 @@
 FROM golang:1.19-alpine AS build
 WORKDIR /src
 
-COPY ../../go.mod ./
-COPY ../../go.sum ./
-RUN go mod download
-
-#COPY ../../abstract/*.go ./abstract/
-#COPY ../../abstract/*.go ./abstract/
-COPY ../../ ./
+COPY ../../ ./IB.YasDataApi/
 
 RUN ls -la
-RUN cd ./cmd/reader && go build -v -o /release
+RUN ls -la ./IB.YasDataApi
+
+RUN cd IB.YasDataApi && go mod download
+
+RUN cd ./IB.YasDataApi/cmd/reader && go build -v -o /release
 
 ## Deploy
 FROM alpine:3.17 as final
