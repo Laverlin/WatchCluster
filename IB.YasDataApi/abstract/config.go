@@ -2,6 +2,7 @@ package abstract
 
 import (
 	"os"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/knadh/koanf"
@@ -71,7 +72,9 @@ func ConfigLoad() (Config, error) {
 		log.Info().Str("file", configFile).Msg("config file loaded")
 	}
 
-	k.Load(env.Provider("YASR", "_", nil), nil)
+	k.Load(env.Provider("YASR_", "_", func(s string) string {
+		return strings.TrimPrefix(s, "YASR_")
+	}), nil)
 
 	if err := k.Unmarshal("", &config); err != nil {
 		log.Error().Err(err).Msg("Unable to parse config")
