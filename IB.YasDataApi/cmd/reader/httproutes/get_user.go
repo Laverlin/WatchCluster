@@ -1,7 +1,6 @@
 package httproutes
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,8 +19,6 @@ func (httpRoutes *HttpRoutes) GetUser (context *gin.Context) {
 			context.JSON(http.StatusBadRequest, gin.H{"msg": "Wrong user id", "error": err.Error()})
 			return
 		}
-
-		fmt.Println(params.UserId)
 
 		user, err := httpRoutes.DataLayer.QueryUser(params.UserId)
 		if err != nil {

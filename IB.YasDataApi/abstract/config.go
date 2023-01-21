@@ -2,48 +2,82 @@ package abstract
 
 import (
 	"os"
-	"strconv"
 
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
+	"github.com/knadh/koanf"
+	"github.com/knadh/koanf/parsers/yaml"
+	"github.com/knadh/koanf/providers/file"
+	"github.com/knadh/koanf/providers/env"
+	flag "github.com/spf13/pflag"
 )
 
-type Config struct {
-	PostgreUrl string `mapstructure:"pgUrl"`
-	LogLevel int `mapstructure:"logLevel"`
+// define where the service is awaiting for requests
+//
+type Listener struct {
+
+	// ip or host name
+	//
+	Host string `koanf:"host"`
+
+	// port
+	//
+	Port string `koanf:"port"`
 }
 
-func LoadConfig() (Config, error) {
+// returns full listener string "host:port"
+//
+func (listener *Listener) GetListener() string {
+	return listener.Host + ":" + listener.Port
+}
+
+// configuration params
+//
+type Config struct {
+
+	// Where the service is awaitng requests
+	//
+	Listener Listener `koanf:"listener"`
+
+	// Postgres connection string
+	//
+	PostgreUrl string `koanf:"pgUrl"`
+
+	// Level of logging -1 Trace, 0 Info, 1 Debug, 2 Warning, 3 Error, 4 Fatal, 5 Panic
+	//
+	LogLevel int `koanf:"logLevel"`
+
+	// Endpoint of OpenTelemetry service for export via GRPC
+	//
+	OtelEndpoint string `koanf:"otelEndpoint"`
+}
+
+// Loads config data from .yaml config file and environment variables (prefix YASR_).
+// The config file can be passed via command line --config option.
+// The default is ./config.yaml
+//
+func ConfigLoad() (Config, error) {
+
 	var config Config
-	viper.AddConfigPath(".")
-    viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
+	var configFile string
+	 
+	f := flag.NewFlagSet("config", flag.ContinueOnError)
+	f.StringVar(&configFile, "config", "./config.yaml", "path to config file in yaml")
+	f.Parse(os.Args[1:])
 
-	viper.SetDefault("LogLevel", 2) // Warning
-
-	err := viper.ReadInConfig()
-	if err == nil {
-		err = viper.Unmarshal(&config)
-		if err != nil {
-			log.Error().Err(err).Msg("Unable to parse config")
-			return Config{}, err
-		}
-		log.Info().Str("file", viper.ConfigFileUsed()).Msg("Config loaded")
-	} else {
+	k := koanf.New(".")
+	if err := k.Load(file.Provider(configFile), yaml.Parser()); err != nil {
 		log.Warn().Err(err).Msg("Unable to load config file")
+	} else {
+		log.Info().Str("file", configFile).Msg("config file loaded")
 	}
 
-	if i, err := strconv.Atoi(os.Getenv("LOGLEVEL")); err == nil {
-    	config.LogLevel = i
-	}
-	if s := os.Getenv("PGURL"); s != "" {
-		config.PostgreUrl = os.Getenv("PGURL")
-	}
+	k.Load(env.Provider("YASR", "_", nil), nil)
 
-	// viper.BindEnv("PostgreUrl", "pgUrl")
-	// viper.BindEnv("LogLevel")
+	if err := k.Unmarshal("", &config); err != nil {
+		log.Error().Err(err).Msg("Unable to parse config")
+		return Config{}, err
+	}
 
 	log.Debug().Interface("Config values", config).Send()
 	return config, nil
 }
-

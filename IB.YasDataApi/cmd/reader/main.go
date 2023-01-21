@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"IB.YasDataApi/abstract"
+	"IB.YasDataApi/telemetry"
 	"IB.YasDataApi/cmd/reader/httproutes"
 	"IB.YasDataApi/dal"
 )
@@ -22,13 +23,13 @@ func main() {
 	multi := zerolog.MultiLevelWriter(consoleWriter, os.Stderr)
 	log.Logger = zerolog.New(multi).With().
 		Timestamp().
-		Str("app", "YasDataReaderApi").
+		Str("Application", "YasDataReaderApi").
 		Caller().
 		Logger()
 
 	// Load config
 	//
-	config, err := abstract.LoadConfig()
+	config, err := abstract.ConfigLoad() //.LoadConfig()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Fatal: unable to load config")
 	}
@@ -48,11 +49,20 @@ func main() {
 	// Setup & run http server
 	//
 	router := gin.New()
-	router.Use(logger.SetLogger())
+	router.Use(
+		logger.SetLogger(
+			logger.WithLogger(func(c *gin.Context, l zerolog.Logger) zerolog.Logger {
+				return log.Logger
+	})))
 	router.Use(gin.Recovery())
+
+	tel, _ := telemetry.Setup(config)
+	defer tel.Shutdown()
+
+	router.Use(telemetry.Middleware(tel))
 
 	router.GET("/user-store/users/:userId", httpRoutes.GetUser)
 	router.GET("/route-store/users/:userId/routes", httpRoutes.GetRouteList)
 	
-	router.Run(":8989")
+	router.Run(config.Listener.GetListener())
 }
