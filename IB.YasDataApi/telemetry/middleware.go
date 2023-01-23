@@ -31,10 +31,14 @@ func Middleware(telemetry Telemetry) gin.HandlerFunc {
 		propgator := propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{})
 		carrier := propagation.MapCarrier{}
 		parentCtx := propgator.Extract(c.Request.Context(), carrier)
-		_, span := tracer.Start(parentCtx, "wc_reader_tracer",  trace.WithAttributes(
+		_, span := tracer.Start(parentCtx, "/reader",  trace.WithAttributes(
 			attribute.KeyValue {
 				Key: "path",
 				Value: attribute.StringValue(c.Request.URL.Path),
+			},
+			attribute.KeyValue{
+				Key: "headers",
+				Value: attribute.StringSliceValue(c.Request.Header.Values("traceparent")),
 			},
 		))	
 		defer span.End()
