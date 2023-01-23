@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/otel/metric/instrument"
 	"go.opentelemetry.io/otel/metric/unit"
 	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 
@@ -27,7 +28,10 @@ func Middleware(telemetry Telemetry) gin.HandlerFunc {
 		
 		// Trace request
 		//
-		_, span := tracer.Start(c.Request.Context(), "wc_reader_tracer",  trace.WithAttributes(
+		propgator := propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{})
+		carrier := propagation.MapCarrier{}
+		parentCtx := propgator.Extract(c.Request.Context(), carrier)
+		_, span := tracer.Start(parentCtx, "wc_reader_tracer",  trace.WithAttributes(
 			attribute.KeyValue {
 				Key: "path",
 				Value: attribute.StringValue(c.Request.URL.Path),
