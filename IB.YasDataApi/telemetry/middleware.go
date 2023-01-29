@@ -15,7 +15,7 @@ import (
 
 func Middleware(telemetry Telemetry) gin.HandlerFunc {
 
-	requestDuration, err := telemetry.MeterProvider.Meter("IB.YasDataApi/reader").SyncInt64().Histogram(
+	requestDuration, err := telemetry.Meter.SyncInt64().Histogram(
 		"wc_reader_request_duration",
 		instrument.WithUnit(unit.Milliseconds))
 	if err != nil {
@@ -29,17 +29,11 @@ func Middleware(telemetry Telemetry) gin.HandlerFunc {
 		// Trace request
 		//
 		propgator := propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{})
-		carrier := propagation.HeaderCarrier(c.Request.Header)
-		
-		parentCtx := propgator.Extract(c.Request.Context(), carrier)
+		parentCtx := propgator.Extract(c.Request.Context(), propagation.HeaderCarrier(c.Request.Header))
 		_, span := tracer.Start(parentCtx, "/reader",  trace.WithAttributes(
 			attribute.KeyValue {
 				Key: "path",
 				Value: attribute.StringValue(c.Request.URL.Path),
-			},
-			attribute.KeyValue{
-				Key: "headers",
-				Value: attribute.StringValue(carrier.Get("traceparent")),
 			},
 		))	
 		defer span.End()

@@ -31,6 +31,18 @@ func (listener *Listener) GetListener() string {
 	return listener.Host + ":" + listener.Port
 }
 
+// Kafka config
+//
+type Kafka struct {
+
+	// Broker address
+	//
+	Broker string `koanf:"broker"`
+
+	TopicName string `koanf:"topicName"`
+
+}
+
 // configuration params
 //
 type Config struct {
@@ -50,6 +62,10 @@ type Config struct {
 	// Endpoint of OpenTelemetry service for export via GRPC
 	//
 	OtelEndpoint string `koanf:"otelEndpoint"`
+
+	// Kafka config
+	//
+	Kafka Kafka `koanf:"kafka"`
 }
 
 // Loads config data from .yaml config file and environment variables (prefix YASR_).

@@ -2,9 +2,9 @@ package dal
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/jackc/pgx/v4"
+	"github.com/rs/zerolog/log"
 
 	"IB.YasDataApi/abstract"
 	"IB.YasDataApi/dal/yasdb"
@@ -95,8 +95,17 @@ func (dal *Dal) QueryRoutes(userId string) ([]abstract.Route, error) {
 	return routes, nil
 }
 
+func (dal *Dal) ExecAddUser(puid string, tid int64, userName string) {
+	execDb(
+		dal.Config, 
+		func(query *yasdb.Queries, ctx context.Context) error {
+			return query.CreateUser(ctx, yasdb.CreateUserParams{PublicID: puid, TelegramID: tid, UserName: userName})
+		})
+}
+
+
 type yasType interface {
-	[]yasdb.YasRoute | []yasdb.YasWaypoint | yasdb.YasUser
+	[]yasdb.YasRoute | []yasdb.YasWaypoint | yasdb.YasUser 
 }
 
 type queryFunc[T yasType] func(query *yasdb.Queries, ctx context.Context) (T, error)
@@ -114,12 +123,32 @@ func queryDb[T yasType](config abstract.Config, query queryFunc[T]) (T, error) {
 
 	result, err := query(queries, ctx)
 
-	fmt.Println(result)
-
 	if err != nil {
 		var empty T
 		return empty, err
 	}
 
 	return result, nil
+}
+
+
+type execFunc func(query *yasdb.Queries, ctx context.Context) error
+
+func execDb(config abstract.Config, exec execFunc) {
+	ctx := context.Background()
+	conn, err := pgx.Connect(ctx, config.PostgreUrl)
+	if err != nil {
+		log.Error().Err(err).Msg("Cannot establish connection to postgres")
+		return 
+	}
+	defer conn.Close(ctx)
+
+	queries := yasdb.New(conn)
+
+	err = exec(queries, ctx)
+
+	if err != nil {
+		log.Error().Err(err).Msg("Error executing query")
+		return 
+	}
 }

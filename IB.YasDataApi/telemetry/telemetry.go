@@ -2,14 +2,19 @@ package telemetry
 
 import (
 	"context"
+	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
+	"go.opentelemetry.io/otel/metric/instrument"
+	"go.opentelemetry.io/otel/metric/instrument/asyncint64"
+	"go.opentelemetry.io/otel/metric/unit"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/semconv/v1.9.0"
 
 	"IB.YasDataApi/abstract"
@@ -19,7 +24,11 @@ type Telemetry struct {
 
 	// Instance of the metric provider
 	//
-	MeterProvider metric.MeterProvider
+	MeterProvider sdkmetric.MeterProvider
+
+	// actual meter
+	//
+	Meter metric.Meter
 
 	// Instance of the metric provider
 	//
@@ -28,16 +37,14 @@ type Telemetry struct {
 	// context
 	//
 	Ctx context.Context
+
+	uptimeGauge asyncint64.Gauge
 }
 
 func Setup(config abstract.Config) (Telemetry, error) {
 
 	ctx := context.Background()
-	res, err := resource.New(ctx,
-		resource.WithAttributes(
-			semconv.ServiceNameKey.String("wc_yas_reader"),
-		),
-	)
+	res, err := resource.New(ctx, resource.WithAttributes(semconv.ServiceNameKey.String("IB.YasDataReader/reader")))
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to create resource")
 		return Telemetry{}, nil
@@ -57,11 +64,18 @@ func Setup(config abstract.Config) (Telemetry, error) {
 		return Telemetry{}, nil
 	}
 
-	meterProvider := metric.NewMeterProvider(
-		metric.WithResource(res), 
-		metric.WithReader(metric.NewPeriodicReader(metricExporter)),
+	meterProvider := sdkmetric.NewMeterProvider(
+		sdkmetric.WithResource(res), 
+		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(metricExporter)),
 	)
 	global.SetMeterProvider(meterProvider)
+	meter := meterProvider.Meter("IB.YasDataApi/reader")
+	gauge, err := meter.AsyncInt64().
+		Gauge("wc_reader_uptime_gauge", instrument.WithUnit(unit.Milliseconds))
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to setup uptime gauge")
+		return Telemetry{}, nil
+	}
 
 	bsp := trace.NewBatchSpanProcessor(traceExporter)
 	tracerProvider := trace.NewTracerProvider(
@@ -70,11 +84,20 @@ func Setup(config abstract.Config) (Telemetry, error) {
 		trace.WithSpanProcessor(bsp),
 	)
 
-	return Telemetry{ MeterProvider: *meterProvider, TraceProvider: *tracerProvider, Ctx: ctx }, nil
+	_telemetry := Telemetry{ MeterProvider: *meterProvider, Meter: meter, TraceProvider: *tracerProvider, Ctx: ctx, uptimeGauge: gauge }
+	_telemetry.SetUptimeGauge(time.Now().UnixMilli())
+	return _telemetry, nil
+}
+
+func (telemetry *Telemetry) SetUptimeGauge(milTime int64) {
+	telemetry.Meter.RegisterCallback([]instrument.Asynchronous{ telemetry.uptimeGauge }, func(ctx context.Context) {
+      telemetry.uptimeGauge.Observe(ctx, milTime)
+	})
 }
 
 func (telemetry *Telemetry) Shutdown() {
 	log.Debug().Msg("Shutdown telemetry")
+	telemetry.SetUptimeGauge(0)
 	if err := telemetry.MeterProvider.Shutdown(telemetry.Ctx); err != nil {
 		log.Error().Err(err).Msg("Unable to shutdown metrics")
 	}

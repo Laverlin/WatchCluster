@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v4"
 	"github.com/rs/zerolog/log"
 )
 
@@ -21,14 +22,16 @@ func (httpRoutes *HttpRoutes) GetUser (context *gin.Context) {
 		}
 
 		user, err := httpRoutes.DataLayer.QueryUser(params.UserId)
+		if err == pgx.ErrNoRows {
+			context.JSON(http.StatusNotFound, gin.H{"msg": "No User has been found"})
+			return
+		}
+
 		if err != nil {
 			log.Error().Err(err).Msg("Unable to get user")
 			context.JSON(http.StatusBadRequest, gin.H{"msg": "Unable to get user", "error": err.Error()})
 			return
 		}
-		if user.UserId == 0 {
-			context.JSON(http.StatusNotFound, gin.H{"msg": "No User has been found"})
-			return
-		}
+
 		context.JSON(http.StatusOK, user)
 }
