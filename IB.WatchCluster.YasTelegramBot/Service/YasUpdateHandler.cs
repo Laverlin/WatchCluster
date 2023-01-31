@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
@@ -19,6 +20,9 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
     private readonly ILogger<YasUpdateHandler> _logger;
     private readonly HttpClient _httpClient;
     private readonly OtelMetrics _otelMetrics;
+    private readonly ActivitySource _activitySource;
+    private readonly YasHttpClient _yasHttpClient;
+    private readonly YasManager _yasManager;
     private readonly Regex _renameLastRegex = new("/renamelast ([^;]+)", RegexOptions.IgnoreCase);
     private readonly Regex _renameRegex = new("/rename:([0-9]+) ([^;]+)", RegexOptions.IgnoreCase);
     private readonly Regex _deleteRegex = new("/delete:([0-9]+)", RegexOptions.IgnoreCase);
@@ -50,21 +54,30 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
         public bool IsSuccess { get; set; }
     }
 
-    public YasUpdateHandler(ILogger<YasUpdateHandler> logger, HttpClient httpClient, OtelMetrics otelMetrics)
+    public YasUpdateHandler(
+        ILogger<YasUpdateHandler> logger, 
+        HttpClient httpClient, 
+        OtelMetrics otelMetrics, 
+        ActivitySource activitySource, 
+        YasHttpClient yasHttpClient,
+        YasManager yasManager)
     {
         _logger = logger;
         _httpClient = httpClient;
         _otelMetrics = otelMetrics;
+        _activitySource = activitySource;
+        _yasHttpClient = yasHttpClient;
+        _yasManager = yasManager;
     }
     
     public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
+        Activity activity = _activitySource.StartActivity("/command", ActivityKind.Producer)!;
         var commandResult = new CommandResult();
         try
         {
-            if (update.Message == null)
-                return;
-
+            if (update.Message == null) return;
+            
             var yasUser = await GetYasUser(update.Message);
             if (yasUser == null)
                 throw new ApplicationException($"Unable to find user with id {update.Message.From?.Id}");
@@ -75,8 +88,8 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
                 var msg when msg.Text == "/start" => await CommandStart(),
                 var msg when msg.Text == "/myid" => await CommandMyId(yasUser),
                 var msg when msg.Text == "/list" => await CommandList(yasUser),
-                var msg when _renameLastRegex.IsMatch(msg.Text!) =>
-                    await CommandRenameLast(yasUser, _renameLastRegex.Match(msg.Text!).Groups[1].Value),
+                // var msg when _renameLastRegex.IsMatch(msg.Text!) =>
+                //     await CommandRenameLast(yasUser, _renameLastRegex.Match(msg.Text!).Groups[1].Value),
                 var msg when _renameRegex.IsMatch(msg.Text!) =>
                     await CommandRename(
                         yasUser,
@@ -108,6 +121,9 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
                     new KeyValuePair<string, object?>("command", commandResult.Command),
                     new KeyValuePair<string, object?>("is-success", commandResult.IsSuccess)
                 });
+            activity.AddTag("command", commandResult.Command);
+            activity.AddTag("is-success", commandResult.IsSuccess);
+            activity.Stop();
         }
     }
 
@@ -117,10 +133,14 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
         _logger.LogError(exception, "Telegram bot exception was thrown: {@msg}", exception.Message);
         return Task.CompletedTask;
     }
-
+    
     private async Task<YasUser?> GetYasUser(Message message)
     {
-        var getResponse = await _httpClient.GetAsync($"{message.From?.Id}");
+        var tid = message.From?.Id;
+        if (tid == null)
+            throw new ArgumentException("No telegram user id is provided");
+        
+        using var getResponse = await _yasHttpClient.GetUser(tid.Value);
         if (getResponse.StatusCode == HttpStatusCode.NotFound)
         {
             var fullName = $"{message.From?.FirstName} ${message.From?.LastName}";
@@ -128,16 +148,7 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
                 ? $"{message.From?.Username} ({fullName})"
                 : fullName;
             
-            var jsonContent = JsonContent.Create(new
-            {
-                TelegramId = message.From?.Id,
-                UserName = userName
-            });
-            var postResponse = await _httpClient.PostAsync("", jsonContent);
-            if (postResponse.StatusCode == HttpStatusCode.Created)
-            {
-                getResponse = await _httpClient.GetAsync($"{postResponse.Headers.Location}");
-            }
+            return await _yasManager.CreateUser(tid.Value, userName);
         }
 
         if (!getResponse.IsSuccessStatusCode)
@@ -179,18 +190,12 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
             UserId = yasUser.UserId,
             UploadTime = DateTime.UtcNow,
             RouteName = root.Element(ns + "rte")?.Element(ns + "name")?.Value ?? Path.GetFileNameWithoutExtension(fileName),
-            Waypoints = points.ToArray()
+            Waypoints = points.OrderBy(wp => wp.OrderId).ToArray()
         };
-
-        var url = $"{yasUser.PublicId}/route";
-        var postResponse = await _httpClient.PostAsync(url, JsonContent.Create(route));
-
-        if (!postResponse.IsSuccessStatusCode) 
-            return CommandResult.ErrorResult($"Unable to upload {fileName}");
         
-        var savedRoute = await postResponse.Content.ReadFromJsonAsync<YasRoute>();
+        await _yasManager.AddRoute(route);
+        
         return CommandResult.SuccessResult(
-            $"The route <b> {savedRoute?.RouteId} </b>:" +
             $" {route.RouteName} ({points.Count} way points) has been uploaded \n userId:{yasUser.PublicId}");
     }
     
@@ -199,7 +204,7 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
         var output = CommandResult.SuccessResult(
             "/myid <code>- returns ID-string to identify your routes</code>\n\n" +
             "/list <code>- route list </code>\n\n" + "" +
-            "/renamelast &lt;new name&gt; <code>- rename last uploaded route</code>\n\n " +
+            // "/renamelast &lt;new name&gt; <code>- rename last uploaded route</code>\n\n " +
             "/rename:&lt;id&gt; &lt;new name&gt; <code>- set the &lt;new name&gt; to route with &lt;id&gt;</code>\n\n" +
             "/delete:&lt;id&gt; <code>delete route with &lt;id&gt;</code>");
         return await Task.FromResult(output);
@@ -213,7 +218,10 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
 
     private async Task<CommandResult> CommandList(YasUser yasUser)
     {
-        using var getResponse = await _httpClient.GetAsync($"{yasUser.PublicId}/route");
+        using var getResponse = await _yasHttpClient.GetRouteList(yasUser.PublicId);
+        if (getResponse.StatusCode == HttpStatusCode.NotFound)
+                return CommandResult.ErrorResult("No routes found");
+        
         var routes = await getResponse.Content.ReadFromJsonAsync<YasRoute[]>();
         var result = routes is { Length: > 0 }
             ? CommandResult.SuccessResult(routes.Aggregate("", (o, r) => 
@@ -233,20 +241,14 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
     
     private async Task<CommandResult> CommandRename(YasUser yasUser, string routeId, string newName)
     {
-        var url = $"{yasUser.PublicId}/route/{routeId}?newName={newName}";
-        using var putResponse = await _httpClient.PutAsync(url, null);
-        return putResponse.IsSuccessStatusCode
-            ? CommandResult.SuccessResult($"The route {routeId} name has been successfully changed, the new name is {newName}")
-            : CommandResult.ErrorResult("Unable to change route name");
+        await _yasManager.RenameRoute(int.Parse(routeId), yasUser.UserId, newName);
+        return CommandResult.SuccessResult($"The route {routeId} name has been successfully changed, the new name is {newName}");
     }
     
     private async Task<CommandResult> CommandDelete(YasUser yasUser, string routeId)
     {
-        var url = $"{yasUser.PublicId}/route/{routeId}";
-        using var deleteResponse = await _httpClient.DeleteAsync(url);
-        return deleteResponse.IsSuccessStatusCode
-            ? CommandResult.SuccessResult($"The route {routeId} has been successfully deleted")
-            : CommandResult.ErrorResult("Unable to delete route");
+        await _yasManager.DeleteRoute(int.Parse(routeId), yasUser.UserId);
+        return CommandResult.SuccessResult($"The route {routeId} has been successfully deleted");
     }
     
     //private static string MethodName([CallerMemberName] string caller = default!) => caller;

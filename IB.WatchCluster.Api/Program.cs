@@ -1,4 +1,3 @@
-using Confluent.Kafka;
 using IB.WatchCluster.Abstract;
 using IB.WatchCluster.Abstract.Configuration;
 using IB.WatchCluster.Abstract.Entity.Configuration;
@@ -71,7 +70,9 @@ try
 
     builder.Services.AddOpenTelemetryTracing(b => b
         .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(SolutionInfo.Name))
-        .AddAspNetCoreInstrumentation()
+        .AddAspNetCoreInstrumentation(options => options.Filter = 
+            httpContext => !httpContext.Request.Path.StartsWithSegments("/health") && 
+                           !httpContext.Request.Path.StartsWithSegments("/swagger"))
         .AddSource(SolutionInfo.Name)
         .AddOtlpExporter(options => options.Endpoint = new Uri(apiConfiguration.OpenTelemetryCollectorUrl)));
 
@@ -88,6 +89,8 @@ try
     var pgConfig = builder.Configuration.LoadVerifiedConfiguration<PgProviderConfiguration>();
     builder.Services.AddSingleton(pgConfig.ConnectionFactory());
 
+    builder.Services.AddHttpClient<RouteHttpClient>(
+        config => config.BaseAddress = new Uri(apiConfiguration.YasStorageApiUrl));
     builder.Services.AddControllers();
 
     // Authentication

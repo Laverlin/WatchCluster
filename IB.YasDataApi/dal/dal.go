@@ -125,6 +125,22 @@ func (dal *Dal) ExecAddWaypoint(routeId int32, wpName string, lat float64, lon f
 		})
 }
 
+func (dal *Dal) ExecDeleteRoute(routeId int32, userId int64) {
+	execDb(
+		dal.Config,
+		func(query *yasdb.Queries, ctx context.Context) error {
+			return query.DeleteRoute(ctx, yasdb.DeleteRouteParams{UserID: userId, RouteID: routeId })
+		})
+}
+
+func (dal *Dal) ExecRenameRoute(routeId int32, userId int64, newName string) {
+	execDb(
+		dal.Config,
+		func(query *yasdb.Queries, ctx context.Context) error {
+			return query.RenameRoute(ctx, yasdb.RenameRouteParams{UserID: userId, RouteID: routeId, RouteName: newName })
+		})
+}
+
 type yasType interface {
 	[]yasdb.YasRoute | []yasdb.YasWaypoint | yasdb.YasUser | int32
 }

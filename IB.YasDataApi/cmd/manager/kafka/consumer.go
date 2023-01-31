@@ -65,10 +65,28 @@ func dispatcher(dal dal.Dal, message kafka.Message) {
 				log.Error().Err(err).Msg("Unable to parse add route message")
 				break
 			}
-			routeId, err := dal.ExecAddRoute(addRouteCommand.UserId, addRouteCommand.RouteName)
+			routeId, _ := dal.ExecAddRoute(addRouteCommand.UserId, addRouteCommand.RouteName)
 			for id, wp := range addRouteCommand.Waypoints {
 				dal.ExecAddWaypoint(routeId, wp.WaypointName, wp.Lat, wp.Lon, int32(id))
 			}
+
+		case CmdDeleteRoute:
+			var deleteRouteCommand DeleteRouteCommand
+			err := json.Unmarshal(message.Value, &deleteRouteCommand)
+			if err != nil {
+				log.Error().Err(err).Msg("Unable to parse delete route message")
+				break
+			}
+			dal.ExecDeleteRoute(deleteRouteCommand.RouteId, deleteRouteCommand.UserId)
+
+		case CmdRenameRoute:
+			var renameRouteCommand RenameRouteCommand
+			err := json.Unmarshal(message.Value, &renameRouteCommand)
+			if err != nil {
+				log.Error().Err(err).Msg("Unable to parse rename route message")
+				break
+			}
+			dal.ExecRenameRoute(renameRouteCommand.RouteId, renameRouteCommand.UserId, renameRouteCommand.NewName)
 
 		default:
 			log.Warn().Str("command", command).Msg("Unknown command")

@@ -25,3 +25,9 @@ RETURNING route_id;
 
 -- name: AddWaypoint :exec
 INSERT INTO yas_waypoint (route_id, waypoint_name, lat, lon, order_id) VALUES ($1, $2, $3, $4, $5);
+
+-- name: DeleteRoute :exec
+DELETE FROM yas_route WHERE route_id = $1 AND user_id = $2;
+
+-- name: RenameRoute :exec
+UPDATE yas_route SET route_name = $3 WHERE route_id = $1 AND user_id = $2;

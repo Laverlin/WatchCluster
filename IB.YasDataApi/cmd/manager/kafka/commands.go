@@ -6,6 +6,8 @@ package kafka
 const (
     CmdCreateUser = "create-user"
     CmdAddRoute = "add-route"
+    CmdDeleteRoute = "delete-route"
+    CmdRenameRoute = "rename-route"
 )
 
 type AddUserCommand struct {
@@ -24,5 +26,16 @@ type AddRouteCommand struct {
     UserId int64
     RouteName string
     Waypoints []AddWaypointCommand
+}
+
+type RenameRouteCommand struct {
+    RouteId int32
+    UserId int64
+    NewName string
+}
+
+type DeleteRouteCommand struct {
+    RouteId int32
+    UserId int64
 }
 

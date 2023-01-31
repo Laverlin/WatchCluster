@@ -19,5 +19,10 @@ namespace IB.WatchCluster.Api.Entity.Configuration
         [Required]
         public AuthSettings AuthSettings { get; set; } = default!;
 
+        /// <summary>
+        /// Base URL of the YAS data api
+        /// </summary>
+        public string YasStorageApiUrl { get; set; } = default!;
+
     }
 }

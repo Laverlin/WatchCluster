@@ -6,5 +6,6 @@ public static class Topics
 {
     public static string RequestTopic => "watch-request";
     public static string ResponseTopic => "watch-response";
-    public static IEnumerable<string> AllTopics => new[] { RequestTopic, ResponseTopic };
+    public static IEnumerable<string> AllWfTopics => new[] { RequestTopic, ResponseTopic };
+    public static string YasTopic => "yas-manager";
 }

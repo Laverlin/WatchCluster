@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -8,6 +9,9 @@ using Confluent.Kafka;
 using IB.WatchCluster.Abstract.Entity.Configuration;
 using IB.WatchCluster.Abstract.Kafka.Entity;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
+
 
 namespace IB.WatchCluster.Abstract.Kafka;
 
@@ -17,6 +21,8 @@ public sealed class KafkaBroker: IKafkaBroker
     private readonly KafkaConfiguration _kafkaConfiguration;
     private readonly KafkaProducer<string, string> _producer;
     private readonly IConsumer<string, string> _consumer;
+    
+    private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
 
     public KafkaBroker(ILogger<KafkaBroker> logger, KafkaConfiguration kafkaConfiguration)
     {
@@ -25,6 +31,9 @@ public sealed class KafkaBroker: IKafkaBroker
         _producer = new KafkaProducer<string, string>(kafkaConfiguration);
         _consumer = new ConsumerBuilder<string, string>(kafkaConfiguration.BuildConsumerConfig()).Build();
     }
+
+    public async Task<DeliveryResult<string, string>> ProduceYasMessageAsync<T>(string command, T msgObject)
+        => await ProduceYasAsync(Topics.YasTopic, command, msgObject);
 
     public async Task<DeliveryResult<string, string>> ProduceRequestAsync<T>(string key, string activityId, T msgObject)
         => await ProduceAsync(Topics.RequestTopic, key, activityId, msgObject);
@@ -110,7 +119,40 @@ public sealed class KafkaBroker: IKafkaBroker
             }
         }
     }
+
+    private async Task<DeliveryResult<string, string>> ProduceYasAsync<T>(string topic, string command, T msgObject)
+    {
+        var message = new Message<string, string>
+        {
+            Headers = new Headers
+            {
+                new Header("command", Encoding.ASCII.GetBytes(command))
+            },
+            Key = Guid.NewGuid().ToString(),
+            Value = JsonSerializer.Serialize(msgObject)
+        };
         
+        if (Activity.Current != null)
+            Propagator.Inject(
+                new PropagationContext(Activity.Current.Context, Baggage.Current),
+                message, (m, key, value) => m.Headers.Add(key, Encoding.ASCII.GetBytes(value))
+            );
+        
+        var dr = await _producer.ProduceAsync(topic, message);
+        if (dr.Status != PersistenceStatus.Persisted)
+        {
+            _logger.LogWarning("Unable to deliver the message {@Key} to a broker", message.Key);
+        }
+        else
+        {
+            _logger.LogDebug(
+                "Push processed message {@Key} at: {@TopicPartitionOffset}",
+                dr.Message.Key, dr.TopicPartitionOffset.ToString());
+        }
+
+        return dr;
+    }
+    
     private async Task<DeliveryResult<string, string>> ProduceAsync<T>(string topic, string key, string activityId, T msgObject)
     {
         var message = CreateMessage(key, activityId, msgObject);

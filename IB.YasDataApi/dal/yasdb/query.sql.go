@@ -66,6 +66,20 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 	return err
 }
 
+const deleteRoute = `-- name: DeleteRoute :exec
+DELETE FROM yas_route WHERE route_id = $1 AND user_id = $2
+`
+
+type DeleteRouteParams struct {
+	RouteID int32
+	UserID  int64
+}
+
+func (q *Queries) DeleteRoute(ctx context.Context, arg DeleteRouteParams) error {
+	_, err := q.db.Exec(ctx, deleteRoute, arg.RouteID, arg.UserID)
+	return err
+}
+
 const getUser = `-- name: GetUser :one
 SELECT user_id, public_id, telegram_id, COALESCE(user_name, '') as user_name, register_time FROM yas_user WHERE telegram_id = $1
 `
@@ -148,4 +162,19 @@ func (q *Queries) ListWaypoints(ctx context.Context, publicID string) ([]YasWayp
 		return nil, err
 	}
 	return items, nil
+}
+
+const renameRoute = `-- name: RenameRoute :exec
+UPDATE yas_route SET route_name = $3 WHERE route_id = $1 AND user_id = $2
+`
+
+type RenameRouteParams struct {
+	RouteID   int32
+	UserID    int64
+	RouteName string
+}
+
+func (q *Queries) RenameRoute(ctx context.Context, arg RenameRouteParams) error {
+	_, err := q.db.Exec(ctx, renameRoute, arg.RouteID, arg.UserID, arg.RouteName)
+	return err
 }

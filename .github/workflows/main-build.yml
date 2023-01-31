@@ -98,10 +98,18 @@ jobs:
 #        tags: ilaverlin/watchcluster-migration:latest,ilaverlin/watchcluster-migration:${{ env.version }} 
 
 
-    - name: Build and push reader
+    - name: Build and push yas reader
       uses: docker/build-push-action@v2
       with:
         context: ./IB.YasDataApi
         file: ./IB.YasDataApi/cmd/reader/Dockerfile
         push: true
         tags: ilaverlin/watchcluster-reader:latest,ilaverlin/watchcluster-reader:${{ env.version }}
+
+    - name: Build and push yas manager
+      uses: docker/build-push-action@v2
+      with:
+        context: ./IB.YasDataApi
+        file: ./IB.YasDataApi/cmd/manager/Dockerfile
+        push: true
+        tags: ilaverlin/watchcluster-manager:latest,ilaverlin/watchcluster-manager:${{ env.version }}

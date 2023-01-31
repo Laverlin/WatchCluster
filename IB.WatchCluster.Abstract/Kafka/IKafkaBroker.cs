@@ -9,6 +9,8 @@ namespace IB.WatchCluster.Abstract.Kafka;
 public interface IKafkaBroker: IDisposable
 {
     public Task<DeliveryResult<string, string>> ProduceRequestAsync<T>(string key, string activityId, T msgObject);
+
+    public Task<DeliveryResult<string, string>> ProduceYasMessageAsync<T>(string command, T msgObject);
     
     public Task ProduceResponseAsync<T>(string key, string activityId, T msgObject);
 

@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
 using IB.WatchCluster.Abstract;
 using IB.WatchCluster.Abstract.Configuration;
+using IB.WatchCluster.Abstract.Entity.Configuration;
+using IB.WatchCluster.Abstract.Kafka;
 using IB.WatchCluster.Abstract.Services;
 using IB.WatchCluster.YasTelegramBot.Configuration;
 using IB.WatchCluster.YasTelegramBot.Infrastructure;
@@ -43,6 +45,7 @@ await Host.CreateDefaultBuilder(args)
     {
         var appConfig = hostContext.Configuration.LoadVerifiedConfiguration<BotConfiguration>();
         var healthcheckConfig = hostContext.Configuration.LoadVerifiedConfiguration<HealthcheckConfig>();
+        var kafkaConfig = hostContext.Configuration.LoadVerifiedConfiguration<KafkaConfiguration>();
         var yasBotHandler = new YasBotServiceHandler();
         var otelMetrics = new OtelMetrics("yasbot");
 
@@ -55,7 +58,11 @@ await Host.CreateDefaultBuilder(args)
              .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(otelMetrics.MetricJob))
              .AddMeter(otelMetrics.MetricJob)
              .AddOtlpExporter(options => options.Endpoint = new Uri(appConfig.OpenTelemetryCollectorUrl)));
-        
+
+        services.AddSingleton(kafkaConfig);
+        services.AddSingleton<IKafkaBroker, KafkaBroker>();
+        services.AddSingleton<YasManager>();
+        services.AddSingleton(appConfig);
         services.AddSingleton(otelMetrics);
         services.AddSingleton(new ActivitySource(SolutionInfo.Name));
         services.AddSingleton(healthcheckConfig);
@@ -63,6 +70,7 @@ await Host.CreateDefaultBuilder(args)
 
         services.AddSingleton(new TelegramBotClient(appConfig.BotApiKey));
         services.AddHttpClient<YasUpdateHandler>(config => config.BaseAddress = new Uri(appConfig.BaseStorageApiUrl));
+        services.AddHttpClient<YasHttpClient>(config => config.BaseAddress = new Uri(appConfig.BaseReaderApiUrl));
 
         services.AddHostedService<YasBotService>();
         

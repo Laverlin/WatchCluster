@@ -15,4 +15,7 @@ public class BotConfiguration
 
     [Required, Url]
     public string BaseStorageApiUrl { get; set; } = default!;
+
+    [Required, Url]
+    public string BaseReaderApiUrl { get; set; } = default!;
 }

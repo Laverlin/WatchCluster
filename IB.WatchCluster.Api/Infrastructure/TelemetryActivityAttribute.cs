@@ -34,7 +34,7 @@ public class TelemetryActivityAttribute: Attribute, IFilterFactory
 
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            using (_activitySource.StartActivity(_sourceName))
+            using (_activitySource.StartActivity(_sourceName, ActivityKind.Producer))
             {
                 await next();
             }

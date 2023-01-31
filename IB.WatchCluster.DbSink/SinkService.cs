@@ -39,7 +39,7 @@ namespace IB.WatchCluster.DbSink
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await _kafkaBroker.StartConsumingLoop(
-                Topics.AllTopics,
+                Topics.AllWfTopics,
                 MessageHandler,
                 status => _sinkServiceHandler.IsRunning = status == ConsumerLoopStatus.Running,
                 cancellationToken);

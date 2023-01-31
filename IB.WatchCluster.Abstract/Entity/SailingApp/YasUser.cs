@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 using LinqToDB.Mapping;
 
 namespace IB.WatchCluster.Abstract.Entity.SailingApp;
@@ -10,17 +11,22 @@ namespace IB.WatchCluster.Abstract.Entity.SailingApp;
 public class YasUser
 {
     [Column("user_id", IsIdentity = true)]
+    [JsonPropertyName("userId")]
     public long UserId {get;set;}
 
     [Column("public_id")]
-    public string PublicId {get;set;}
+    [JsonPropertyName("publicId")]
+    public string PublicId {get; set;}
 
     [Column("telegram_id")]
-    public long TelegramId {get;set;}
+    [JsonPropertyName("telegramId")]
+    public long TelegramId {get; set;}
 
     [Column("user_name")]
-    public string UserName {get;set;}
+    [JsonPropertyName("userName")]
+    public string UserName {get; set;}
 
     [Column("register_time")]
-    public DateTime RegisterTime {get;set;}
+    [JsonPropertyName("registerTime")]
+    public DateTime RegisterTime {get; set;}
 }
