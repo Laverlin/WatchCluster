@@ -8,7 +8,7 @@ import (
 )
 
 type RouteListParams struct {
-	UserId string `uri:"userId" binding:"required,min=7,max=9"`
+	UserId string `uri:"userId" binding:"required,min=6,max=10"`
 }
 
 func (httpRoutes *HttpRoutes) GetRouteList (context *gin.Context) {

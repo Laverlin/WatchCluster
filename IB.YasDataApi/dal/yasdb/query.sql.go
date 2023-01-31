@@ -9,10 +9,49 @@ import (
 	"context"
 )
 
-const createUser = `-- name: CreateUser :exec
+const addRoute = `-- name: AddRoute :one
+INSERT INTO yas_route (user_id, route_name, upload_time) VALUES ($1, $2, now())
+RETURNING route_id
+`
 
-INSERT INTO yas_user (public_id, telegram_id, user_name)
-    VALUES ($1, $2, $3)
+type AddRouteParams struct {
+	UserID    int64
+	RouteName string
+}
+
+func (q *Queries) AddRoute(ctx context.Context, arg AddRouteParams) (int32, error) {
+	row := q.db.QueryRow(ctx, addRoute, arg.UserID, arg.RouteName)
+	var route_id int32
+	err := row.Scan(&route_id)
+	return route_id, err
+}
+
+const addWaypoint = `-- name: AddWaypoint :exec
+INSERT INTO yas_waypoint (route_id, waypoint_name, lat, lon, order_id) VALUES ($1, $2, $3, $4, $5)
+`
+
+type AddWaypointParams struct {
+	RouteID      int64
+	WaypointName string
+	Lat          float64
+	Lon          float64
+	OrderID      int32
+}
+
+func (q *Queries) AddWaypoint(ctx context.Context, arg AddWaypointParams) error {
+	_, err := q.db.Exec(ctx, addWaypoint,
+		arg.RouteID,
+		arg.WaypointName,
+		arg.Lat,
+		arg.Lon,
+		arg.OrderID,
+	)
+	return err
+}
+
+const createUser = `-- name: CreateUser :exec
+INSERT INTO yas_user (public_id, telegram_id, user_name, register_time)
+    VALUES ($1, $2, $3, now())
 ON CONFLICT DO NOTHING
 `
 
@@ -22,14 +61,6 @@ type CreateUserParams struct {
 	UserName   string
 }
 
-// SELECT * FROM (
-//
-//	SELECT user_id, public_id, telegram_id, COALESCE(user_name, '') as user_name, register_time FROM yas_user WHERE telegram_id = $1
-//	UNION
-//	SELECT 0 as user_id, 'empty' as public_id, 0 as telegram_id, 'dummy' as user_name, NOW() as register_time
-//
-// ) u
-// ORDER BY user_id DESC LIMIT 1;
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 	_, err := q.db.Exec(ctx, createUser, arg.PublicID, arg.TelegramID, arg.UserName)
 	return err

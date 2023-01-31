@@ -11,10 +11,10 @@ CREATE UNIQUE INDEX ixu_userid ON "yas_user" USING btree ("user_id");
 
 
 CREATE TABLE yas_route(
-    route_id SERIAL NOT NULL,
+    route_id SERIAL NOT NULL PRIMARY KEY,
     user_id bigint NOT NULL,
     route_name character varying NOT NULL DEFAULT '',
-    upload_time timestamp with time zone NOT NULL
+    upload_time timestamp with time zone NOT NULL default (now() at time zone 'utc')
 );
 CREATE UNIQUE INDEX ixu_route_routeid ON "yas_route" USING btree ("route_id");
 CREATE INDEX ixu_route_userid ON "yas_route" USING btree ("user_id");

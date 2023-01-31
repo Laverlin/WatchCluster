@@ -16,8 +16,6 @@ func Subscribe(config abstract.Config, dal dal.Dal){
 		Brokers:   []string{ config.Kafka.Broker },
 		GroupID:   "yas-consumer",
 		Topic:     config.Kafka.TopicName,
-		// MinBytes:  10e3, // 10KB
-		// MaxBytes:  10e6, // 10MB
 	})
 
 	for {
@@ -40,28 +38,39 @@ func Subscribe(config abstract.Config, dal dal.Dal){
 }
 
 func dispatcher(dal dal.Dal, message kafka.Message) {
-	var command CommandType
+	command := "unknown"
 	for _, v := range message.Headers {
 		if v.Key == "command" {
-			command = MapStringCommandType(string(v.Value))
+			command = string(v.Value)
 		}
 	}
-	if command == 0 {
+	if command == "unknown" {
 		log.Warn().Msg("Unknown message")
 	}
 
 	switch command {
-		case AddUser:
+		case CmdCreateUser:
 			var addUserCommand AddUserCommand
 			err := json.Unmarshal(message.Value, &addUserCommand)
 			if err != nil {
-				log.Error().Err(err).Msg("Unable to parse message")
+				log.Error().Err(err).Msg("Unable to parse add user message")
 				break
 			}
 			dal.ExecAddUser(addUserCommand.PublicId, addUserCommand.TelegramId, addUserCommand.UserName)
 
+		case CmdAddRoute:
+			var addRouteCommand AddRouteCommand
+			err := json.Unmarshal(message.Value, &addRouteCommand)
+			if err != nil {
+				log.Error().Err(err).Msg("Unable to parse add route message")
+				break
+			}
+			routeId, err := dal.ExecAddRoute(addRouteCommand.UserId, addRouteCommand.RouteName)
+			for id, wp := range addRouteCommand.Waypoints {
+				dal.ExecAddWaypoint(routeId, wp.WaypointName, wp.Lat, wp.Lon, int32(id))
+			}
+
 		default:
-			log.Warn().Str("command", strconv.Itoa(int(command))).Msg("Unknown command")
+			log.Warn().Str("command", command).Msg("Unknown command")
 	}
 }
-

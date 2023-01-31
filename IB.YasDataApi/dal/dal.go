@@ -103,9 +103,30 @@ func (dal *Dal) ExecAddUser(puid string, tid int64, userName string) {
 		})
 }
 
+func (dal *Dal) ExecAddRoute(userId int64, routeName string) (int32, error) {
+	return queryDb(
+		dal.Config,
+		func(query *yasdb.Queries, ctx context.Context) (int32, error) {
+			return query.AddRoute(ctx, yasdb.AddRouteParams{UserID: userId, RouteName: routeName })
+		})
+}
+
+func (dal *Dal) ExecAddWaypoint(routeId int32, wpName string, lat float64, lon float64, orderId int32) {
+	execDb(
+		dal.Config,
+		func(query *yasdb.Queries, ctx context.Context) error {
+			return query.AddWaypoint(ctx, yasdb.AddWaypointParams {
+				RouteID: int64(routeId), 
+				WaypointName: wpName,
+				Lat: lat,
+				Lon: lon,
+				OrderID: orderId,
+			})
+		})
+}
 
 type yasType interface {
-	[]yasdb.YasRoute | []yasdb.YasWaypoint | yasdb.YasUser 
+	[]yasdb.YasRoute | []yasdb.YasWaypoint | yasdb.YasUser | int32
 }
 
 type queryFunc[T yasType] func(query *yasdb.Queries, ctx context.Context) (T, error)
@@ -122,7 +143,6 @@ func queryDb[T yasType](config abstract.Config, query queryFunc[T]) (T, error) {
 	queries := yasdb.New(conn)
 
 	result, err := query(queries, ctx)
-
 	if err != nil {
 		var empty T
 		return empty, err
@@ -134,6 +154,8 @@ func queryDb[T yasType](config abstract.Config, query queryFunc[T]) (T, error) {
 
 type execFunc func(query *yasdb.Queries, ctx context.Context) error
 
+// Execute query without result. Errors are not porpagated
+//
 func execDb(config abstract.Config, exec execFunc) {
 	ctx := context.Background()
 	conn, err := pgx.Connect(ctx, config.PostgreUrl)
@@ -146,7 +168,6 @@ func execDb(config abstract.Config, exec execFunc) {
 	queries := yasdb.New(conn)
 
 	err = exec(queries, ctx)
-
 	if err != nil {
 		log.Error().Err(err).Msg("Error executing query")
 		return 

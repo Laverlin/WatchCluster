@@ -1,27 +1,28 @@
 package kafka
 
 
-type CommandType int
+
 
 const (
-	AddUser CommandType = iota
+    CmdCreateUser = "create-user"
+    CmdAddRoute = "add-route"
 )
-
-var (
-    commandTypeMap = map[string]CommandType{
-        "AddUser":   AddUser,
-    }
-)
-func MapStringCommandType(str string) CommandType {
-    c := commandTypeMap[str]
-    return c
-}
-
-
 
 type AddUserCommand struct {
 	TelegramId int64
 	PublicId string
 	UserName string
+}
+
+type AddWaypointCommand struct {
+    WaypointName string		`json:"waypointName"`
+	Lat          float64	`json:"lat"`
+	Lon          float64	`json:"lon"`
+}
+
+type AddRouteCommand struct {
+    UserId int64
+    RouteName string
+    Waypoints []AddWaypointCommand
 }
 
