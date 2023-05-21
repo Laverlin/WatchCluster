@@ -5,7 +5,7 @@ namespace IB.WatchCluster.Api.Entity.Configuration
     /// <summary>
     /// Watch API configuration setting
     /// </summary>
-    internal class ApiConfiguration
+    public class ApiConfiguration
     {
         /// <summary>
         /// Location service url template
@@ -23,6 +23,8 @@ namespace IB.WatchCluster.Api.Entity.Configuration
         /// Base URL of the YAS data api
         /// </summary>
         public string YasStorageApiUrl { get; set; } = default!;
+
+        public int RefreshInterval { get; set; } = 40;
 
     }
 }

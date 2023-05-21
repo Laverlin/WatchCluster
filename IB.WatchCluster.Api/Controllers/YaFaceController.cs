@@ -7,6 +7,7 @@ using Confluent.Kafka;
 using IB.WatchCluster.Api.Services;
 using System.Diagnostics;
 using IB.WatchCluster.Abstract.Kafka;
+using IB.WatchCluster.Api.Entity.Configuration;
 
 namespace IB.WatchCluster.Api.Controllers;
 
@@ -26,13 +27,16 @@ public class YaFaceController : Controller
     private readonly Stopwatch _processTimer = new ();
     private bool _isProduced = false;
     private bool _isCollected = false;
+    private readonly ApiConfiguration _apiConfiguration;
 
     public YaFaceController(
         ILogger<YaFaceController> logger,
         OtelMetrics otelMetrics,
         IKafkaBroker kafkaBroker,
-        CollectorHandler collectorHandler)
+        CollectorHandler collectorHandler,
+        ApiConfiguration apiConfiguration)
     {
+        _apiConfiguration = apiConfiguration;
         _logger = logger;
         _collectorHandler = collectorHandler;
         _otelMetrics = otelMetrics;
@@ -109,6 +113,7 @@ public class YaFaceController : Controller
             throw new ApiException(503, "Server Error: temporarily unable to process request");
         }
         _isCollected = true;
+        watchResponse.RefInterval = _apiConfiguration.RefreshInterval;
         
         return watchResponse;
     }

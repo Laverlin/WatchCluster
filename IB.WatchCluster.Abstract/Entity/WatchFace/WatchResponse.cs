@@ -29,5 +29,11 @@ namespace IB.WatchCluster.Abstract.Entity.WatchFace
         /// </summary>
         [JsonPropertyName("exchange")]
         public ExchangeRateInfo ExchangeRateInfo { get; set; } = new ExchangeRateInfo();
+
+        /// <summary>
+        /// interval for next refresh
+        /// </summary>
+        [JsonPropertyName("ref-interval")] 
+        public int RefInterval { get; set; } = 40;
     }
 }

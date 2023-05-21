@@ -80,6 +80,7 @@ try
     //
     builder.Services.AddScoped<RequestRateLimit>();
     builder.Services.AddSingleton(new ActivitySource(SolutionInfo.Name));
+    builder.Services.AddSingleton(apiConfiguration);
     builder.Services.AddSingleton(otelMetrics);
     builder.Services.AddSingleton(kafkaConfig);
     builder.Services.AddSingleton<IKafkaBroker, KafkaBroker>();
