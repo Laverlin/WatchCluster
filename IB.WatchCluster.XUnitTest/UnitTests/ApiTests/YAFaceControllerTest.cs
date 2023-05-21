@@ -11,6 +11,7 @@ using Moq;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using IB.WatchCluster.Abstract.Kafka;
+using IB.WatchCluster.Api.Entity.Configuration;
 using Xunit;
 
 namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
@@ -24,6 +25,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
             //
             var loggerMock = new Mock<ILogger<YaFaceController>>();
             var otMetricsMock = new Mock<OtelMetrics>("", "", "");
+            var apiConfigMock = new ApiConfiguration();
             var deliveryResult = new DeliveryResult<string, string> 
             { 
                 Message = new Message<string, string> { Value = "" }, 
@@ -43,7 +45,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 
             
             var controller = new YaFaceController(
-                loggerMock.Object, otMetricsMock.Object, kafkaBrokerMock.Object, collectorConsumerMock.Object);
+                loggerMock.Object, otMetricsMock.Object, kafkaBrokerMock.Object, collectorConsumerMock.Object, apiConfigMock);
             controller.ControllerContext.HttpContext = new DefaultHttpContext();
             controller.HttpContext.TraceIdentifier = requestId;
 
@@ -69,6 +71,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
             //
             var loggerMock = new Mock<ILogger<YaFaceController>>();
             var otMetricsMock = new Mock<OtelMetrics>("", "", "");
+            var apiConfigMock = new ApiConfiguration();
             var deliveryResult = new DeliveryResult<string, string>
             {
                 Message = new Message<string, string> { Value = "" },
@@ -88,7 +91,7 @@ namespace IB.WatchCluster.XUnitTest.UnitTests.ApiTests
 
 
             var controller = new YaFaceController(
-                loggerMock.Object, otMetricsMock.Object, kafkaBrokerMock.Object, collectorConsumerMock.Object);
+                loggerMock.Object, otMetricsMock.Object, kafkaBrokerMock.Object, collectorConsumerMock.Object, apiConfigMock);
             controller.ControllerContext.HttpContext = new DefaultHttpContext();
             controller.HttpContext.TraceIdentifier = requestId;
 
