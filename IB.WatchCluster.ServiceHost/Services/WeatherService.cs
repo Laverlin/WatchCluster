@@ -1,5 +1,8 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
+using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using IB.WatchCluster.Abstract.Entity;
 using IB.WatchCluster.Abstract.Entity.WatchFace;
@@ -16,7 +19,7 @@ public class WeatherService : IRequestHandler<WeatherInfo>
     private readonly OtelMetrics _metrics;
 
     public WeatherService(
-        ILogger<WeatherService> logger,HttpClient httpClient, WeatherConfiguration weatherConfig, OtelMetrics metrics)
+        ILogger<WeatherService> logger, HttpClient httpClient, WeatherConfiguration weatherConfig, OtelMetrics metrics)
     {
         _logger = logger;
         _httpClient = httpClient;
@@ -36,14 +39,29 @@ public class WeatherService : IRequestHandler<WeatherInfo>
                 return weatherInfo;
 
             processTimer.Start();
-            
+
             Enum.TryParse(watchRequest.WeatherProvider, true, out weatherProvider);
 
-            weatherInfo = weatherProvider == WeatherProvider.DarkSky
-                ? await RequestDarkSky(watchRequest.Lat.Value, watchRequest.Lon.Value, watchRequest.DarkskyKey)
-                : await RequestOpenWeather(watchRequest.Lat.Value, watchRequest.Lon.Value);
+            weatherInfo = weatherProvider switch
+            {
+                WeatherProvider.DarkSky => await RequestDarkSky(watchRequest.Lat.Value, watchRequest.Lon.Value,
+                    watchRequest.DarkskyKey),
+                WeatherProvider.AppleDarkSky => await RequestAppleDarkSky(watchRequest.Lat.Value, watchRequest.Lon.Value),
+                WeatherProvider.OpenWeather => await RequestOpenWeather(watchRequest.Lat.Value, watchRequest.Lon.Value),
+                _ => new WeatherInfo { RequestStatus = new RequestStatus(RequestStatusCode.Error) }
+            };
+
             sourceKind = DataSourceKind.Remote;
-            return weatherInfo;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,"Request weather exception, {@provider}", weatherProvider);
+            weatherInfo.RequestStatus = new RequestStatus
+            {
+                ErrorCode = 500,
+                ErrorDescription = "Internal Server Error",
+                StatusCode = RequestStatusCode.Error
+            };
         }
         finally
         {
@@ -53,6 +71,89 @@ public class WeatherService : IRequestHandler<WeatherInfo>
             _metrics.IncreaseProcessedCounter(
                 sourceKind, weatherInfo.RequestStatus.StatusCode, weatherProvider.ToString());
         }
+        return weatherInfo;
+    }
+    
+    
+    public async Task<WeatherInfo> RequestAppleDarkSky(decimal lat, decimal lon)
+    {
+        var conditionIcons = new Dictionary<string, string>
+        {
+            { "Clear1", "clear-day"}, { "Clear0", "clear-night"},
+            { "Cloudy", "cloudy"},
+            { "Haze1", "fog" },
+            { "MostlyClear1", "partly-cloudy-day"}, { "MostlyClear0", "partly-cloudy-night"},
+            { "MostlyCloudy1", "partly-cloudy-day"}, { "MostlyCloudy0", "partly-cloudy-night"},
+            { "PartlyCloudy1", "partly-cloudy-day"}, { "PartlyCloudy0", "partly-cloudy-night"},
+            { "ScatteredThunderstorms","rain"},
+            { "Breezy", "wind"},
+            { "Windy", "wind"},
+            { "Drizzle", "rain"},
+            { "HeavyRain", "rain"},
+            { "Rain", "rain"},
+            { "Flurries", "snow"},
+            { "HeavySnow", "snow"},
+            { "Sleet", "sleet" },
+            { "Snow", "snow"},
+            { "Blizzard", "snow"},
+            { "BlowingSnow", "snow"},
+            { "FreezingDrizzle", "sleet"},
+            { "FreezingRain", "sleet"},
+            { "Frigid1","clear-day"}, { "Frigid0","clear-night"},
+            { "Hail", "rain"},
+            { "Hot1", "clear-day"}, { "Hot0","clear-night"},
+            { "Hurricane", "wind"},
+            { "IsolatedThunderstorms", "rain"},
+            { "TropicalStorm", "rain"},
+            { "BlowingDust", "wind"},
+            { "Foggy", "fog"},
+            { "Smoky", "fog" },
+            { "StrongStorms", "rain"},
+            { "SunFlurries", "snow"},
+            { "SunShowers", "rain"},
+            { "Thunderstorms", "rain"},
+            { "WintryMix", "cloudy"}
+        };
+        
+        var providerName = WeatherProvider.AppleDarkSky.ToString();
+        var url = string.Format(
+            _weatherConfig.AppleDarkSkyUrlTemplate, 
+            lat.ToString(CultureInfo.InvariantCulture), 
+            lon.ToString(CultureInfo.InvariantCulture));
+
+        var request = new HttpRequestMessage
+        {
+            Headers = { Authorization = new AuthenticationHeaderValue("Bearer", _weatherConfig.AppleDarkSkyKey) },
+            Method = HttpMethod.Get,
+            RequestUri = new Uri(url)
+        };
+        
+        using var response = await _httpClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Error {@provider} request, status: {@statusCode}", providerName, response.StatusCode);
+            return new WeatherInfo { RequestStatus = new RequestStatus(response.StatusCode) };
+        }
+        
+        await using var content = await response.Content.ReadAsStreamAsync();
+        using var json = await JsonDocument.ParseAsync(content);
+        var currentWeatherRoot = json.RootElement.GetProperty("currentWeather");
+        var weatherInfo = JsonSerializer.Deserialize<WeatherInfo>(currentWeatherRoot.GetRawText());
+        if (weatherInfo == null)
+            return new WeatherInfo { RequestStatus = new RequestStatus(RequestStatusCode.Error) };
+        var conditionCode = currentWeatherRoot.GetProperty("conditionCode").GetString() ?? "";
+        var isDaylight = currentWeatherRoot.GetProperty("daylight").GetBoolean();
+        var iconKey = conditionCode + Convert.ToInt32(isDaylight);
+        if (conditionIcons.TryGetValue(conditionCode, out var icon)) 
+            conditionIcons.TryGetValue(iconKey, out icon);
+        weatherInfo.Icon = icon;
+        if (json.RootElement.TryGetProperty("forecastHourly", out var forecastHoursRoot))
+            weatherInfo.PrecipProbability = forecastHoursRoot
+                .GetProperty("hours").EnumerateArray().First().GetProperty("precipitationChance").GetDecimal();
+        weatherInfo.WindSpeed *= 0.277778M;
+        weatherInfo.WeatherProvider = providerName;
+        weatherInfo.RequestStatus = new RequestStatus(RequestStatusCode.Ok);
+        return weatherInfo;
     }
 
     /// <summary>
@@ -76,10 +177,11 @@ public class WeatherService : IRequestHandler<WeatherInfo>
 
         await using var content = await response.Content.ReadAsStreamAsync();
         using var json = await JsonDocument.ParseAsync(content);
-        var weatherInfo = JsonSerializer.Deserialize<WeatherInfo>(
-            json.RootElement.GetProperty("currently").GetRawText());
+        var currentWeatherRoot = json.RootElement.GetProperty("current");
+        var weatherInfo = JsonSerializer.Deserialize<WeatherInfo>(currentWeatherRoot.GetRawText());
         if (weatherInfo == null)
             return new WeatherInfo { RequestStatus = new RequestStatus(RequestStatusCode.Error) };
+
         weatherInfo.WeatherProvider = providerName;
         weatherInfo.RequestStatus = new RequestStatus(RequestStatusCode.Ok);
 

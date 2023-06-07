@@ -12,5 +12,11 @@ namespace IB.WatchCluster.ServiceHost.Entity
 
         [Required]
         public string OpenWeatherKey { get; set; } = default!;
+
+        [Required, Url] 
+        public string AppleDarkSkyUrlTemplate { get; set; } = default!;
+        
+        [Required]
+        public string AppleDarkSkyKey { get; set; } = default!;
     }
 }

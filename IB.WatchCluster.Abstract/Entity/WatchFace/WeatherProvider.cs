@@ -13,6 +13,11 @@
         /// <summary>
         /// https://darksky.net/
         /// </summary>
-        DarkSky = 1
+        DarkSky = 1,
+        
+        /// <summary>
+        /// https://weatherkit.apple.com
+        /// </summary>
+        AppleDarkSky = 2,
     }
 }

@@ -1,7 +1,8 @@
 {
   "profiles": {
     "IB.WatchCluster.ServiceHost": {
-      "commandName": "Project",
+      "commandName": "Project", 
+      "commandLineArgs": "--AppConfiguration:handler WeatherInfo",
 
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
