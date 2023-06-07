@@ -177,7 +177,7 @@ public class WeatherService : IRequestHandler<WeatherInfo>
 
         await using var content = await response.Content.ReadAsStreamAsync();
         using var json = await JsonDocument.ParseAsync(content);
-        var currentWeatherRoot = json.RootElement.GetProperty("current");
+        var currentWeatherRoot = json.RootElement.GetProperty("currently");
         var weatherInfo = JsonSerializer.Deserialize<WeatherInfo>(currentWeatherRoot.GetRawText());
         if (weatherInfo == null)
             return new WeatherInfo { RequestStatus = new RequestStatus(RequestStatusCode.Error) };
