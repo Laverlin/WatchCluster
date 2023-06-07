@@ -144,7 +144,7 @@ public class WeatherService : IRequestHandler<WeatherInfo>
         var conditionCode = currentWeatherRoot.GetProperty("conditionCode").GetString() ?? "";
         var isDaylight = currentWeatherRoot.GetProperty("daylight").GetBoolean();
         var iconKey = conditionCode + Convert.ToInt32(isDaylight);
-        if (conditionIcons.TryGetValue(conditionCode, out var icon)) 
+        if (!conditionIcons.TryGetValue(conditionCode, out var icon)) 
             conditionIcons.TryGetValue(iconKey, out icon);
         weatherInfo.Icon = icon;
         if (json.RootElement.TryGetProperty("forecastHourly", out var forecastHoursRoot))
