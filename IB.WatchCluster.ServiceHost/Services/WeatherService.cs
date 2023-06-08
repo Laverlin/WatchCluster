@@ -39,19 +39,17 @@ public class WeatherService : IRequestHandler<WeatherInfo>
                 return weatherInfo;
 
             processTimer.Start();
-
+            sourceKind = DataSourceKind.Remote;
             Enum.TryParse(watchRequest.WeatherProvider, true, out weatherProvider);
 
             weatherInfo = weatherProvider switch
             {
-                WeatherProvider.DarkSky => await RequestDarkSky(watchRequest.Lat.Value, watchRequest.Lon.Value,
-                    watchRequest.DarkskyKey),
+                //await RequestDarkSky(watchRequest.Lat.Value, watchRequest.Lon.Value, watchRequest.DarkskyKey),
+                WeatherProvider.DarkSky => await RequestAppleDarkSky(watchRequest.Lat.Value, watchRequest.Lon.Value),
                 WeatherProvider.AppleDarkSky => await RequestAppleDarkSky(watchRequest.Lat.Value, watchRequest.Lon.Value),
                 WeatherProvider.OpenWeather => await RequestOpenWeather(watchRequest.Lat.Value, watchRequest.Lon.Value),
                 _ => new WeatherInfo { RequestStatus = new RequestStatus(RequestStatusCode.Error) }
             };
-
-            sourceKind = DataSourceKind.Remote;
         }
         catch (Exception ex)
         {
