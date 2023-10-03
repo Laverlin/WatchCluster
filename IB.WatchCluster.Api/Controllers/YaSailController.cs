@@ -96,7 +96,7 @@ public class YaSailController
         var wayPoints = routes
             .Join(db.GetTable<YasWaypoint>(), r => r.RouteId, w => w.RouteId, (r, w) => w)
             .ToArray();
-        var routesArray = routes.ToArray();
+        var routesArray = routes.OrderByDescending(r=>r.UploadTime).Take(10).ToArray();
         foreach (var route in routesArray)
             route.Waypoints = wayPoints
                 .Where(w => w.RouteId == route.RouteId)
@@ -215,4 +215,4 @@ public class YaSailController
         
         return await RenameRoute(userId, route.RouteId, newName);
     }
-}
+} 
