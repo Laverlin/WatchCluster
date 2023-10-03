@@ -7,6 +7,7 @@ package yasdb
 
 import (
 	"context"
+	"github.com/rs/zerolog/log"
 )
 
 const addRoute = `-- name: AddRoute :one
@@ -124,13 +125,14 @@ func (q *Queries) ListRoutes(ctx context.Context, publicID string) ([]YasRoute, 
 		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
+		log.Error().Err(err).Msg("DB:: error on load routes from db")
 		return nil, err
 	}
 	return items, nil
 }
 
 const listWaypoints = `-- name: ListWaypoints :many
-SELECT wp.waypoint_id, wp.route_id, wp.waypoint_name, wp.lat, wp.lon, wp.order_id FROM yas_waypoint wp
+SELECT wp.waypoint_id, wp.route_id, COALESCE(wp.waypoint_name, '') as waypoint_name, wp.lat, wp.lon, wp.order_id FROM yas_waypoint wp
 JOIN yas_route r ON wp.route_id = r.route_id
 JOIN yas_user u ON r.user_id = u.user_id
 WHERE u.public_id = $1
@@ -159,6 +161,7 @@ func (q *Queries) ListWaypoints(ctx context.Context, publicID string) ([]YasWayp
 		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
+		log.Error().Err(err).Msg("DB:: error on load waypoints from db")
 		return nil, err
 	}
 	return items, nil
@@ -176,5 +179,8 @@ type RenameRouteParams struct {
 
 func (q *Queries) RenameRoute(ctx context.Context, arg RenameRouteParams) error {
 	_, err := q.db.Exec(ctx, renameRoute, arg.RouteID, arg.UserID, arg.RouteName)
+	if err != nil {
+		log.Error().Err(err).Msg("DB:: error on update route")
+	}
 	return err
 }
