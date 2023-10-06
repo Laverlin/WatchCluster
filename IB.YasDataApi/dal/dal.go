@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"IB.YasDataApi/abstract"
+	"IB.YasDataApi/abstract/command"
 	"IB.YasDataApi/dal/yasdb"
 )
 
@@ -95,49 +96,63 @@ func (dal *Dal) QueryRoutes(userId string) ([]abstract.Route, error) {
 	return routes, nil
 }
 
-func (dal *Dal) ExecAddUser(puid string, tid int64, userName string) {
+func (dal *Dal) ExecAddUser(u command.AddUser) {
 	execDb(
 		dal.Config, 
 		func(query *yasdb.Queries, ctx context.Context) error {
-			return query.CreateUser(ctx, yasdb.CreateUserParams{PublicID: puid, TelegramID: tid, UserName: userName})
+			return query.CreateUser(ctx, yasdb.CreateUserParams { PublicID: u.PublicId, TelegramID: u.TelegramId, UserName: u.UserName })
 		})
 }
 
-func (dal *Dal) ExecAddRoute(userId int64, routeName string) (int32, error) {
+func (dal *Dal) ExecAddRoute(r command.AddRoute) (int32, error) {
 	return queryDb(
 		dal.Config,
 		func(query *yasdb.Queries, ctx context.Context) (int32, error) {
-			return query.AddRoute(ctx, yasdb.AddRouteParams{UserID: userId, RouteName: routeName })
+			return query.AddRoute(ctx, yasdb.AddRouteParams { UserID: r.UserId, RouteName: r.RouteName })
 		})
 }
 
-func (dal *Dal) ExecAddWaypoint(routeId int32, wpName string, lat float64, lon float64, orderId int32) {
+func (dal *Dal) ExecAddWaypoint(routeId int32, orderId int32, wp command.AddWaypoint) {
 	execDb(
 		dal.Config,
 		func(query *yasdb.Queries, ctx context.Context) error {
 			return query.AddWaypoint(ctx, yasdb.AddWaypointParams {
 				RouteID: int64(routeId), 
-				WaypointName: wpName,
-				Lat: lat,
-				Lon: lon,
+				WaypointName: wp.WaypointName,
+				Lat: wp.Lat,
+				Lon: wp.Lon,
 				OrderID: orderId,
 			})
 		})
 }
 
-func (dal *Dal) ExecDeleteRoute(routeId int32, userId int64) {
+func (dal *Dal) ExecDeleteRoute(delParams command.DeleteRoute) {
 	execDb(
 		dal.Config,
 		func(query *yasdb.Queries, ctx context.Context) error {
-			return query.DeleteRoute(ctx, yasdb.DeleteRouteParams{UserID: userId, RouteID: routeId })
+			return query.DeleteRoute(ctx, yasdb.DeleteRouteParams{PublicID: delParams.Token, RouteID: delParams.RouteId })
 		})
 }
 
-func (dal *Dal) ExecRenameRoute(routeId int32, userId int64, newName string) {
+func (dal *Dal) ExecRenameRouteById(routeId int32, userId int64, newName string) {
 	execDb(
 		dal.Config,
 		func(query *yasdb.Queries, ctx context.Context) error {
-			return query.RenameRoute(ctx, yasdb.RenameRouteParams{UserID: userId, RouteID: routeId, RouteName: newName })
+			return query.RenameRouteById(ctx, yasdb.RenameRouteByIdParams{UserID: userId, RouteID: routeId, RouteName: newName })
+		})
+}
+
+func (dal *Dal) ExecRenameRouteByToken(renameParams command.RenameRouteByToken) {
+	execDb(
+		dal.Config,
+		func(query *yasdb.Queries, ctx context.Context) error {
+			return query.RenameRouteByToken(ctx, 
+				yasdb.RenameRouteByTokenParams{
+					PublicID: renameParams.Token, 
+					RouteID: renameParams.RouteId, 
+					RouteName: renameParams.RouteName, 
+				},
+			)
 		})
 }
 

@@ -5,7 +5,7 @@ WHERE  u.public_id = $1
 ORDER BY upload_time DESC;
 
 -- name: ListWaypoints :many
-SELECT wp.* FROM yas_waypoint wp
+SELECT wp.waypoint_id, wp.route_id, COALESCE(wp.waypoint_name, '') as waypoint_name, wp.lat, wp.lon, wp.order_id FROM yas_waypoint wp
 JOIN yas_route r ON wp.route_id = r.route_id
 JOIN yas_user u ON r.user_id = u.user_id
 WHERE u.public_id = $1
@@ -27,7 +27,10 @@ RETURNING route_id;
 INSERT INTO yas_waypoint (route_id, waypoint_name, lat, lon, order_id) VALUES ($1, $2, $3, $4, $5);
 
 -- name: DeleteRoute :exec
-DELETE FROM yas_route WHERE route_id = $1 AND user_id = $2;
+DELETE FROM yas_route WHERE route_id = $1 AND user_id = (SELECT user_id FROM yas_user WHERE public_id = $2);
 
--- name: RenameRoute :exec
+-- name: RenameRouteById :exec
 UPDATE yas_route SET route_name = $3 WHERE route_id = $1 AND user_id = $2;
+
+-- name: RenameRouteByToken :exec
+UPDATE yas_route SET route_name = $3 WHERE route_id = $1 AND user_id = (SELECT user_id FROM yas_user WHERE public_id = $2);

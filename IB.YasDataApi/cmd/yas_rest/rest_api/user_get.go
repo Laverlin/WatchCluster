@@ -1,4 +1,4 @@
-package httproutes
+package rest_api
 
 import (
 	"net/http"
@@ -12,7 +12,7 @@ type GetUserParams struct {
 	UserId int64 `uri:"userId" binding:"required,min=1"`
 }
 
-func (httpRoutes *HttpRoutes) GetUser (context *gin.Context) {
+func (rest *Rest) GetUser (context *gin.Context) {
 
 		var params GetUserParams
 		if err := context.ShouldBindUri(&params); err != nil {
@@ -21,7 +21,7 @@ func (httpRoutes *HttpRoutes) GetUser (context *gin.Context) {
 			return
 		}
 
-		user, err := httpRoutes.DataLayer.QueryUser(params.UserId)
+		user, err := rest.DataLayer.QueryUser(params.UserId)
 		if err == pgx.ErrNoRows {
 			context.JSON(http.StatusNotFound, gin.H{"msg": "No User has been found"})
 			return

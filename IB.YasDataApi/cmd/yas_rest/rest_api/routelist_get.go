@@ -1,4 +1,4 @@
-package httproutes
+package rest_api
 
 import (
 	"net/http"
@@ -8,10 +8,10 @@ import (
 )
 
 type RouteListParams struct {
-	UserId string `uri:"userId" binding:"required,min=6,max=10"`
+	UserToken string `uri:"userId" binding:"required,min=6,max=10"`
 }
 
-func (httpRoutes *HttpRoutes) GetRouteList (context *gin.Context) {
+func (rest *Rest) GetRouteList (context *gin.Context) {
 
 		var params RouteListParams
 		if err := context.ShouldBindUri(&params); err != nil {
@@ -20,7 +20,7 @@ func (httpRoutes *HttpRoutes) GetRouteList (context *gin.Context) {
 			return
 		}
 
-		routes, err := httpRoutes.DataLayer.QueryRoutes(params.UserId)
+		routes, err := rest.DataLayer.QueryRoutes(params.UserToken)
 		if err != nil {
 			log.Error().Err(err).Msg("Unable to get route")
 			context.JSON(http.StatusBadRequest, gin.H{"msg": "Unable to get route", "error": err.Error()})

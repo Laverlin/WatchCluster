@@ -1,4 +1,4 @@
-package kafka
+package main
 
 import (
 	"context"
@@ -6,12 +6,13 @@ import (
 	"strconv"
 
 	"IB.YasDataApi/abstract"
+	"IB.YasDataApi/abstract/command"
 	"IB.YasDataApi/dal"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/kafka-go"
 )
 
-func Subscribe(config abstract.Config, dal dal.Dal){
+func Subscribe(config abstract.Config, dal dal.Dal) {
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   []string{ config.Kafka.Broker },
 		GroupID:   "yas-consumer",
@@ -38,57 +39,66 @@ func Subscribe(config abstract.Config, dal dal.Dal){
 }
 
 func dispatcher(dal dal.Dal, message kafka.Message) {
-	command := "unknown"
+	cmd := "unknown"
 	for _, v := range message.Headers {
 		if v.Key == "command" {
-			command = string(v.Value)
+			cmd = string(v.Value)
 		}
 	}
-	if command == "unknown" {
+	if cmd == "unknown" {
 		log.Warn().Msg("Unknown message")
 	}
 
-	switch command {
-		case CmdCreateUser:
-			var addUserCommand AddUserCommand
+	switch cmd {
+		case command.CmdCreateUser:
+			var addUserCommand command.AddUser
 			err := json.Unmarshal(message.Value, &addUserCommand)
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to parse add user message")
 				break
 			}
-			dal.ExecAddUser(addUserCommand.PublicId, addUserCommand.TelegramId, addUserCommand.UserName)
+			dal.ExecAddUser(addUserCommand)
 
-		case CmdAddRoute:
-			var addRouteCommand AddRouteCommand
+		case command.CmdAddRoute:
+			var addRouteCommand command.AddRoute
 			err := json.Unmarshal(message.Value, &addRouteCommand)
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to parse add route message")
 				break
 			}
-			routeId, _ := dal.ExecAddRoute(addRouteCommand.UserId, addRouteCommand.RouteName)
+			routeId, _ := dal.ExecAddRoute(addRouteCommand)
 			for id, wp := range addRouteCommand.Waypoints {
-				dal.ExecAddWaypoint(routeId, wp.WaypointName, wp.Lat, wp.Lon, int32(id))
+				dal.ExecAddWaypoint(routeId, int32(id), wp)
 			}
 
-		case CmdDeleteRoute:
-			var deleteRouteCommand DeleteRouteCommand
+		case command.CmdDeleteRoute:
+			var deleteRouteCommand command.DeleteRoute
 			err := json.Unmarshal(message.Value, &deleteRouteCommand)
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to parse delete route message")
 				break
 			}
-			dal.ExecDeleteRoute(deleteRouteCommand.RouteId, deleteRouteCommand.UserId)
+			dal.ExecDeleteRoute(deleteRouteCommand)
 
-		case CmdRenameRoute:
-			var renameRouteCommand RenameRouteCommand
+		case command.CmdRenameRouteById:
+			var renameRouteCommand command.RenameRouteById
 			err := json.Unmarshal(message.Value, &renameRouteCommand)
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to parse rename route message")
 				break
 			}
-			dal.ExecRenameRoute(renameRouteCommand.RouteId, renameRouteCommand.UserId, renameRouteCommand.NewName)
+			dal.ExecRenameRouteById(renameRouteCommand.RouteId, renameRouteCommand.UserId, renameRouteCommand.NewName)
+
+		case command.CmdRenameRouteByToken:
+			var renameRouteCommand command.RenameRouteByToken
+			err := json.Unmarshal(message.Value, &renameRouteCommand)
+			if err != nil {
+				log.Error().Err(err).Msg("Unable to parse rename route message")
+				break
+			}
+			dal.ExecRenameRouteByToken(renameRouteCommand)
 
 		default:
-			log.Warn().Str("command", command).Msg("Unknown command")
+			log.Warn().Str("command", cmd).Msg("Unknown command")
 	}
 }

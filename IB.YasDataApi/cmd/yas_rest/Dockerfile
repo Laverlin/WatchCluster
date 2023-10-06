@@ -6,7 +6,7 @@ WORKDIR /src
 COPY ../../ ./IB.YasDataApi/
 
 RUN cd IB.YasDataApi && go mod download
-RUN cd ./IB.YasDataApi/cmd/reader && go build -o /release
+RUN cd ./IB.YasDataApi/cmd/yas_rest && go build -o /release
 
 ## Deploy
 FROM alpine:3.17 as final

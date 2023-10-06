@@ -9,9 +9,9 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"IB.YasDataApi/abstract"
-	"IB.YasDataApi/telemetry"
-	"IB.YasDataApi/cmd/reader/httproutes"
+	"IB.YasDataApi/cmd/yas_rest/rest_api"
 	"IB.YasDataApi/dal"
+	"IB.YasDataApi/telemetry"
 )
 
 func main() {
@@ -44,7 +44,7 @@ func main() {
 
 	// Setup http routes
 	//
-	httpRoutes := httproutes.New(config, dataLayer)
+	httpRoutes := rest_api.New(config, dataLayer)
 	
 	// Setup & run http server
 	//
@@ -63,6 +63,9 @@ func main() {
 
 	router.GET("/user-store/users/:userId", httpRoutes.GetUser)
 	router.GET("/route-store/users/:userId/routes", httpRoutes.GetRouteList)
+	router.PUT("/route-store/users/:token/routes/:routeId", httpRoutes.UpdateRoute)
+	router.DELETE("/route-store/users/:token/routes/:routeId", httpRoutes.DeleteRoute)
+	
 	
 	router.Run(config.Listener.GetListener())
 }

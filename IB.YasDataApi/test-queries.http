@@ -1,0 +1,25 @@
+###
+https://ivan-b.com/api/v2.0/YASail/FNw2hZ7To/route
+
+
+####
+
+http://localhost:8989/user-store/users/200352025
+
+###
+http://localhost:8989/user-store/users/200352025
+
+###
+http://localhost:8989/route-store/users/bGXpKXWYd/routes?limit=10
+
+###
+PUT http://localhost:8989/route-store/users/bGXpKXWYd/routes/852
+content-type: application/json
+
+{
+    "routeName": "Milna-Maslinica-outside-2"
+}
+
+###
+
+DELETE http://localhost:8989/route-store/users/bGXpKXWYd/routes/853

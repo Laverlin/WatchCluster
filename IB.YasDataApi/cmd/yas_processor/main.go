@@ -7,7 +7,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"IB.YasDataApi/abstract"
-	"IB.YasDataApi/cmd/manager/kafka"
 	"IB.YasDataApi/dal"
 )
 
@@ -39,5 +38,5 @@ func main() {
 	//
 	dataLayer := dal.New(config)
 
-	kafka.Subscribe(config, dataLayer)
+	Subscribe(config, dataLayer)
 }
