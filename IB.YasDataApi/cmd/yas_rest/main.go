@@ -44,7 +44,7 @@ func main() {
 
 	// Setup http routes
 	//
-	httpRoutes := rest_api.New(config, dataLayer)
+	rest_api := rest_api.New(config, dataLayer)
 	
 	// Setup & run http server
 	//
@@ -61,10 +61,10 @@ func main() {
 
 	router.Use(telemetry.Middleware(tel))
 
-	router.GET("/user-store/users/:userId", httpRoutes.GetUser)
-	router.GET("/route-store/users/:userId/routes", httpRoutes.GetRouteList)
-	router.PUT("/route-store/users/:token/routes/:routeId", httpRoutes.UpdateRoute)
-	router.DELETE("/route-store/users/:token/routes/:routeId", httpRoutes.DeleteRoute)
+	router.GET("/user-store/users/:telegramId", rest_api.GetUser)
+	router.GET("/route-store/users/:token/routes", rest_api.GetRouteList)
+	router.PUT("/route-store/users/:token/routes/:routeId", rest_api.UpdateRoute)
+	router.DELETE("/route-store/users/:token/routes/:routeId", rest_api.DeleteRoute)
 	
 	
 	router.Run(config.Listener.GetListener())

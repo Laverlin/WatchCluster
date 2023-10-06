@@ -8,7 +8,8 @@ import (
 )
 
 type RouteListParams struct {
-	UserToken string `uri:"userId" binding:"required,min=6,max=10"`
+	UserToken string 	`uri:"token" binding:"required,min=6,max=10"`
+	Limit int32			`form:"limit"`
 }
 
 func (rest *Rest) GetRouteList (context *gin.Context) {
@@ -20,7 +21,15 @@ func (rest *Rest) GetRouteList (context *gin.Context) {
 			return
 		}
 
-		routes, err := rest.DataLayer.QueryRoutes(params.UserToken)
+		if err := context.ShouldBindQuery(&params); err != nil {
+			log.Error().Err(err).Msg("Error bing limit")
+			context.JSON(http.StatusBadRequest, gin.H{"msg": "error limit binding", "error": err.Error()})
+			return
+		}
+
+		routes, err := rest.DataLayer.QueryRoutes(params.UserToken, params.Limit)
+
+		
 		if err != nil {
 			log.Error().Err(err).Msg("Unable to get route")
 			context.JSON(http.StatusBadRequest, gin.H{"msg": "Unable to get route", "error": err.Error()})
@@ -30,5 +39,6 @@ func (rest *Rest) GetRouteList (context *gin.Context) {
 			context.JSON(http.StatusNotFound, gin.H{"msg": "No User/Routes has been found"})
 			return
 		}
+		
 		context.JSON(http.StatusOK, routes)
 }

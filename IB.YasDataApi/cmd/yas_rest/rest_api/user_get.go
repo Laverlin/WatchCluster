@@ -9,7 +9,7 @@ import (
 )
 
 type GetUserParams struct {
-	UserId int64 `uri:"userId" binding:"required,min=1"`
+	TelegramId int64 `uri:"telegramId" binding:"required,min=1"`
 }
 
 func (rest *Rest) GetUser (context *gin.Context) {
@@ -21,7 +21,7 @@ func (rest *Rest) GetUser (context *gin.Context) {
 			return
 		}
 
-		user, err := rest.DataLayer.QueryUser(params.UserId)
+		user, err := rest.DataLayer.QueryUser(params.TelegramId)
 		if err == pgx.ErrNoRows {
 			context.JSON(http.StatusNotFound, gin.H{"msg": "No User has been found"})
 			return

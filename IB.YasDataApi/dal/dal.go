@@ -21,14 +21,14 @@ func New(config abstract.Config) Dal {
 	}
 }
 
-func (dal *Dal) QueryUser(userId int64) (abstract.User, error) {
+func (dal *Dal) QueryUser(telegramId int64) (abstract.User, error) {
 
 	// Get raw routes from DB
 	// 
 	yasUser, err := queryDb(
 		dal.Config,
 		func(query *yasdb.Queries, ctx context.Context) (yasdb.YasUser, error) {
-			return query.GetUser(ctx, userId)
+			return query.GetUser(ctx, telegramId)
 		})
 
 	if err != nil {
@@ -44,14 +44,19 @@ func (dal *Dal) QueryUser(userId int64) (abstract.User, error) {
 	}, nil
 }
 
-func (dal *Dal) QueryRoutes(userId string) ([]abstract.Route, error) {
+func (dal *Dal) QueryRoutes(token string, limit int32) ([]abstract.Route, error) {
 
 	// Get raw routes from DB
 	// 
 	yasRoutes, err := queryDb(
 		dal.Config,
 		func(query *yasdb.Queries, ctx context.Context) ([]yasdb.YasRoute, error) {
-			return query.ListRoutes(ctx, userId)
+			if limit > 0 {
+				return query.ListRoutesWithLimit(ctx, yasdb.ListRoutesWithLimitParams{ PublicID: token, Limit: limit })
+			} else {
+				return query.ListRoutes(ctx, token)
+			}
+			
 		})
 	if err != nil {
 		return nil, err
@@ -62,7 +67,7 @@ func (dal *Dal) QueryRoutes(userId string) ([]abstract.Route, error) {
 	yasWaypoints, err := queryDb(
 		dal.Config,
 		func(query *yasdb.Queries, ctx context.Context) ([]yasdb.YasWaypoint, error) {
-			return query.ListWaypoints(ctx, userId)
+			return query.ListWaypoints(ctx, token)
 		})
 	if err != nil {
 		return nil, err

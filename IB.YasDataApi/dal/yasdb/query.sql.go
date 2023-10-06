@@ -129,6 +129,44 @@ func (q *Queries) ListRoutes(ctx context.Context, publicID string) ([]YasRoute, 
 	return items, nil
 }
 
+const listRoutesWithLimit = `-- name: ListRoutesWithLimit :many
+SELECT r.route_id, r.user_id, r.route_name, r.upload_time FROM yas_route r
+JOIN yas_user u ON r.user_id = u.user_id 
+WHERE  u.public_id = $1
+ORDER BY upload_time DESC
+LIMIT $2
+`
+
+type ListRoutesWithLimitParams struct {
+	PublicID string
+	Limit    int32
+}
+
+func (q *Queries) ListRoutesWithLimit(ctx context.Context, arg ListRoutesWithLimitParams) ([]YasRoute, error) {
+	rows, err := q.db.Query(ctx, listRoutesWithLimit, arg.PublicID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []YasRoute
+	for rows.Next() {
+		var i YasRoute
+		if err := rows.Scan(
+			&i.RouteID,
+			&i.UserID,
+			&i.RouteName,
+			&i.UploadTime,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listWaypoints = `-- name: ListWaypoints :many
 SELECT wp.waypoint_id, wp.route_id, COALESCE(wp.waypoint_name, '') as waypoint_name, wp.lat, wp.lon, wp.order_id FROM yas_waypoint wp
 JOIN yas_route r ON wp.route_id = r.route_id

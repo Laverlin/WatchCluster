@@ -4,6 +4,13 @@ JOIN yas_user u ON r.user_id = u.user_id
 WHERE  u.public_id = $1
 ORDER BY upload_time DESC;
 
+-- name: ListRoutesWithLimit :many
+SELECT r.* FROM yas_route r
+JOIN yas_user u ON r.user_id = u.user_id 
+WHERE  u.public_id = $1
+ORDER BY upload_time DESC
+LIMIT $2;
+
 -- name: ListWaypoints :many
 SELECT wp.waypoint_id, wp.route_id, COALESCE(wp.waypoint_name, '') as waypoint_name, wp.lat, wp.lon, wp.order_id FROM yas_waypoint wp
 JOIN yas_route r ON wp.route_id = r.route_id
