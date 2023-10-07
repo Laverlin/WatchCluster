@@ -17,13 +17,13 @@ public class YasHttpClient
         _httpClient = httpClient;
     }
 
-    public Task<HttpResponseMessage> GetRouteList(string puid) => 
-        RequestDataApi(HttpMethod.Get, $"route-store/users/{puid}/routes");
+    public Task<HttpResponseMessage> GetRouteList(string token) => 
+        RequestYasRestApi(HttpMethod.Get, $"route-store/users/{token}/routes");
     
     public Task<HttpResponseMessage> GetUser(Int64 telegramId) => 
-        RequestDataApi(HttpMethod.Get, $"user-store/users/{telegramId}");
+        RequestYasRestApi(HttpMethod.Get, $"user-store/users/{telegramId}");
     
-    private Task<HttpResponseMessage> RequestDataApi(HttpMethod httpMethod, string url)
+    private Task<HttpResponseMessage> RequestYasRestApi(HttpMethod httpMethod, string url)
     {
         var requestMessage = new HttpRequestMessage(httpMethod, url);
         Propagator.Inject(

@@ -15,10 +15,9 @@ using Telegram.Bot.Types.Enums;
 
 namespace IB.WatchCluster.YasTelegramBot.Service;
 
-public class YasUpdateHandler: IUpdateHandler, IDisposable
+public class YasUpdateHandler: IUpdateHandler
 {
     private readonly ILogger<YasUpdateHandler> _logger;
-    private readonly HttpClient _httpClient;
     private readonly OtelMetrics _otelMetrics;
     private readonly ActivitySource _activitySource;
     private readonly YasHttpClient _yasHttpClient;
@@ -56,14 +55,12 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
 
     public YasUpdateHandler(
         ILogger<YasUpdateHandler> logger, 
-        HttpClient httpClient, 
         OtelMetrics otelMetrics, 
         ActivitySource activitySource, 
         YasHttpClient yasHttpClient,
         YasManager yasManager)
     {
         _logger = logger;
-        _httpClient = httpClient;
         _otelMetrics = otelMetrics;
         _activitySource = activitySource;
         _yasHttpClient = yasHttpClient;
@@ -136,19 +133,17 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
     
     private async Task<YasUser?> GetYasUser(Message message)
     {
-        var tid = message.From?.Id;
-        if (tid == null)
-            throw new ArgumentException("No telegram user id is provided");
-        
-        using var getResponse = await _yasHttpClient.GetUser(tid.Value);
+        var tid = (message.From?.Id) ?? throw new ArgumentException("No telegram user id is provided");
+
+        using var getResponse = await _yasHttpClient.GetUser(tid);
         if (getResponse.StatusCode == HttpStatusCode.NotFound)
         {
-            var fullName = $"{message.From?.FirstName} ${message.From?.LastName}";
+            var fullName = $"{message.From?.FirstName} {message.From?.LastName}";
             var userName = !string.IsNullOrWhiteSpace(message.From?.Username)
                 ? $"{message.From?.Username} ({fullName})"
                 : fullName;
             
-            return await _yasManager.CreateUser(tid.Value, userName);
+            return await _yasManager.CreateUser(tid, userName);
         }
 
         if (!getResponse.IsSuccessStatusCode)
@@ -230,14 +225,14 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
         return result;
     }
 
-    private async Task<CommandResult> CommandRenameLast(YasUser yasUser, string newName)
-    {
-        var url = $"{yasUser.PublicId}/route?newName={newName}";
-        using var putResponse = await _httpClient.PutAsync(url, null);
-        return putResponse.IsSuccessStatusCode
-            ? CommandResult.SuccessResult($"The route name has been successfully changed, the new name is {newName}")
-            : CommandResult.ErrorResult("Unable to change route name");
-    }
+    // private async Task<CommandResult> CommandRenameLast(YasUser yasUser, string newName)
+    // {
+    //     var url = $"{yasUser.PublicId}/route?newName={newName}";
+    //     using var putResponse = await _httpClient.PutAsync(url, null);
+    //     return putResponse.IsSuccessStatusCode
+    //         ? CommandResult.SuccessResult($"The route name has been successfully changed, the new name is {newName}")
+    //         : CommandResult.ErrorResult("Unable to change route name");
+    // }
     
     private async Task<CommandResult> CommandRename(YasUser yasUser, string routeId, string newName)
     {
@@ -249,12 +244,5 @@ public class YasUpdateHandler: IUpdateHandler, IDisposable
     {
         await _yasManager.DeleteRoute(int.Parse(routeId), yasUser.UserId);
         return CommandResult.SuccessResult($"The route {routeId} has been successfully deleted");
-    }
-    
-    //private static string MethodName([CallerMemberName] string caller = default!) => caller;
-
-    public void Dispose()
-    {
-        _httpClient.Dispose();
     }
 }

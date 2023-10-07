@@ -69,9 +69,8 @@ await Host.CreateDefaultBuilder(args)
         services.AddSingleton(yasBotHandler);
 
         services.AddSingleton(new TelegramBotClient(appConfig.BotApiKey));
-        services.AddHttpClient<YasUpdateHandler>(config => config.BaseAddress = new Uri(appConfig.BaseStorageApiUrl));
         services.AddHttpClient<YasHttpClient>(config => config.BaseAddress = new Uri(appConfig.BaseReaderApiUrl));
-
+        services.AddSingleton<YasUpdateHandler>();
         services.AddHostedService<YasBotService>();
         
         // healthcheck
