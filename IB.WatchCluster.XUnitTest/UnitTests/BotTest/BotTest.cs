@@ -63,7 +63,7 @@ public class BotTest
         Mock<YasHttpClient> chMock = new Mock<YasHttpClient>();
         Mock<YasManager> ymMock = new Mock<YasManager>();
         var updateHandler = new YasUpdateHandler(
-            loggerMock.Object, client, otelMock.Object, new ActivitySource("test"), chMock.Object, ymMock.Object);
+            loggerMock.Object, otelMock.Object, new ActivitySource("test"), chMock.Object, ymMock.Object);
 
         await updateHandler.HandleUpdateAsync(botClientMock.Object, update, CancellationToken.None);
 
@@ -115,7 +115,7 @@ public class BotTest
         Mock<YasHttpClient> chMock = new Mock<YasHttpClient>();
         Mock<YasManager> ymMock = new Mock<YasManager>();
         var updateHandler = new YasUpdateHandler(
-            loggerMock.Object, client, otelMock.Object, new ActivitySource("test"), chMock.Object, ymMock.Object);
+            loggerMock.Object, otelMock.Object, new ActivitySource("test"), chMock.Object, ymMock.Object);
 
         await updateHandler.HandleUpdateAsync(botClientMock.Object, update, CancellationToken.None);
         

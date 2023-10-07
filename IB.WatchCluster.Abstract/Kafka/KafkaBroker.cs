@@ -33,7 +33,10 @@ public sealed class KafkaBroker: IKafkaBroker
     }
 
     public async Task<DeliveryResult<string, string>> ProduceYasMessageAsync<T>(string command, T msgObject)
-        => await ProduceYasAsync(Topics.YasTopic, command, msgObject);
+        => await ProduceYasAsync(
+            string.IsNullOrEmpty(_kafkaConfiguration.YasTopic) ? Topics.YasTopic : _kafkaConfiguration.YasTopic, 
+            command, 
+            msgObject);
 
     public async Task<DeliveryResult<string, string>> ProduceRequestAsync<T>(string key, string activityId, T msgObject)
         => await ProduceAsync(Topics.RequestTopic, key, activityId, msgObject);

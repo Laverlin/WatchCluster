@@ -236,13 +236,13 @@ public class YasUpdateHandler: IUpdateHandler
     
     private async Task<CommandResult> CommandRename(YasUser yasUser, string routeId, string newName)
     {
-        await _yasManager.RenameRoute(int.Parse(routeId), yasUser.UserId, newName);
+        await _yasManager.RenameRoute(int.Parse(routeId), yasUser.PublicId, newName);
         return CommandResult.SuccessResult($"The route {routeId} name has been successfully changed, the new name is {newName}");
     }
     
     private async Task<CommandResult> CommandDelete(YasUser yasUser, string routeId)
     {
-        await _yasManager.DeleteRoute(int.Parse(routeId), yasUser.UserId);
+        await _yasManager.DeleteRoute(int.Parse(routeId), yasUser.PublicId);
         return CommandResult.SuccessResult($"The route {routeId} has been successfully deleted");
     }
 }

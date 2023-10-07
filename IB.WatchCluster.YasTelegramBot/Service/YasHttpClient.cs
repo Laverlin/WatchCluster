@@ -20,7 +20,7 @@ public class YasHttpClient
     public Task<HttpResponseMessage> GetRouteList(string token) => 
         RequestYasRestApi(HttpMethod.Get, $"route-store/users/{token}/routes");
     
-    public Task<HttpResponseMessage> GetUser(Int64 telegramId) => 
+    public Task<HttpResponseMessage> GetUser(long telegramId) => 
         RequestYasRestApi(HttpMethod.Get, $"user-store/users/{telegramId}");
     
     private Task<HttpResponseMessage> RequestYasRestApi(HttpMethod httpMethod, string url)

@@ -22,9 +22,9 @@ public class YasManager
     {
         var createParams = new
         {
-            TelegramId = telegramId,
-            UserName = userName,
-            PublicId = shortid.ShortId.Generate(
+            telegramId,
+            userName,
+            publicId = shortid.ShortId.Generate(
                 new GenerationOptions(useNumbers: true, useSpecialCharacters: false, length: 10))
         };
         var produce = await _kafkaBroker.ProduceYasMessageAsync("create-user", createParams);
@@ -33,9 +33,9 @@ public class YasManager
         
         return new YasUser
         {
-            PublicId = createParams.PublicId,
-            TelegramId = createParams.TelegramId,
-            UserName = createParams.UserName,
+            PublicId = createParams.publicId,
+            TelegramId = createParams.telegramId,
+            UserName = createParams.userName,
             RegisterTime = new DateTime(),
         };
     }
@@ -47,27 +47,27 @@ public class YasManager
             throw new ApplicationException("Unable to deliver add route message");
     }
 
-    public async Task DeleteRoute(int routeId, long userId)
+    public async Task DeleteRoute(int routeId, string token)
     {
         var deleteParams = new
         {
-            routeId = routeId,
-            userId = userId
+            routeId,
+            token
         };
         var produce = await _kafkaBroker.ProduceYasMessageAsync("delete-route", deleteParams);
         if (produce.Status != PersistenceStatus.Persisted)
             throw new ApplicationException("Unable to deliver delete route message");
     }
     
-    public async Task RenameRoute(int routeId, long userId, string newName)
+    public async Task RenameRoute(int routeId, string token, string routeName)
     {
         var renameParams = new
         {
-            routeId = routeId,
-            userId = userId,
-            newName = newName
+            routeId,
+            token,
+            routeName
         };
-        var produce = await _kafkaBroker.ProduceYasMessageAsync("rename-route", renameParams);
+        var produce = await _kafkaBroker.ProduceYasMessageAsync("rename-route-token", renameParams);
         if (produce.Status != PersistenceStatus.Persisted)
             throw new ApplicationException("Unable to deliver rename route message");
     }

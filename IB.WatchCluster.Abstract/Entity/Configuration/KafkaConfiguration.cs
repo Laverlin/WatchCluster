@@ -15,6 +15,8 @@ namespace IB.WatchCluster.Abstract.Entity.Configuration
         public string BootstrapServers { get; set; } = default!;
 
         public string GroupId { get; set; } = default!;
+
+        public string YasTopic { get; set; } = default!;
         
         public AutoOffsetReset AutoOffsetReset { get; set; } = AutoOffsetReset.Latest;
     }
