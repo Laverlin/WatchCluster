@@ -87,7 +87,7 @@ jobs:
         context: .
         file: ./IB.WatchCluster.YasTelegramBot/Dockerfile
         push: true
-        tags: ilaverlin/watchcluster-yasbot:latest,ilaverlin/watchcluster-yasbot:${{ env.version }}
+        tags: ilaverlin/yas-bot:latest,ilaverlin/yas-bot:${{ env.version }}
 
 #    - name: Build and push Migration
 #      uses: docker/build-push-action@v2
@@ -98,18 +98,18 @@ jobs:
 #        tags: ilaverlin/watchcluster-migration:latest,ilaverlin/watchcluster-migration:${{ env.version }} 
 
 
-    - name: Build and push yas reader
+    - name: Build and push yas api
       uses: docker/build-push-action@v2
       with:
         context: ./IB.YasDataApi
         file: ./IB.YasDataApi/cmd/yas_rest/Dockerfile
         push: true
-        tags: ilaverlin/yas_rest:latest,ilaverlin/yas_rest:${{ env.version }}
+        tags: ilaverlin/yas-restapi:latest,ilaverlin/yas-rest:${{ env.version }}
 
-    - name: Build and push yas manager
+    - name: Build and push yas processor
       uses: docker/build-push-action@v2
       with:
         context: ./IB.YasDataApi
         file: ./IB.YasDataApi/cmd/yas_processor/Dockerfile
         push: true
-        tags: ilaverlin/yas_processor:latest,ilaverlin/yas_processor:${{ env.version }}
+        tags: ilaverlin/yas-processor:latest,ilaverlin/yas-processor:${{ env.version }}

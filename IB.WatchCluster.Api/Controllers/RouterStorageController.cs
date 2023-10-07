@@ -8,6 +8,7 @@ namespace IB.WatchCluster.Api.Controllers;
 [Route("api/v{version:apiVersion}/[controller]")]
 [ApiVersion("3.0")]
 [Produces("application/json")]
+[Obsolete]
 public class RouteStorageController
 {
     private readonly ILogger<YaSailController> _logger;

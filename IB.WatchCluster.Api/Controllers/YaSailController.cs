@@ -14,6 +14,7 @@ namespace IB.WatchCluster.Api.Controllers;
 [Route("api/v{version:apiVersion}/[controller]")]
 [ApiVersion("1.0", Deprecated = true), ApiVersion("2.0")]
 [Produces("application/json")]
+[Obsolete]
 public class YaSailController
 {
     private readonly ILogger<YaSailController> _logger;
