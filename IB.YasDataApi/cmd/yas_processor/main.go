@@ -19,7 +19,7 @@ func main() {
 	multi := zerolog.MultiLevelWriter(consoleWriter, os.Stderr)
 	log.Logger = zerolog.New(multi).With().
 		Timestamp().
-		Str("Application", "YasDataReaderApi").
+		Str("Application", "yas-processor").
 		Caller().
 		Logger()
 
