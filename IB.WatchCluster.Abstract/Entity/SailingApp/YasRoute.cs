@@ -12,21 +12,21 @@ namespace IB.WatchCluster.Abstract.Entity.SailingApp;
 public class YasRoute
 {
     [Column("route_id", IsIdentity = true)]
-    [JsonPropertyName("routeId")]
+    [JsonPropertyName("RouteId")]
     public long RouteId { get; set; } 
 
     [Column("user_id")]
-    [JsonPropertyName("userId")]
+    [JsonPropertyName("UserId")]
     public long UserId { get; set; }
 
     [Column("route_name")]
-    [JsonPropertyName("routeName")]
+    [JsonPropertyName("RouteName")]
     public string RouteName { get; set; }
 
     [Column("upload_time")]
-    [JsonPropertyName("routeDate")]
+    [JsonPropertyName("RouteDate")]
     public DateTime UploadTime { get; set; }
 
-    [JsonPropertyName("waypoints")]
+    [JsonPropertyName("WayPoints")]
     public YasWaypoint[] Waypoints { get; set; }
 }
