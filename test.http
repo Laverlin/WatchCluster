@@ -1,0 +1,33 @@
+
+// Full request to the watch-face backend
+GET {{yawf-host}}/v2/YAFace
+    ?apiToken={{yawf-token}}
+    &did=4a411568ffc1d40acd84eb51e1296b3ad97dbfe7
+    &dn=unknown
+    &av=0.9.257
+    &wp=AppleDarkSky
+    &bc=EUR
+    &tc=USD
+    &fw=19.20
+    &ciqv=3.2.6
+    &lat=48.20849
+    &lon=16.37208
+User-Agent: rest-client
+Content-Type: application/json
+
+### Get User
+{{yas-host}}/user-store/users/{{yas-userId}}
+
+### Get all routes
+{{yas-host}}/route-store/users/{{yas-token}}/routes?limit=2
+
+### Update route
+PUT {{yas-host}}/route-store/users/{{yas-token}}/routes/864
+content-type: application/json
+
+{
+    "routeName": "Simi-Rhodes-2"
+}
+
+### Delete Route
+DELETE {{yas-host}}/route-store/users/{{yas-token}}/routes/865

@@ -15,7 +15,7 @@ import (
 func Subscribe(config abstract.Config, dal dal.Dal) {
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   []string{ config.Kafka.Broker },
-		GroupID:   "yas-consumer",
+		GroupID:   "yas-proc-consumer",
 		Topic:     config.Kafka.TopicName,
 	})
 
