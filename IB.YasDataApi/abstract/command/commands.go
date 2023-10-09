@@ -10,7 +10,7 @@ const (
 
 type AddUser struct {
 	TelegramId int64    `json:"telegramId"`
-	PublicId string     `json:"publicIs"`
+	Token string        `json:"token"`
 	UserName string     `json:"userName"`
 }
 

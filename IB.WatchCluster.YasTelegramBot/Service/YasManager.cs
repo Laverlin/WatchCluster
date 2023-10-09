@@ -24,7 +24,7 @@ public class YasManager
         {
             telegramId,
             userName,
-            publicId = shortid.ShortId.Generate(
+            token = shortid.ShortId.Generate(
                 new GenerationOptions(useNumbers: true, useSpecialCharacters: false, length: 10))
         };
         var produce = await _kafkaBroker.ProduceYasMessageAsync("create-user", createParams);
@@ -33,7 +33,7 @@ public class YasManager
         
         return new YasUser
         {
-            PublicId = createParams.publicId,
+            PublicId = createParams.token,
             TelegramId = createParams.telegramId,
             UserName = createParams.userName,
             RegisterTime = new DateTime(),

@@ -105,7 +105,7 @@ func (dal *Dal) ExecAddUser(u command.AddUser) {
 	execDb(
 		dal.Config, 
 		func(query *yasdb.Queries, ctx context.Context) error {
-			return query.CreateUser(ctx, yasdb.CreateUserParams { PublicID: u.PublicId, TelegramID: u.TelegramId, UserName: u.UserName })
+			return query.CreateUser(ctx, yasdb.CreateUserParams { PublicID: u.Token, TelegramID: u.TelegramId, UserName: u.UserName })
 		})
 }
 
