@@ -15,7 +15,7 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/semconv/v1.9.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.9.0"
 
 	"IB.YasDataApi/abstract"
 )
@@ -44,7 +44,7 @@ type Telemetry struct {
 func Setup(config abstract.Config) (Telemetry, error) {
 
 	ctx := context.Background()
-	res, err := resource.New(ctx, resource.WithAttributes(semconv.ServiceNameKey.String("IB.YasDataReader/reader")))
+	res, err := resource.New(ctx, resource.WithAttributes(semconv.ServiceNameKey.String("IB.YasDataReader/restapi")))
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to create resource")
 		return Telemetry{}, nil
@@ -69,7 +69,7 @@ func Setup(config abstract.Config) (Telemetry, error) {
 		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(metricExporter)),
 	)
 	global.SetMeterProvider(meterProvider)
-	meter := meterProvider.Meter("IB.YasDataApi/reader")
+	meter := meterProvider.Meter("IB.YasDataApi/restapi")
 	gauge, err := meter.AsyncInt64().
 		Gauge("wc_reader_uptime_gauge", instrument.WithUnit(unit.Milliseconds))
 	if err != nil {

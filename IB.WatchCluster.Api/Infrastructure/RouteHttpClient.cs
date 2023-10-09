@@ -56,9 +56,9 @@ public class RouteHttpClient
 
         return routes!;
 
-        void SetTraceHeaders(HttpRequestMessage message, string key, string value)
-        {
-            message.Headers.Add(key, value);
-        }
+        // void SetTraceHeaders(HttpRequestMessage message, string key, string value)
+        // {
+        //     message.Headers.Add(key, value);
+        // }
     }
 }

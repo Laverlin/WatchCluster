@@ -21,12 +21,15 @@ Content-Type: application/json
 ### Get all routes
 {{yas-host}}/route-store/users/{{yas-token}}/routes?limit=2
 
+### Get all routes
+{{yas-host}}/route-store/users/{{yas-token}}/routes
+
 ### Update route
-PUT {{yas-host}}/route-store/users/{{yas-token}}/routes/864
+PUT {{yas-host}}/route-store/users/{{yas-token}}/routes/957
 content-type: application/json
 
 {
-    "routeName": "Simi-Rhodes-2"
+    "routeName": "Monk-Trinity-2"
 }
 
 ### Delete Route

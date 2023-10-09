@@ -8,21 +8,21 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric/instrument"
 	"go.opentelemetry.io/otel/metric/unit"
-	"go.opentelemetry.io/otel/trace"
 	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 )
 
 
 func Middleware(telemetry Telemetry) gin.HandlerFunc {
 
 	requestDuration, err := telemetry.Meter.SyncInt64().Histogram(
-		"wc_reader_request_duration",
+		"wc_restapi_request_duration",
 		instrument.WithUnit(unit.Milliseconds))
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to register metric")
 	}
 
-	tracer := telemetry.TraceProvider.Tracer("IB.YasDataApi/reader")
+	tracer := telemetry.TraceProvider.Tracer("IB.YasDataApi/restapi")
 
 	return func(c *gin.Context) {
 		
@@ -30,7 +30,7 @@ func Middleware(telemetry Telemetry) gin.HandlerFunc {
 		//
 		propgator := propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{})
 		parentCtx := propgator.Extract(c.Request.Context(), propagation.HeaderCarrier(c.Request.Header))
-		_, span := tracer.Start(parentCtx, "/reader",  trace.WithAttributes(
+		_, span := tracer.Start(parentCtx, "/restapi",  trace.WithAttributes(
 			attribute.KeyValue {
 				Key: "path",
 				Value: attribute.StringValue(c.Request.URL.Path),
@@ -40,6 +40,7 @@ func Middleware(telemetry Telemetry) gin.HandlerFunc {
 
 		// Meter request
 		//
+
 		startTime := time.Now()
 		defer requestDuration.Record(c.Request.Context(), time.Since(startTime).Milliseconds(), 
 			attribute.KeyValue {
@@ -49,6 +50,10 @@ func Middleware(telemetry Telemetry) gin.HandlerFunc {
 			attribute.KeyValue {
 				Key: "path",
 				Value: attribute.StringValue(c.Request.URL.Path),
+			},
+			attribute.KeyValue {
+				Key: "query",
+				Value: attribute.StringValue(c.Request.URL.RawQuery),
 			},
 		)
 
