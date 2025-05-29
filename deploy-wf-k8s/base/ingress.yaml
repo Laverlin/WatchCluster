@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: watchface-api
+
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`ivan-b.com`) && PathPrefix(`/watch-api`)
+      kind: Rule
+      services:
+        - name: watchface-api
+          port: 8080
+  tls: {}

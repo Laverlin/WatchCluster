@@ -1,0 +1,25 @@
+meta {
+  name: watchface
+  type: http
+  seq: 2
+}
+
+get {
+  url: https://{{host-name}}/watch-api/v2/YAFace?apiToken={{api-token}}&did={{device-id}}&dn=unknown&av=0.9.257&wp=AppleDarkSky&bc=EUR&tc=USD&fw=19.20&ciqv=3.2.6&lat=48.20849&lon=16.37208
+  body: none
+  auth: inherit
+}
+
+params:query {
+  apiToken: {{api-token}}
+  did: {{device-id}}
+  dn: unknown
+  av: 0.9.257
+  wp: AppleDarkSky
+  bc: EUR
+  tc: USD
+  fw: 19.20
+  ciqv: 3.2.6
+  lat: 48.20849
+  lon: 16.37208
+}

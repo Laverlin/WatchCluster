@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watchface-weather
+  labels:
+    kubernetes.io/name: watchface-weather
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kubernetes.io/name: watchface-weather
+  template:
+    metadata:
+      labels:
+        kubernetes.io/name: watchface-weather
+    spec:
+      containers:
+        - name: watchface-weather
+          image: ilaverlin/watchcluster-servicehost:latest
+          env:
+            - name: "DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE"
+              value: "false"
+            - name: Serilog__WriteTo__0__Args__uri
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: LOKI_URL
+            - name: AppConfiguration__OpenTelemetryCollectorUrl
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: OTEL_URL
+            - name: KafkaConfiguration__BootstrapServers
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: KAFKA_URL
+            - name: AppConfiguration__handler 
+              value: WeatherInfo
+            - name: WeatherConfiguration__AppleDarkSkyKey
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: APPLE_DARK_SKY_KEY
+            - name: WeatherConfiguration__OpenWeatherKey
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: OPEN_WEATHER_KEY
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: 100Mi

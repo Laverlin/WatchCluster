@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watchface-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kubernetes.io/name: watchface-api
+  template:
+    metadata:
+      labels:
+        kubernetes.io/name: watchface-api
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports: 
+            - containerPort: 8080
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+          resources:
+            requests:
+              memory: "20Mi"
+
+        - name: watchface-api
+          image: ilaverlin/watchcluster-api:latest
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          env:
+            - name: "DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE"
+              value: "false"
+            - name: Serilog__WriteTo__0__Args__uri
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: LOKI_URL   
+            - name: ApiConfiguration__OpenTelemetryCollectorUrl
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: OTEL_URL   
+            - name: ApiConfiguration__RefreshInterval
+              value: "15"
+            - name: KafkaConfiguration__BootstrapServers
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: KAFKA_URL   
+            - name: PgProviderConfiguration__server
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: PG_HOST   
+            - name: PgProviderConfiguration__Port
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: PG_PORT    
+            - name: PgProviderConfiguration__UserId
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: PG_USER
+            - name: PgProviderConfiguration__Password
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: PG_PASSWORD
+            - name: ApiConfiguration__AuthSettings__Token
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: AUTH_TOKEN                  
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            requests:
+              memory: 200Mi
+
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: watchface-nginx
+

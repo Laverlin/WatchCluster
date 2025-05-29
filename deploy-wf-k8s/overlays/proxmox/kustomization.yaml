@@ -1,0 +1,52 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: watchface
+
+# Setting the base resources
+resources:
+  - ../../base
+
+# Patches
+patchesJson6902:
+  - target:
+      group: "traefik.io"
+      version: "v1alpha1"
+      kind: "IngressRoute"
+      name: "watchface-api"
+    patch: |-
+      [
+        {
+          "op": "replace",
+          "path": "/spec/routes/0/match",
+          "value": "Host(`watch.bdgn.me`) && PathPrefix(`/watch-api`)"
+        }
+      ]
+
+# Override the secretGenerator from the base
+secretGenerator:
+  - name: watchface
+    envs:
+      - ./.env.secret
+    behavior: merge
+    
+generatorOptions:
+  disableNameSuffixHash: true
+
+# Optional: you can modify replicas for dev environment
+replicas:
+  - name: watchface-api
+    count: 1
+  - name: watchface-dbsink
+    count: 2
+  - name: watchface-exchange
+    count: 2
+  - name: watchface-location
+    count: 2
+  - name: watchface-weather
+    count: 2
+
+# Optional: override common annotations for the dev environment
+commonAnnotations:
+  environment: "dev"
+  version: "latest"

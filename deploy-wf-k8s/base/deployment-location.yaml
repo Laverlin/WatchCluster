@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watchface-location
+  labels:
+    kubernetes.io/name: watchface-location
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kubernetes.io/name: watchface-location
+  template:
+    metadata:
+      labels:
+        kubernetes.io/name: watchface-location
+    spec:
+      containers:
+        - name: watchface-location
+          image: ilaverlin/watchcluster-servicehost:latest
+          env:
+            - name: "DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE"
+              value: "false"
+            - name: Serilog__WriteTo__0__Args__uri
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: LOKI_URL
+            - name: AppConfiguration__OpenTelemetryCollectorUrl
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: OTEL_URL
+            - name: KafkaConfiguration__BootstrapServers
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: KAFKA_URL
+            - name: AppConfiguration__handler 
+              value: LocationInfo
+            - name: VirtualEarthConfiguration__AuthKey
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: LOCATION_AUTH_KEY
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: 100Mi

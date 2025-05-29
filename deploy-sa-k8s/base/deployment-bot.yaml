@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sailingapp-bot
+  labels:
+    kubernetes.io/name: sailingapp-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kubernetes.io/name: sailingapp-bot
+  template:
+    metadata:
+      labels:
+        kubernetes.io/name: sailingapp-bot
+    spec:
+      containers:
+        - name: sailingapp-bot
+          image: ilaverlin/yas-bot:latest
+          env:
+            - name: "DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE"
+              value: "false"
+            - name: Serilog__WriteTo__0__Args__uri
+              valueFrom:
+                secretKeyRef:
+                  name: sailingapp
+                  key: LOKI_URL
+            - name: BotConfiguration__OpenTelemetryCollectorUrl
+              valueFrom:
+                secretKeyRef:
+                  name: sailingapp
+                  key: OTEL_URL
+            - name: BotConfiguration__BaseReaderApiUrl
+              value: http://sailingapp-restapi:8080/yas-api/
+
+            - name: BotConfiguration__BotApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: sailingapp
+                  key: TELEGRAM_BOT_TOKEN
+            - name: KafkaConfiguration__BootstrapServers
+              valueFrom:
+                secretKeyRef:
+                  name: sailingapp
+                  key: KAFKA_URL
+            - name: KafkaConfiguration__Topic
+              value: "yas-msgs" 
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10

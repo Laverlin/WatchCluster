@@ -1,0 +1,15 @@
+meta {
+  name: get-yas-user
+  type: http
+  seq: 2
+}
+
+get {
+  url: https://{{host-name}}/yas-api/user-store/users/{{telegram-id}}
+  body: none
+  auth: inherit
+}
+
+vars:post-response {
+  yas-token: res('publicId')
+}

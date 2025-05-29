@@ -1,0 +1,11 @@
+meta {
+  name: get-yas-routes
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{host-name}}/yas-api/route-store/users/{{yas-token}}/routes
+  body: none
+  auth: inherit
+}

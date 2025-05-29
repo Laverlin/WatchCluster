@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watchface-exchange
+  labels:
+    kubernetes.io/name: watchface-exchange
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kubernetes.io/name: watchface-exchange
+  template:
+    metadata:
+      labels:
+        kubernetes.io/name: watchface-exchange
+    spec:
+      containers:
+        - name: watchface-exchange
+          image: ilaverlin/watchcluster-servicehost:latest
+          env:
+            - name: "DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE"
+              value: "false"
+            - name: Serilog__WriteTo__0__Args__uri
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: LOKI_URL
+            - name: AppConfiguration__OpenTelemetryCollectorUrl
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: OTEL_URL
+            - name: KafkaConfiguration__BootstrapServers
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: KAFKA_URL
+            - name: AppConfiguration__handler 
+              value: ExchangeRateInfo
+            - name: CurrencyExchangeConfiguration__CurrencyConverterKey
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: CURRENCY_CONVERTER_KEY
+            - name: CurrencyExchangeConfiguration__TwelveDataKey
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: TWELVE_DATA_KEY
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: 100Mi

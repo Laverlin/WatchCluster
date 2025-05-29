@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "watch-queries",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

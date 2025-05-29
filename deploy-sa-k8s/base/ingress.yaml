@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: sailingapp
+
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(``) && (PathPrefix(`/yas-api/`) || PathPrefix(`/yas-bot/`))
+      kind: Rule
+      services:
+        - name: sailingapp
+          port: 8080
+  tls: {}

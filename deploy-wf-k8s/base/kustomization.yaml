@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: watchface
+
+# setting labels
+#
+commonLabels:
+  kubernetes.io/instance: watchface
+  managed-by: kustomize
+
+# setting annotations
+#
+commonAnnotations:
+  version: "latest"
+
+secretGenerator:
+  - name: watchface
+    envs:
+      - ./.env.secret
+
+# generatorOptions:
+#   disableNameSuffixHash: true
+
+resources:
+  - namespace.yaml
+  - configmap-nginx.yaml  
+  - deployment-api.yaml
+  - deployment-dbsink.yaml
+  - deployment-exchange.yaml
+  - deployment-location.yaml
+  - deployment-weather.yaml
+  - service-wfapi.yaml
+  - ingress.yaml

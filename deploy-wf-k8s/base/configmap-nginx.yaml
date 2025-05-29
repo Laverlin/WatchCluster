@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: watchface-nginx
+
+data:
+  allow-snippet-annotations: "false"
+  watchface.conf: |
+
+        upstream watch-server {
+                server 127.0.0.1;
+        }
+
+        server {
+                listen 8080 default_server;
+                listen [::]:8080 default_server;
+
+                root /var/www/html;
+                index index.html index.htm;
+                server_name _;
+
+                recursive_error_pages   on;
+                proxy_intercept_errors  on;
+
+                add_header Access-Control-Allow-Origin * always;
+
+                # error 404 handler
+                #
+                error_page 404 /error404.html;
+                location = /error404.html {
+                        root /var/www/html;
+                        internal;
+                }
+
+                location / {
+                        try_files $uri $uri/ = 404;
+                }
+
+                # Route list for Yet-Another-Sailing-App
+                #
+                location ~* ^/garminapi/routelist/(.*)/?$ {
+                        proxy_pass              http://watch-server/api/v2.0/YaSail/$1/route/;
+                        proxy_set_header        X-Real-IP $remote_addr;
+                }
+
+                # Legacy api for watch face app
+                #
+                location /garminapi/wf-service/ {
+                        # rewrite ^/api/YAFace(.*) $1 break;
+                        proxy_pass              http://watch-server/api/v1/YAFace/;
+                        proxy_set_header        Host $host;
+                        proxy_set_header        X-Real-IP $remote_addr;
+                }
+
+                # Actual api for watch face app
+                #
+                location /watch-api/ {
+                        proxy_set_header        Host $host;
+                        proxy_set_header        X-Real-IP $remote_addr;
+                        proxy_pass              http://watch-server/api/;
+                }
+
+                location /api/v2.0/YASail/ {
+                        proxy_pass              http://watch-server/api/v2.0/YaSail/;
+                }
+
+                # Health check
+                #
+                location /health {
+                        proxy_pass http://watch-server/health;
+                }
+
+                location /metrics {
+                        proxy_pass http://watch-server/metrics;
+                }                
+
+                # handle favico
+                #
+                location /favicon.ico {
+                        access_log      off;
+                        log_not_found   off;
+                        try_files $uri =204;
+                }
+
+        }

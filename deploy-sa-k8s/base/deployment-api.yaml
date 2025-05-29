@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sailingapp-api
+  labels:
+    kubernetes.io/name: sailingapp-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kubernetes.io/name: sailingapp-api
+  template:
+    metadata:
+      labels:
+        kubernetes.io/name: sailingapp-api
+        kubernetes.io/language: go
+    spec:
+      containers:
+
+        - name: nginx
+          image: nginx:alpine
+          ports: 
+            - containerPort: 8080
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+          resources:
+            requests:
+              memory: "20Mi"
+
+        - name: sailingapp-api
+          image: ilaverlin/yas-restapi:latest
+          ports:
+            - containerPort: 8989
+          env:
+            - name: YASR_logLevel
+              value: "1" 
+            - name: YASR_listener_port
+              value: "8989"
+            - name: YASR_otelEndpoint
+              valueFrom:
+                secretKeyRef:
+                  name: sailingapp
+                  key: OTEL_URL
+            - name: YASR_kafka_broker
+              valueFrom:
+                secretKeyRef:
+                  name: sailingapp
+                  key: KAFKA_URL
+            - name: YASR_kafka_topicName
+              value: "yas-msgs"
+            - name: YASR_pgUrl
+              valueFrom:
+                secretKeyRef:
+                  name: sailingapp
+                  key: PG_URL
+            - name: GIN_MODE
+              value: "release"
+
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: sailingapp-nginx
+
