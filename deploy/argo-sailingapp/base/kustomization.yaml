@@ -5,22 +5,15 @@ namespace: sailingapp
 
 # setting labels
 #
-commonLabels:
-  kubernetes.io/instance: sailingapp
-  managed-by: kustomize
+labels:
+  - pairs:
+      kubernetes.io/instance: sailingapp
+      managed-by: kustomize
 
 # setting annotations
 #
 commonAnnotations:
   version: "latest"
-
-secretGenerator:
-  - name: sailingapp
-    envs:
-      - ./.env.secret
-
-# generatorOptions:
-#   disableNameSuffixHash: true
 
 resources:
   - namespace.yaml

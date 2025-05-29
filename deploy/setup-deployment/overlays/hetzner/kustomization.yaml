@@ -1,0 +1,50 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+
+# Setting the base resources
+resources:
+  - ../../base
+
+# Override the secretGenerator from the base
+secretGenerator:
+  - name: watchface
+    namespace: watchface
+    envs:
+      - ./.env.secret
+    behavior: merge
+  - name: sailingapp
+    namespace: sailingapp
+    envs:
+      - ./.env.secret
+    behavior: merge
+generatorOptions:
+  disableNameSuffixHash: true
+
+patches:
+  - target:
+      group: "argoproj.io"
+      version: "v1alpha1"
+      kind: "Application"
+      name: "watchface"
+    patch: |-
+      [
+        {
+          "op": "replace",
+          "path": "/spec/source/path",
+          "value": "deploy/argo-watchface/overlays/hetzner"
+        }
+      ]
+  - target:
+      group: "argoproj.io"
+      version: "v1alpha1"
+      kind: "Application"
+      name: "sailingapp"
+    patch: |-
+      [
+        {
+          "op": "replace",
+          "path": "/spec/source/path",
+          "value": "deploy/argo-sailingapp/overlays/hetzner"
+        }
+      ]

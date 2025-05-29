@@ -9,18 +9,12 @@ SOURCE_DIRS=(
   "$HOME/Sync/Projects/AppSecrets/watch-cluster"
   "$HOME/Sync/Projects/AppSecrets/watch-cluster/dev"
   "$HOME/Sync/Projects/AppSecrets/watch-cluster/prod"
-  "$HOME/Sync/Projects/AppSecrets/watch-cluster"
-  "$HOME/Sync/Projects/AppSecrets/watch-cluster/dev"
-  "$HOME/Sync/Projects/AppSecrets/watch-cluster/prod"  
   # Add more source paths here
 )
 DEST_DIRS=(
-  "$(pwd)/deploy-wf-k8s/base"
-  "$(pwd)/deploy-wf-k8s/overlays/dev"
-  "$(pwd)/deploy-wf-k8s/overlays/prod"
-  "$(pwd)/deploy-sa-k8s/base"
-  "$(pwd)/deploy-sa-k8s/overlays/dev"
-  "$(pwd)/deploy-sa-k8s/overlays/prod"
+  "$(pwd)/setup/base"
+  "$(pwd)/setup/overlays/proxmox"
+  "$(pwd)/setup/overlays/hetzner"
   # Add corresponding destination paths here
 )
 

@@ -7,7 +7,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`ivan-b.com`) && PathPrefix(`/watch-api`)
+    - match: Host(``) && PathPrefix(`/watch-api`)
       kind: Rule
       services:
         - name: watchface-api

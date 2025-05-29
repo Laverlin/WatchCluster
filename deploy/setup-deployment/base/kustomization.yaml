@@ -9,8 +9,10 @@ labels:
       managed-by: kustomize
 
 resources:
-  - namespace-isplitapp.yaml
+  - namespace-sailingapp.yaml
   - namespace-watchface.yaml
+  - argo-deploy-sailingapp.yaml
+  - argo-deploy-watchface.yaml
 
 secretGenerator:
   - name: sailingapp
