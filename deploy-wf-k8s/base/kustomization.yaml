@@ -5,22 +5,16 @@ namespace: watchface
 
 # setting labels
 #
-commonLabels:
-  kubernetes.io/instance: watchface
-  managed-by: kustomize
+labels:
+  - includeSelectors: true
+    pairs:
+      kubernetes.io/instance: watchface
+      managed-by: kustomize
 
 # setting annotations
 #
 commonAnnotations:
   version: "latest"
-
-secretGenerator:
-  - name: watchface
-    envs:
-      - ./.env.secret
-
-# generatorOptions:
-#   disableNameSuffixHash: true
 
 resources:
   - namespace.yaml

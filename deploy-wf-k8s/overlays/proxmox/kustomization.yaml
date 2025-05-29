@@ -8,7 +8,7 @@ resources:
   - ../../base
 
 # Patches
-patchesJson6902:
+patches:
   - target:
       group: "traefik.io"
       version: "v1alpha1"
@@ -22,16 +22,6 @@ patchesJson6902:
           "value": "Host(`watch.bdgn.me`) && PathPrefix(`/watch-api`)"
         }
       ]
-
-# Override the secretGenerator from the base
-secretGenerator:
-  - name: watchface
-    envs:
-      - ./.env.secret
-    behavior: merge
-    
-generatorOptions:
-  disableNameSuffixHash: true
 
 # Optional: you can modify replicas for dev environment
 replicas:
