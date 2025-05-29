@@ -17,7 +17,7 @@ fi
 
 # Define variables
 KUBECONFIG="$HOME/remote-kube/$1/config"
-BASE_DIR="$(dirname "$0")/setup"
+BASE_DIR="$(dirname "$0")/setup-deployment"
 
 if [ ! -f "$KUBECONFIG" ]; then
   echo -e "\033[31m❌ Kubeconfig file not found at $KUBECONFIG.\033[0m"

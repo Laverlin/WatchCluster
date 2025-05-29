@@ -34,16 +34,6 @@ patches:
         }
       ]
 
-# Override the secretGenerator from the base
-secretGenerator:
-  - name: sailingapp
-    envs:
-      - ./.env.secret
-    behavior: merge
-    
-generatorOptions:
-  disableNameSuffixHash: true
-
 # Optional: you can modify replicas for dev environment
 replicas:
   - name: sailingapp-api
