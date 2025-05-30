@@ -24,6 +24,22 @@ if [ ! -f "$KUBECONFIG" ]; then
   exit 1
 fi
 
+# Check if setup-deployment symlink exists, create if needed
+SECRET_SOURCE_DIR="$HOME/Sync/Projects/AppSecrets/watch-cluster/setup-deployment"
+
+if [ ! -L "$BASE_DIR" ] && [ ! -d "$BASE_DIR" ]; then
+  if [ -d "$SECRET_SOURCE_DIR" ]; then
+    echo "🔗 Creating symlink to setup-deployment from secrets directory..."
+    ln -sf "$SECRET_SOURCE_DIR" "$BASE_DIR"
+    echo -e "\033[32m✅ Symlink created: $BASE_DIR -> $SECRET_SOURCE_DIR\033[0m"
+  else
+    echo -e "\033[31m❌ Secret source directory not found at $SECRET_SOURCE_DIR.\033[0m"
+    exit 1
+  fi
+elif [ ! -L "$BASE_DIR" ] && [ -d "$BASE_DIR" ]; then
+  echo -e "\033[33m⚠️  setup-deployment directory exists but is not a symlink.\033[0m"
+fi
+
 # Check if the -rdb flag is provided
 if [[ "${2-}" == "-rdb" ]]; then
   echo "Deploying database..."
