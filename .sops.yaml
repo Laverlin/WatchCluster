@@ -1,0 +1,3 @@
+creation_rules:
+  - age: 'age1cy3v9gmgsmmac479e9cnrpln8haharhp0kejws970k2v8h4ng97qw77mk6'
+    path_regex: '.*\.(yaml|env|txt|env)$'

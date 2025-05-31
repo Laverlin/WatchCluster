@@ -18,36 +18,46 @@ fi
 # Define variables
 KUBECONFIG="$HOME/remote-kube/$1/config"
 BASE_DIR="$(dirname "$0")/setup-deployment"
+TEMP_DEPLOY_DIR="$HOME/projects/deploy/wf-deploy"
 
 if [ ! -f "$KUBECONFIG" ]; then
   echo -e "\033[31m❌ Kubeconfig file not found at $KUBECONFIG.\033[0m"
   exit 1
 fi
 
-# Check if setup-deployment symlink exists, create if needed
-SECRET_SOURCE_DIR="$HOME/Sync/Projects/AppSecrets/watch-cluster/setup-deployment"
-
-if [ ! -L "$BASE_DIR" ] && [ ! -d "$BASE_DIR" ]; then
-  if [ -d "$SECRET_SOURCE_DIR" ]; then
-    echo "🔗 Creating symlink to setup-deployment from secrets directory..."
-    ln -sf "$SECRET_SOURCE_DIR" "$BASE_DIR"
-    echo -e "\033[32m✅ Symlink created: $BASE_DIR -> $SECRET_SOURCE_DIR\033[0m"
-  else
-    echo -e "\033[31m❌ Secret source directory not found at $SECRET_SOURCE_DIR.\033[0m"
-    exit 1
+# Function to clean up temp directory
+cleanup() {
+  if [ -d "$TEMP_DEPLOY_DIR" ]; then
+    echo "🧹 Cleaning up temporary deployment directory..."
+    rm -rf "$TEMP_DEPLOY_DIR"
   fi
-elif [ ! -L "$BASE_DIR" ] && [ -d "$BASE_DIR" ]; then
-  echo -e "\033[33m⚠️  setup-deployment directory exists but is not a symlink.\033[0m"
-fi
+}
+
+# Set trap to ensure cleanup happens on exit
+trap cleanup EXIT
+
+# Create temporary deployment directory and copy contents
+echo "📁 Creating temporary deployment directory at $TEMP_DEPLOY_DIR..."
+mkdir -p "$TEMP_DEPLOY_DIR"
+cp -r "$BASE_DIR"/* "$TEMP_DEPLOY_DIR/"
+
+# Decrypt SOPS files
+echo "🔓 Decrypting SOPS files..."
+find "$TEMP_DEPLOY_DIR" -name "*.sops.*" -not -name "*.decrypted.*" | while read -r sops_file; do
+  # Extract the decrypted filename by removing .sops from the name
+  decrypted_file="${sops_file//.sops/}"
+  echo "🔐 Decrypting $sops_file -> $decrypted_file"
+  sops -d "$sops_file" > "$decrypted_file"
+done
 
 # Check if the -rdb flag is provided
 if [[ "${2-}" == "-rdb" ]]; then
   echo "Deploying database..."
-  kubectl apply --kubeconfig "$KUBECONFIG" -f "$BASE_DIR/restore-db.yaml"
+  kubectl apply --kubeconfig "$KUBECONFIG" -f "$TEMP_DEPLOY_DIR/restore-db.yaml"
 else
   # Deploy secrets & argocd applications
   echo "🚀 Deploying secrets and argocd applications to $1 environment..."
-  kubectl apply --kubeconfig "$KUBECONFIG" -k "$BASE_DIR/overlays/$1"
+  kubectl apply --kubeconfig "$KUBECONFIG" -k "$TEMP_DEPLOY_DIR/overlays/$1"
 fi
 
 echo "Deployment complete."

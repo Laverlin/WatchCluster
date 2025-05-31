@@ -8,7 +8,7 @@
 .vscode
 *.DS_Store
 *.secret*
-
+**/*.decrypted.*
 
 # User-specific files
 *.rsuser

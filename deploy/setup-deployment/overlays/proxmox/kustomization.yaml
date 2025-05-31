@@ -11,12 +11,12 @@ secretGenerator:
   - name: watchface
     namespace: watchface
     envs:
-      - ./.env.secret
+      - ./proxmox.env
     behavior: merge
   - name: sailingapp
     namespace: sailingapp
     envs:
-      - ./.env.secret
+      - ./proxmox.env
     behavior: merge
 generatorOptions:
   disableNameSuffixHash: true

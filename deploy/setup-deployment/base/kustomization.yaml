@@ -18,11 +18,11 @@ secretGenerator:
   - name: sailingapp
     namespace: sailingapp
     envs:
-      - ./.env.secret
+      - ./base.env
   - name: watchface
     namespace: watchface
     envs:
-      - ./.env.secret
+      - ./base.env
 
 generatorOptions:
   disableNameSuffixHash: true
