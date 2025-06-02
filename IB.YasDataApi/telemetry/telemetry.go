@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -50,15 +51,18 @@ func Setup(config abstract.Config) (Telemetry, error) {
 		return Telemetry{}, nil
 	}
 
+	// Strip http:// prefix from endpoint if present
+	endpoint := strings.TrimPrefix(config.OtelEndpoint, "http://")
+
 	metricExporter, err := otlpmetricgrpc.New(
-		ctx, otlpmetricgrpc.WithEndpoint(config.OtelEndpoint), otlpmetricgrpc.WithInsecure())
+		ctx, otlpmetricgrpc.WithEndpoint(endpoint), otlpmetricgrpc.WithInsecure())
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to setup metrics")
 		return Telemetry{}, nil
 	}
 
 	traceExporter, err := otlptracegrpc.New(
-		ctx, otlptracegrpc.WithEndpoint(config.OtelEndpoint), otlptracegrpc.WithInsecure())
+		ctx, otlptracegrpc.WithEndpoint(endpoint), otlptracegrpc.WithInsecure())
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to setup traces")
 		return Telemetry{}, nil
