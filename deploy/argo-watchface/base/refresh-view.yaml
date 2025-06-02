@@ -1,0 +1,48 @@
+# Refresh material views
+#
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: watchface-view-refresh
+  namespace: watchface
+spec:
+  schedule: "0 9 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      #ttlSecondsAfterFinished: 600
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: watchface-refresh
+              image: ilaverlin/pg-client:latest
+              command:
+                - /bin/sh
+                - -c
+                - >
+                    psql -d "{{ .Values.backupDatabase }}" -c "SELECT refresh_view('total_devices');";
+                    psql -d "{{ .Values.backupDatabase }}" -c "SELECT refresh_view('total_versions');";
+                    psql -d "{{ .Values.backupDatabase }}" -c "SELECT refresh_view('uniq_month');";
+              env:
+                - name: PGHOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: watchface
+                      key: PG_HOST
+                - name: PGPORT
+                  valueFrom:
+                    secretKeyRef:
+                      name: watchface
+                      key: PG_PORT
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: watchface
+                      key: PG_USER
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: watchface
+                      key: PG_PASSWORD
