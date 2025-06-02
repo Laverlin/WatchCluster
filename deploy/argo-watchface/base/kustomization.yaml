@@ -26,4 +26,4 @@ resources:
   - deployment-weather.yaml
   - service-wfapi.yaml
   - ingress.yaml
-  - refresh_view.yaml
+  - refresh-view.yaml
