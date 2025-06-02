@@ -22,9 +22,9 @@ spec:
                 - /bin/sh
                 - -c
                 - >
-                    psql -d "{{ .Values.backupDatabase }}" -c "SELECT refresh_view('total_devices');";
-                    psql -d "{{ .Values.backupDatabase }}" -c "SELECT refresh_view('total_versions');";
-                    psql -d "{{ .Values.backupDatabase }}" -c "SELECT refresh_view('uniq_month');";
+                    psql -d "WatchService" -c "SELECT refresh_view('total_devices');";
+                    psql -d "WatchService" -c "SELECT refresh_view('total_versions');";
+                    psql -d "WatchService" -c "SELECT refresh_view('uniq_month');";
               env:
                 - name: PGHOST
                   valueFrom:
