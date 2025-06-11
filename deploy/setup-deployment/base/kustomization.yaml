@@ -11,6 +11,7 @@ labels:
 resources:
   - namespace-sailingapp.yaml
   - namespace-watchface.yaml
+  - postgres.yaml
   - argo-deploy-sailingapp.yaml
   - argo-deploy-watchface.yaml
 
@@ -23,6 +24,14 @@ secretGenerator:
     namespace: watchface
     envs:
       - ./base.env
+  - name: pg-secret
+    namespace: watchface
+    envs:
+      - ./pg-secret.env
+  - name: pg-secret
+    namespace: sailingapp
+    envs:
+      - ./pg-secret.env
 
 generatorOptions:
   disableNameSuffixHash: true

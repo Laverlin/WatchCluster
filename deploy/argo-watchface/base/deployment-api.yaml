@@ -49,7 +49,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: watchface
-                  key: KAFKA_URL   
+                  key: KAFKA_URL
+            - name: ApiConfiguration__AuthSettings__Token
+              valueFrom:
+                secretKeyRef:
+                  name: watchface
+                  key: AUTH_TOKEN                          
             - name: PgProviderConfiguration__server
               valueFrom:
                 secretKeyRef:
@@ -63,18 +68,14 @@ spec:
             - name: PgProviderConfiguration__UserId
               valueFrom:
                 secretKeyRef:
-                  name: watchface
-                  key: PG_USER
+                  name: pg-secret
+                  key: username
             - name: PgProviderConfiguration__Password
               valueFrom:
                 secretKeyRef:
-                  name: watchface
-                  key: PG_PASSWORD
-            - name: ApiConfiguration__AuthSettings__Token
-              valueFrom:
-                secretKeyRef:
-                  name: watchface
-                  key: AUTH_TOKEN                  
+                  name: pg-secret
+                  key: password
+             
           startupProbe:
             httpGet:
               path: /health/ready

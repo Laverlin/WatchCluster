@@ -1,0 +1,53 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: pg-watchface
+  namespace: watchface
+spec:
+
+  instances: 3
+
+  superuserSecret:
+    name: pg-secret
+
+  # PostgreSQL configuration
+  postgresql:
+    parameters:
+      # Storage is local so we can optimize for local disk performance
+      random_page_cost: "1.3"
+
+  backup:
+    barmanObjectStore:
+      destinationPath: "s3://ib.pg-backup/pg-"
+      s3Credentials:
+        accessKeyId:
+          name: watchface
+          key: aws_key_id
+        secretAccessKey:
+          name: watchface
+          key: aws_secret_key
+      wal:
+        compression: bzip2
+        maxParallel: 2
+    retentionPolicy: "7d"
+
+  externalClusters:
+    - name: pg-watchface
+      barmanObjectStore:
+        destinationPath: "s3://ib.pg-backup/pg-"
+        s3Credentials:
+          accessKeyId:
+            name: watchface
+            key: aws_key_id
+          secretAccessKey:
+            name: watchface
+            key: aws_secret_key
+
+  storage:
+    storageClass: longhorn-local
+    size: 15Gi
+
+  # Pod distribution - ensure PostgreSQL instances are on different nodes
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname

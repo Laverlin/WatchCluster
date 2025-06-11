@@ -50,14 +50,16 @@ find "$TEMP_DEPLOY_DIR" -name "*.sops.*" -not -name "*.decrypted.*" | while read
   sops -d "$sops_file" > "$decrypted_file"
 done
 
+
+
+# Deploy secrets & argocd applications
+echo "🚀 Deploying secrets and argocd applications to $1 environment..."
+kubectl apply --kubeconfig "$KUBECONFIG" -k "$TEMP_DEPLOY_DIR/overlays/$1"
+
 # Check if the -rdb flag is provided
 if [[ "${2-}" == "-rdb" ]]; then
   echo "Deploying database..."
-  kubectl apply --kubeconfig "$KUBECONFIG" -f "$TEMP_DEPLOY_DIR/restore-db.yaml"
-else
-  # Deploy secrets & argocd applications
-  echo "🚀 Deploying secrets and argocd applications to $1 environment..."
-  kubectl apply --kubeconfig "$KUBECONFIG" -k "$TEMP_DEPLOY_DIR/overlays/$1"
+  kubectl apply --kubeconfig "$KUBECONFIG" -f "$TEMP_DEPLOY_DIR/restore-azure-db.yaml"
 fi
 
 echo "Deployment complete."

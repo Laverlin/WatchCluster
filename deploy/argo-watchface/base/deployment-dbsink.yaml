@@ -43,13 +43,13 @@ spec:
             - name: PgProviderConfiguration__UserId
               valueFrom:
                 secretKeyRef:
-                  name: watchface
-                  key: PG_USER
+                  name: pg-secret
+                  key: username
             - name: PgProviderConfiguration__Password
               valueFrom:
                 secretKeyRef:
-                  name: watchface
-                  key: PG_PASSWORD
+                  name: pg-secret
+                  key: password
           startupProbe:
             httpGet:
               path: /health/ready
