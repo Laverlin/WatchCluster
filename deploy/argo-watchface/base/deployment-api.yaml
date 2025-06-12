@@ -58,13 +58,13 @@ spec:
             - name: PgProviderConfiguration__server
               valueFrom:
                 secretKeyRef:
-                  name: watchface
-                  key: PG_HOST   
+                  name: pg-secret
+                  key: host   
             - name: PgProviderConfiguration__Port
               valueFrom:
                 secretKeyRef:
-                  name: watchface
-                  key: PG_PORT    
+                  name: pg-secret
+                  key: port    
             - name: PgProviderConfiguration__UserId
               valueFrom:
                 secretKeyRef:

@@ -52,8 +52,8 @@ spec:
             - name: YASR_pgUrl
               valueFrom:
                 secretKeyRef:
-                  name: sailingapp
-                  key: PG_URL
+                  name: pg-secret
+                  key: wf_pg_url
             - name: GIN_MODE
               value: "release"
 
