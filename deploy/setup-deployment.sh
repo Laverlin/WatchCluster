@@ -3,14 +3,14 @@
 
 set -euo pipefail
 
-echo "This script deploys secrets and argocd applications to a specific cluster environment."
+echo "This script deploys database, secrets and argocd applications to a specific cluster environment."
 
 
 if [ "${1-}" == "" ]; then
   echo -e "\033[33miCluster name is required as the first argument.\033[0m"
   echo "Usage: $0 <cluster-name> [-rdb]"
   echo "  <cluster-name>  Name of the cluster environment (e.g., proxmox, hetzner)"
-  echo "  -rdb             Deploy database"
+  echo "  -rdb            Deploy database from azure backup"
   echo "Example: $0 proxmox -rdb"
   exit 1
 fi

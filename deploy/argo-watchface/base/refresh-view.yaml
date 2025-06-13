@@ -29,13 +29,13 @@ spec:
                 - name: PGHOST
                   valueFrom:
                     secretKeyRef:
-                      name: watchface
-                      key: PG_HOST
+                      name: pg-secret
+                      key: host
                 - name: PGPORT
                   valueFrom:
                     secretKeyRef:
-                      name: watchface
-                      key: PG_PORT
+                      name: pg-secret
+                      key: port
                 - name: PGUSER
                   valueFrom:
                     secretKeyRef:

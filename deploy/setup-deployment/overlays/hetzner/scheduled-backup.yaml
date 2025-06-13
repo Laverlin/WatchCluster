@@ -1,0 +1,12 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: 'pg-watchface-backup'
+  namespace: watchface
+# This ScheduledBackup is for the PostgreSQL cluster named 'pg-watchface'
+spec:
+  schedule: "0 0 0 * * *"
+  backupOwnerReference: self
+  cluster:
+    name: pg-watchface

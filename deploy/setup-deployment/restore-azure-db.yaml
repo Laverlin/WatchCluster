@@ -14,8 +14,8 @@ spec:
             - name: POSTGRES_HOST
               valueFrom:
                 secretKeyRef:
-                  name: watchface
-                  key: PG_HOST
+                  name: pg-secret
+                  key: host
             - name: POSTGRES_DATABASE
               value: WatchService
             - name: POSTGRES_USER

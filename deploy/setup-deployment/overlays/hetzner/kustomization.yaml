@@ -3,6 +3,7 @@ kind: Kustomization
 # Setting the base resources
 resources:
     - ../../base
+    - scheduled-backup.yaml
 # Override the secretGenerator from the base
 secretGenerator:
     - name: watchface
@@ -44,3 +45,21 @@ patches:
             "value": "deploy/argo-sailingapp/overlays/hetzner"
           }
         ]
+    - target:
+        group: "postgresql.cnpg.io"
+        version: "v1"
+        kind: "Cluster"
+        name: "pg-watchface"
+      patch: |-
+        [
+          {
+            "op": "replace",
+            "path": "/spec/backup/barmanObjectStore/destinationPath",
+            "value": "s3://ib.pg-backup/pg-hetzner"
+          },
+          {
+            "op": "replace",
+            "path": "/spec/externalClusters/0/barmanObjectStore/destinationPath",
+            "value": "s3://ib.pg-backup/pg-hetzner-backup"
+          }
+        ]        
