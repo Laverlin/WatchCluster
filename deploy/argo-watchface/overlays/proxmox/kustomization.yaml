@@ -23,6 +23,20 @@ patches:
         }
       ]
 
+  - target:
+      group: "cert-manager.io"
+      version: "v1"
+      kind: "Certificate"
+      name: "watchface"
+    patch: |-
+      [
+        {
+          "op": "replace",
+          "path": "/spec/dnsNames/0",
+          "value": "watch.bdgn.me"
+        }
+      ]
+
 # Optional: you can modify replicas for dev environment
 replicas:
   - name: watchface-api

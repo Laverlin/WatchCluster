@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: watchface
+  namespace: watchface
+spec:
+  secretName: 'watchface-tls'
+  dnsNames:
+    - "ivan-b.com"
+  issuerRef:
+    name: letsencrypt-dns
+    kind: ClusterIssuer
