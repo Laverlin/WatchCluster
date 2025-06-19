@@ -10,7 +10,7 @@ resources:
 # Patches
 patches:
   - target:
-      apiVersion: "apps/v1"
+      kind: "Deployment"
       labelSelector: "kubernetes.io/language=go"
     patch: |-
       [

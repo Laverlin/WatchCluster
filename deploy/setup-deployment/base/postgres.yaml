@@ -44,7 +44,7 @@ spec:
             key: aws_secret_key
 
   storage:
-    storageClass: local-path
+    storageClass: local-longhorn
     size: 15Gi
 
   # Pod distribution - ensure PostgreSQL instances are on different nodes
