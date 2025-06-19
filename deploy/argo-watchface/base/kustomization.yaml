@@ -27,3 +27,4 @@ resources:
   - service-wfapi.yaml
   - ingress.yaml
   - refresh-view.yaml
+  - certificate.yaml
