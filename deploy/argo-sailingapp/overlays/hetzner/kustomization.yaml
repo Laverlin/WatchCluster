@@ -30,7 +30,7 @@ patches:
         {
           "op": "replace",
           "path": "/spec/routes/0/match",
-          "value": "Host(`ivan-b.com`) && (PathPrefix(`/yas-api/`) || PathPrefix(`/yas-bot/`))"
+          "value": "Host(`ivan-b.com`) && PathPrefix(`/yas-api/`)"
         }
       ]
 
