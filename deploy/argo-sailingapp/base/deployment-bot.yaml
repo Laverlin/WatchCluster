@@ -44,7 +44,7 @@ spec:
                 secretKeyRef:
                   name: sailingapp
                   key: KAFKA_URL
-            - name: KafkaConfiguration__Topic
+            - name: KafkaConfiguration__YasTopic
               value: "yas-msgs" 
           startupProbe:
             httpGet:
