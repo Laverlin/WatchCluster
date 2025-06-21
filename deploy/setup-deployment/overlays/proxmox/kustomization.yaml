@@ -5,6 +5,7 @@ kind: Kustomization
 # Setting the base resources
 resources:
   - ../../base
+  - backup.yaml
 
 # Override the secretGenerator from the base
 secretGenerator:

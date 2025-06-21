@@ -32,7 +32,7 @@ spec:
                   name: sailingapp
                   key: OTEL_URL
             - name: BotConfiguration__BaseReaderApiUrl
-              value: http://sailingapp-restapi:8080/yas-api/
+              value: http://sailingapp:8080/yas-api/
 
             - name: BotConfiguration__BotApiKey
               valueFrom:
