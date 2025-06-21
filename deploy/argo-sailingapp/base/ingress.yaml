@@ -7,7 +7,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(``) && (PathPrefix(`/yas-api/`) || PathPrefix(`/yas-bot/`))
+    - match: Host(``) && PathPrefix(`/yas-api/`) 
       kind: Rule
       services:
         - name: sailingapp
