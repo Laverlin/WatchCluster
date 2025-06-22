@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: watchface-nginx
+  name: nginx-homeroot
 
 data:
   index.html: |
