@@ -18,6 +18,7 @@ commonAnnotations:
 resources:
   - namespace.yaml
   - configmap-nginx.yaml  
+  - configmap-homeroot.yaml  
   - deployment-api.yaml
   - deployment-bot.yaml
   - deployment-processor.yaml

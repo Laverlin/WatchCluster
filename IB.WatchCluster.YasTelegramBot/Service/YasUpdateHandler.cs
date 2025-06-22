@@ -136,6 +136,7 @@ public class YasUpdateHandler: IUpdateHandler
         var tid = (message.From?.Id) ?? throw new ArgumentException("No telegram user id is provided");
 
         using var getResponse = await _yasHttpClient.GetUser(tid);
+        
         if (getResponse.StatusCode == HttpStatusCode.NotFound)
         {
             var fullName = $"{message.From?.FirstName} {message.From?.LastName}";

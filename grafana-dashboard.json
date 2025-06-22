@@ -24,7 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 750,
+  "id": 823,
   "links": [],
   "panels": [
     {
@@ -88,7 +88,7 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -157,7 +157,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -255,7 +255,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -319,7 +319,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -397,7 +397,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -468,7 +468,7 @@
         "sizing": "auto",
         "valueMode": "color"
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -562,7 +562,7 @@
         "sizing": "auto",
         "valueMode": "color"
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -659,7 +659,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -760,7 +760,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -837,7 +837,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -901,7 +901,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -973,7 +973,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -1042,7 +1042,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -1143,7 +1143,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -1220,7 +1220,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -1293,7 +1293,7 @@
         "sizing": "auto",
         "valueMode": "color"
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -1362,7 +1362,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -1463,7 +1463,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -1540,7 +1540,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -1614,7 +1614,7 @@
         "sizing": "auto",
         "valueMode": "color"
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -1683,7 +1683,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -1758,7 +1758,7 @@
         },
         "valueMode": "color"
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -1828,7 +1828,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -1892,7 +1892,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -1993,7 +1993,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -2070,7 +2070,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -2133,7 +2133,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -2196,7 +2196,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -2259,7 +2259,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
@@ -2292,7 +2292,7 @@
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "fenrir9ur2vpcb"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2372,12 +2372,12 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "fenrir9ur2vpcb"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "format": "table",
@@ -2411,7 +2411,7 @@
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "fenrir9ur2vpcb"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2461,12 +2461,12 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "fenrir9ur2vpcb"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "format": "table",
@@ -2498,7 +2498,7 @@
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "fenrir9ur2vpcb"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2579,12 +2579,12 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "fenrir9ur2vpcb"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "format": "table",
@@ -2616,7 +2616,7 @@
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "fenrir9ur2vpcb"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2666,12 +2666,12 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "fenrir9ur2vpcb"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "format": "table",
@@ -2712,7 +2712,7 @@
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "fenrir9ur2vpcb"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2762,12 +2762,12 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "fenrir9ur2vpcb"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "format": "table",
@@ -2808,7 +2808,7 @@
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "fenrir9ur2vpcb"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -2894,17 +2894,17 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "fenrir9ur2vpcb"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "select\n  COALESCE(\"FaceVersion\", 'nil') as \"Version\",\n  count(distinct(\"DeviceInfoId\")) as \"Count\"\nfrom \"CityInfo\" \n\nWHERE\n  $__timeFilter(\"RequestTime\")\ngroup by \"FaceVersion\"\norder by \"Count\" desc\n",
+          "rawSql": "select\n  COALESCE(\"FaceVersion\", 'nil') as \"Version\",\n  count(distinct(\"DeviceInfoId\")) as \"Count\"\nfrom \"CityInfo\" \n\nWHERE\n  $__timeFilter(\"RequestTime\")\ngroup by \"FaceVersion\"\norder by \"Count\" desc",
           "refId": "A",
           "sql": {
             "columns": [
@@ -2939,7 +2939,7 @@
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "fenrir9ur2vpcb"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -3011,12 +3011,12 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "fenrir9ur2vpcb"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "format": "table",
@@ -3048,7 +3048,7 @@
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "fenrir9ur2vpcb"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -3067,11 +3067,11 @@
                 "color": "#FFF899"
               },
               {
-                "color": "#E0B400",
+                "color": "light-green",
                 "value": 2
               },
               {
-                "color": "#56A64B",
+                "color": "dark-green",
                 "value": 3
               }
             ]
@@ -3094,7 +3094,7 @@
         },
         "controls": {
           "mouseWheelZoom": false,
-          "showAttribution": true,
+          "showAttribution": false,
           "showDebug": false,
           "showMeasure": false,
           "showScale": false,
@@ -3106,9 +3106,10 @@
               "showLegend": true,
               "style": {
                 "color": {
+                  "field": "metric",
                   "fixed": "dark-green"
                 },
-                "opacity": 0.4,
+                "opacity": 0.6,
                 "rotation": {
                   "fixed": 0,
                   "max": 360,
@@ -3116,9 +3117,10 @@
                   "mode": "mod"
                 },
                 "size": {
+                  "field": "metric",
                   "fixed": 5,
-                  "max": 20,
-                  "min": 2
+                  "max": 15,
+                  "min": 4
                 },
                 "symbol": {
                   "fixed": "img/icons/marker/circle.svg",
@@ -3137,8 +3139,9 @@
                 }
               }
             },
-            "location": {
-              "mode": "auto"
+            "filterData": {
+              "id": "byRefId",
+              "options": "A"
             },
             "name": "Layer 0",
             "tooltip": true,
@@ -3150,18 +3153,18 @@
         },
         "view": {
           "allLayers": true,
-          "id": "zero",
-          "lat": 0,
-          "lon": 0,
-          "zoom": 1
+          "id": "fit",
+          "lat": 46,
+          "lon": 14,
+          "zoom": 15
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "fenrir9ur2vpcb"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "format": "table",
@@ -3188,12 +3191,13 @@
         }
       ],
       "title": "Geo visual",
+      "transparent": true,
       "type": "geomap"
     },
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "fenrir9ur2vpcb"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -3242,12 +3246,12 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.0.0+security-01",
       "targets": [
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "fenrir9ur2vpcb"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "format": "table",
@@ -3282,7 +3286,21 @@
   "schemaVersion": 41,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "text": "pg-watchface",
+          "value": "aepcad3dnfke8c"
+        },
+        "label": "Data Source",
+        "name": "datasource",
+        "options": [],
+        "query": "grafana-postgresql-datasource",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
     "from": "now-6h",
@@ -3291,6 +3309,6 @@
   "timepicker": {},
   "timezone": "",
   "title": "App Activity",
-  "uid": "heRCqYv4z",
-  "version": 25
+  "uid": "heRCqYv4zq",
+  "version": 20
 }

@@ -18,7 +18,8 @@ commonAnnotations:
 
 resources:
   - namespace.yaml
-  - configmap-nginx.yaml  
+  - configmap-nginx.yaml
+  - configmap-homeroot.yaml  
   - deployment-api.yaml
   - deployment-dbsink.yaml
   - deployment-exchange.yaml

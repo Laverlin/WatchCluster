@@ -19,7 +19,7 @@ data:
                 index index.html index.htm;
                 server_name _;
 
-                recursive_error_pages   on;
+                recursive_error_pages   off;
                 proxy_intercept_errors  on;
 
                 add_header Access-Control-Allow-Origin * always;
