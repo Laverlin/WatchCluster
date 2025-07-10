@@ -147,7 +147,7 @@ public class AzureMapService : IRequestHandler<LocationInfo>
         var features = document.RootElement.GetProperty("features");
 
         if (features.GetArrayLength() == 0)
-            return new LocationInfo();
+            return new LocationInfo { RequestStatus = new RequestStatus(RequestStatusCode.Ok) };
         
         var resource = features[0].GetProperty("properties");
 
