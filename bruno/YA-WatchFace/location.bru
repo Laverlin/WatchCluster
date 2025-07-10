@@ -1,0 +1,18 @@
+meta {
+  name: location
+  type: http
+  seq: 2
+}
+
+get {
+  url: https://atlas.microsoft.com/reverseGeocode?subscription-key={{location-key}}&api-version=2025-01-01&coordinates=16.37208,48.20849
+  body: none
+  auth: none
+}
+
+params:query {
+  subscription-key: {{location-key}}
+  api-version: 2025-01-01
+  coordinates: 16.37208,48.20849
+  ~ResultType: Address, CountryRegion, AdminDivision1
+}

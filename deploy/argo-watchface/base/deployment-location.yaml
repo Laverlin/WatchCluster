@@ -37,7 +37,7 @@ spec:
                   key: KAFKA_URL
             - name: AppConfiguration__handler 
               value: LocationInfo
-            - name: VirtualEarthConfiguration__AuthKey
+            - name: AzureMapConfiguration__AuthKey
               valueFrom:
                 secretKeyRef:
                   name: watchface
