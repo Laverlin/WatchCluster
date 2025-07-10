@@ -5,6 +5,5 @@ metadata:
   name: 'pg-watchface-backup'
   namespace: watchface
 spec:
-  backupOwnerReference: self
   cluster:
     name: pg-watchface

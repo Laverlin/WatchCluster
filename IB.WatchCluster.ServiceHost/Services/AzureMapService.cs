@@ -130,8 +130,8 @@ public class AzureMapService : IRequestHandler<LocationInfo>
     {
         var requestUrl = string.Format(
             _azureMapConfig.UrlTemplate, 
-            lat.ToString("G", CultureInfo.InvariantCulture), 
             lon.ToString("G", CultureInfo.InvariantCulture), 
+            lat.ToString("G", CultureInfo.InvariantCulture), 
             _azureMapConfig.AuthKey);
         using var response = await _httpClient.GetAsync(requestUrl);
         if (!response.IsSuccessStatusCode)
@@ -144,13 +144,12 @@ public class AzureMapService : IRequestHandler<LocationInfo>
 
         await using var content = await response.Content.ReadAsStreamAsync();
         using var document = await JsonDocument.ParseAsync(content);
-        var resource = document.RootElement
-            .GetProperty("features")[0];
+        var features = document.RootElement.GetProperty("features");
 
-        if (resource.GetArrayLength() == 0)
+        if (features.GetArrayLength() == 0)
             return new LocationInfo();
         
-        resource = resource.GetProperty("properties");
+        var resource = features[0].GetProperty("properties");
 
         string locality;
         var region = "";
@@ -161,8 +160,9 @@ public class AzureMapService : IRequestHandler<LocationInfo>
             locality = address.TryGetProperty("adminDistricts", out var districtElement)
                 ? $"{districtElement[0].GetString()}, " : "";
         if (address.TryGetProperty("countryRegion", out var regionElement) && regionElement.TryGetProperty("name", out var regionNameElement))
-            region = regionNameElement.GetProperty("name").GetString();
+            region = regionNameElement.GetString();
 
+        _logger.LogDebug($"AzureMap location: {locality}{region}");
         return new LocationInfo($"{locality}{region}");
     }
 }
