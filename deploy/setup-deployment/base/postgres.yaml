@@ -44,9 +44,9 @@ spec:
             name: watchface
             key: aws_secret_key
 
-  # bootstrap:
-  #   recovery:
-  #     source: pg-watchface
+  bootstrap:
+    recovery:
+      source: pg-watchface
 
   storage:
     storageClass: local-longhorn

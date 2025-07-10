@@ -64,6 +64,11 @@ patches:
         {
           "op": "replace",
           "path": "/spec/externalClusters/0/barmanObjectStore/destinationPath",
-          "value": "s3://ib.pg-backup/pg-proxmox-backup"
-        }
+          "value": "s3://ib.pg-backup/pg-hetzner"
+        },
+        {
+          "op": "replace",
+          "path": "/spec/storage/storageClass",
+          "value": "local-path"
+        }     
       ]

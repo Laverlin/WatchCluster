@@ -47,7 +47,8 @@ namespace IB.WatchCluster.DbSink
 
         private async Task MessageHandler(KnownMessage message)
         {
-            using (_activitySource.StartActivity("SinkRequest"))
+//            using (_activitySource.StartActivity("SinkRequest"))
+            using(_activitySource.StartActivity("SinkRequest", ActivityKind.Consumer, message.Header.ActivityId))
             {
                 _logger.LogDebug("Push to DB {@message}", message);
                 
