@@ -1,0 +1,23 @@
+meta {
+  name: watchface copy
+  type: http
+  seq: 3
+}
+
+get {
+  url: https://{{host-name}}/watch-api/v2/YAFace?apiToken={{api-token}}&did={{device-id}}&dn=fenix6spro&av=0.10.17&lat=-31.985437&lon=115.824613&wp=AppleDarkSky&fw=28.2&ciqv=3.4.5
+  body: none
+  auth: inherit
+}
+
+params:query {
+  apiToken: {{api-token}}
+  did: {{device-id}}
+  dn: fenix6spro
+  av: 0.10.17
+  lat: -31.985437
+  lon: 115.824613
+  wp: AppleDarkSky
+  fw: 28.2
+  ciqv: 3.4.5
+}

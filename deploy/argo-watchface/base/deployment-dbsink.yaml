@@ -25,6 +25,8 @@ spec:
                 secretKeyRef:
                   name: watchface
                   key: LOKI_URL
+            # - name: Serilog__MinimumLevel__Default
+            #   value: 'Debug'            
             - name: DbSinkConfiguration__OpenTelemetryCollectorUrl
               valueFrom:
                 secretKeyRef:

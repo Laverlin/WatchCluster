@@ -93,8 +93,8 @@ await Host.CreateDefaultBuilder(args)
         switch(appConfig.Handler)
         {
             case nameof(LocationInfo):
-                services.AddHttpClient<IRequestHandler<LocationInfo>, AzureMapService>();
-                services.AddSingleton(hostContext.Configuration.LoadVerifiedConfiguration<AzureMapConfiguration>());
+                services.AddHttpClient<IRequestHandler<LocationInfo>, GeoapifyService>();
+                services.AddSingleton(hostContext.Configuration.LoadVerifiedConfiguration<GeoapifyConfiguration>());
                 services.AddHostedService<ProcessingService<LocationInfo>>();
                 break;
             case nameof(WeatherInfo):
